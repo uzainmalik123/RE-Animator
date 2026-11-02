@@ -21,7 +21,13 @@ function allowedOrigin(origin: string | undefined): boolean {
   }
 }
 
-export type EventServer = { url: string; publish(e: SummonEvent): void; close(): Promise<void> };
+export type EventServer = {
+  url: string;
+  publish(e: SummonEvent): void;
+  /** Resolves when the first client connects (replay waits for it, F15). */
+  firstClient(): Promise<void>;
+  close(): Promise<void>;
+};
 
 /**
  * `--seance` only (PRD F09/F12, D-36, D-40): broadcasts every event on `ws://127.0.0.1:<port>/runs/<runId>`.
@@ -32,7 +38,7 @@ export type EventServer = { url: string; publish(e: SummonEvent): void; close():
  */
 export async function startEventServer(
   runId: string,
-  opts: { port?: number; host?: string; maxBuffered?: number } = {},
+  opts: { port?: number; host?: string; maxBuffered?: number; hello?: Pick<LiveHello, 'recorded' | 'speed'> } = {},
 ): Promise<EventServer> {
   const host = opts.host ?? '127.0.0.1';
   const port = opts.port ?? SEANCE_EVENT_PORT;
@@ -55,9 +61,12 @@ export async function startEventServer(
     if (i !== undefined) backlog[i] = undefined;
     frameAt.delete(ghostId);
   };
+  let connected!: () => void;
+  const first = new Promise<void>((r) => (connected = r));
   wss.on('connection', (ws) => {
+    connected();
     ws.on('error', () => ws.terminate()); // a malformed frame from one client must not crash the run
-    ws.send(JSON.stringify({ type: 'live.hello', protocol: LIVE_PROTOCOL, runId, t: Date.now() } satisfies LiveHello));
+    ws.send(JSON.stringify({ type: 'live.hello', protocol: LIVE_PROTOCOL, runId, t: Date.now(), ...opts.hello } satisfies LiveHello));
     for (const line of backlog) if (line !== undefined) ws.send(line);
   });
   const address = wss.address();
@@ -93,6 +102,7 @@ export async function startEventServer(
         client.send(line);
       }
     },
+    firstClient: () => first,
     close() {
       // A graceful close flushes queued events (run.finished) before the socket goes.
       for (const client of wss.clients) client.close(1001, 'run finished');

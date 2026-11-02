@@ -13,7 +13,7 @@ const events: SummonEvent[] = [
   { type: 'rep.started', t: 1050, rep: 1 },
   { type: 'ghost.spawned', t: 1100, ghostId: G, criterion: '3.2', persona: 'doppelganger', rep: 1, actor: 'a' },
   { type: 'assert.result', t: 1300, criterion: '3.2', persona: 'doppelganger', rep: 1, index: 0, ok: false, detail: 'two claims' },
-  { type: 'rep.finished', t: 1400, rep: 1, outcomes: { passed: 0, failed: 1, inconclusive: 0, aborted: 0 } },
+  { type: 'rep.finished', t: 1400, rep: 1, outcomes: { completed: 1, timeout: 0, planError: 0, systemError: 0 } },
   { type: 'verdict.criterion', t: 1450, criterion: '3.2', verdict: 'haunted' },
   { type: 'run.finished', t: 1500, runId: 'r1', counts: { clean: 0, haunted: 1, flaky: 0, inconclusive: 0, notApplicable: 0, uncompilable: 0 }, haunted: ['3.2'], durationMs: 500 },
 ] as SummonEvent[];

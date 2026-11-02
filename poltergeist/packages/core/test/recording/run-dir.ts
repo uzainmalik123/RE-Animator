@@ -17,7 +17,7 @@ export const runEvents: SummonEvent[] = [
   { type: 'ghost.spawned', t: 1020, ghostId: A, criterion: '3.2', persona: 'doppelganger', rep: 1, actor: 'a' },
   { type: 'ghost.spawned', t: 1020, ghostId: B, criterion: '3.1', persona: 'wraith', rep: 1, actor: 'a' },
   { type: 'assert.result', t: 1500, criterion: '3.2', persona: 'doppelganger', rep: 1, index: 0, ok: false, detail: 'two claims' },
-  { type: 'rep.finished', t: 1600, rep: 1, outcomes: { passed: 1, failed: 1, inconclusive: 0, aborted: 0 } },
+  { type: 'rep.finished', t: 1600, rep: 1, outcomes: { completed: 2, timeout: 0, planError: 0, systemError: 0 } },
   { type: 'verdict.criterion', t: 1610, criterion: '3.1', verdict: 'clean' },
   { type: 'verdict.criterion', t: 1610, criterion: '3.2', verdict: 'haunted' },
   {
