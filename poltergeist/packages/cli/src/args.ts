@@ -13,13 +13,17 @@ export type CliArgs =
       recompile: boolean;
       seance: boolean;
     }
-  | { command: 'init'; dir?: string; target?: string; spec?: string; hook: boolean; force: boolean };
+  | { command: 'init'; dir?: string; target?: string; spec?: string; hook: boolean; force: boolean }
+  | { command: 'export'; runDir: string; out: string; maxMb?: number }
+  | { command: 'replay'; dir: string; speed: number };
 
 export const HELP_TEXT = `poltergeist: haunt a Kiro spec with adversarial ghosts
 
 Usage:
   poltergeist summon --spec <dir> [options]
   poltergeist init [--dir <project>] [init options]
+  poltergeist export <runDir> --out <dir> [--max-mb <n>]
+  poltergeist replay <dir> [--speed <n>]
 
 Summon options:
   --spec <dir>        spec folder holding requirements.md (required)
@@ -38,6 +42,14 @@ Init options (wire a project into Kiro's .kiro/):
   --no-hook           skip the agent hook
   --force             replace files that differ (otherwise they are kept)
 
+Recordings (replay a finished run with no app, LLM or browser):
+  export <runDir>     copy a run folder (.poltergeist/runs/<id>) into a static bundle
+  --out <dir>         new or empty folder for the bundle
+  --max-mb <n>        size cap, 1-1000 (default 50); frames are thinned to fit
+  replay <dir>        stream a run folder or bundle on ws://127.0.0.1:6660/runs/<id>,
+                      labelled RECORDED, once a client connects
+  --speed <n>         playback speed, 1-16 (default 1)
+
 Exit codes:
   0  nothing haunted (init: every file written or already up to date)
   1  at least one criterion haunted (init: some files differ and were kept)
@@ -51,8 +63,15 @@ const list = (flag: string, value: string | undefined): string[] | undefined => 
   return ids;
 };
 
-const SUMMON_ONLY = ['config', 'only', 'personas', 'reps', 'recompile', 'seance'] as const;
-const INIT_ONLY = ['dir', 'target', 'no-hook', 'force'] as const;
+/** The flags each command accepts (`help` is everyone's). */
+const OWNED = {
+  summon: ['spec', 'config', 'only', 'personas', 'reps', 'recompile', 'seance'],
+  init: ['dir', 'target', 'spec', 'no-hook', 'force'],
+  export: ['out', 'max-mb'],
+  replay: ['speed'],
+} as const;
+type Command = keyof typeof OWNED;
+const isCommand = (c: string): c is Command => Object.hasOwn(OWNED, c);
 
 /** Parses `poltergeist` arguments (D-36). Throws `UsageError` for anything it can't accept. */
 export function parseCliArgs(argv: readonly string[]): CliArgs {
@@ -74,6 +93,9 @@ export function parseCliArgs(argv: readonly string[]): CliArgs {
         target: { type: 'string' },
         'no-hook': { type: 'boolean', default: false },
         force: { type: 'boolean', default: false },
+        out: { type: 'string' },
+        'max-mb': { type: 'string' },
+        speed: { type: 'string' },
         help: { type: 'boolean', short: 'h', default: false },
       },
     });
@@ -83,13 +105,35 @@ export function parseCliArgs(argv: readonly string[]): CliArgs {
   const { values, positionals } = parsed;
   const [command, ...rest] = positionals;
   if (values.help || command === undefined || command === 'help') return { command: 'help' };
-  if (command !== 'summon' && command !== 'init') throw new UsageError(`unknown command: ${command}`);
-  if (rest.length) throw new UsageError(`unexpected argument: ${rest[0]}`);
-  const foreign = (command === 'init' ? SUMMON_ONLY : INIT_ONLY).find((flag) => {
+  if (!isCommand(command)) throw new UsageError(`unknown command: ${command}`);
+  const takesFolder = command === 'export' || command === 'replay';
+  const [folder, ...extra] = takesFolder ? rest : [undefined, ...rest];
+  if (extra.length) throw new UsageError(`unexpected argument: ${extra[0]}`);
+  const owned: readonly string[] = OWNED[command];
+  const foreign = (Object.keys(values) as (keyof typeof values)[]).find((flag) => {
     const v = values[flag];
-    return v !== undefined && v !== false;
+    return flag !== 'help' && !owned.includes(flag) && v !== undefined && v !== false;
   });
-  if (foreign) throw new UsageError(`--${foreign} is not a${command === 'init' ? 'n' : ''} ${command} option`);
+  if (foreign) throw new UsageError(`--${foreign} is not a${/^[aeiou]/.test(command) ? 'n' : ''} ${command} option`);
+  if (command === 'export') {
+    if (folder === undefined) throw new UsageError('export needs a run folder: poltergeist export <runDir> --out <dir>');
+    if (values.out === undefined) throw new UsageError('--out is required');
+    let maxMb: number | undefined;
+    if (values['max-mb'] !== undefined) {
+      maxMb = /^\d+$/.test(values['max-mb']) ? Number(values['max-mb']) : NaN;
+      if (!(maxMb >= 1 && maxMb <= 1000)) throw new UsageError(`--max-mb must be an integer 1–1000, got ${values['max-mb']}`);
+    }
+    return { command: 'export', runDir: folder, out: values.out, ...(maxMb !== undefined ? { maxMb } : {}) };
+  }
+  if (command === 'replay') {
+    if (folder === undefined) throw new UsageError('replay needs a recording folder: poltergeist replay <dir>');
+    let speed = 1;
+    if (values.speed !== undefined) {
+      speed = /^\d+(\.\d+)?$/.test(values.speed) ? Number(values.speed) : NaN;
+      if (!(speed >= 1 && speed <= 16)) throw new UsageError(`--speed must be a number 1–16, got ${values.speed}`);
+    }
+    return { command: 'replay', dir: folder, speed };
+  }
   if (command === 'init') {
     return {
       command: 'init',

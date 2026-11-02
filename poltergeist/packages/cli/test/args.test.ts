@@ -64,4 +64,41 @@ describe('parseCliArgs init (F13)', () => {
     expect(HELP_TEXT).toContain('poltergeist init');
     for (const flag of ['--dir', '--target', '--no-hook', '--force']) expect(HELP_TEXT).toContain(flag);
   });
+
+  it('parses export with a run folder, --out and --max-mb (F15)', () => {
+    expect(parseCliArgs(['export', 'runs/r1', '--out', 'dist'])).toEqual({ command: 'export', runDir: 'runs/r1', out: 'dist' });
+    expect(parseCliArgs(['export', 'runs/r1', '--out', 'dist', '--max-mb', '20'])).toEqual({ command: 'export', runDir: 'runs/r1', out: 'dist', maxMb: 20 });
+  });
+
+  it('parses replay with a folder and --speed (F15)', () => {
+    expect(parseCliArgs(['replay', 'dist'])).toEqual({ command: 'replay', dir: 'dist', speed: 1 });
+    expect(parseCliArgs(['replay', 'dist', '--speed', '4'])).toEqual({ command: 'replay', dir: 'dist', speed: 4 });
+    expect(parseCliArgs(['replay', 'dist', '--speed', '2.5'])).toEqual({ command: 'replay', dir: 'dist', speed: 2.5 });
+  });
+
+  it.each([
+    [['export', '--out', 'd'], /export needs a run folder/],
+    [['export', 'r'], /--out is required/],
+    [['export', 'r', 'r2', '--out', 'd'], /unexpected argument: r2/],
+    [['export', 'r', '--out', 'd', '--max-mb', '0'], /--max-mb must be an integer 1–1000/],
+    [['export', 'r', '--out', 'd', '--max-mb', '1001'], /--max-mb must be an integer 1–1000/],
+    [['export', 'r', '--out', 'd', '--speed', '2'], /--speed is not an export option/],
+    [['export', 'r', '--out', 'd', '--spec', 's'], /--spec is not an export option/],
+    [['replay'], /replay needs a recording folder/],
+    [['replay', 'd', '--speed', '0.5'], /--speed must be a number 1–16/],
+    [['replay', 'd', '--speed', '17'], /--speed must be a number 1–16/],
+    [['replay', 'd', '--speed', 'fast'], /--speed must be a number 1–16/],
+    [['replay', 'd', '--out', 'x'], /--out is not a replay option/],
+    [['summon', '--spec', 's', '--out', 'x'], /--out is not a summon option/],
+    [['init', '--speed', '2'], /--speed is not an init option/],
+  ])('%j is a usage error', (argv, msg) => {
+    expect(() => parseCliArgs(argv)).toThrow(UsageError);
+    expect(() => parseCliArgs(argv)).toThrow(msg);
+  });
+
+  it('documents export and replay', () => {
+    expect(HELP_TEXT).toContain('poltergeist export <runDir> --out <dir>');
+    expect(HELP_TEXT).toContain('poltergeist replay <dir>');
+    for (const flag of ['--max-mb', '--speed']) expect(HELP_TEXT).toContain(flag);
+  });
 });

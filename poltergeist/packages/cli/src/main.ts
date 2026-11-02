@@ -4,6 +4,7 @@ import { newRunId, summon, UsageError, type PersonaId, type SummonEvent, type Su
 import { HELP_TEXT, parseCliArgs } from './args.js';
 import { exitCodeFor } from './exit.js';
 import { init } from './init/index.js';
+import { runExport } from './recording.js';
 import { SEANCE_EVENT_PORT, startEventServer, type EventServer } from './seance-server.js';
 import { renderBoard, renderHeader } from './term/board.js';
 import { colorEnabled, paint, termSafe } from './term/color.js';
@@ -61,6 +62,20 @@ export async function main(argv: readonly string[], deps: MainDeps = {}): Promis
       fail(termSafe(message(err), 2000));
       return 2;
     }
+  }
+
+  if (args.command === 'export') {
+    try {
+      return await runExport(args, { stdout, cwd, warn: (w) => stderr.write(`warning: ${termSafe(w, 300)}\n`) });
+    } catch (err) {
+      fail(termSafe(message(err), 2000));
+      return 2;
+    }
+  }
+
+  if (args.command === 'replay') {
+    fail('replay is not built yet'); // F15 Task 5
+    return 2;
   }
 
   let signal = deps.signal;
