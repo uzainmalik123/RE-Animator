@@ -73,6 +73,11 @@ describe('renderBoard', () => {
     expect(out).not.toContain(ECTO);
     expect(plain(out)).toContain('[!!] 3.2');
   });
+  it('shows verdict changes since the previous run, and nothing when there are none', () => {
+    const r = { ...result(), changes: [{ id: '3.2', from: 'haunted' as const, to: 'clean' as const, personas: [] }], previousRunId: 'r0' };
+    expect(renderBoard(r, { color: false, width: 80, cwd: '/p' })).toContain('changes since r0:\n  3.2 [!!] → [ok]\n');
+    expect(renderBoard(result(), { color: false, width: 80, cwd: '/p' })).not.toContain('changes since');
+  });
   it('strips escape sequences from criterion text', () => {
     const r = result();
     r.criteria[0] = criterion('3.1', 'evil\x1b[2J text');

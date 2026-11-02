@@ -31,5 +31,10 @@ export function renderBoard(r: SummonResult, opts: { color: boolean; width: numb
   const n = r.verdicts.counts;
   const counts = `haunted ${n.haunted} · flaky ${n.flaky} · inconclusive ${n.inconclusive + n.uncompilable} · clean ${n.clean} · n/a ${n.notApplicable}`;
   const report = `report: ${relative(opts.cwd ?? process.cwd(), r.reportPaths.markdownPath)}`;
-  return [...rows, '', termSafe(counts, width), paint(termSafe(report, width), 'dim', color), ''].join('\n');
+  // F14 (D-42): `3.2 [!!] → [ok]` for each re-run criterion whose verdict moved.
+  const glyph = (v: PairVerdict | 'notRun') => paint(VERDICT_GLYPHS[v], TONE[v], color);
+  const changes = r.changes.length
+    ? ['', termSafe(`changes since ${r.previousRunId ?? 'the last run'}:`, width), ...r.changes.map((c) => `  ${termSafe(c.id, 20)} ${glyph(c.from)} → ${glyph(c.to)}`)]
+    : [];
+  return [...rows, ...changes, '', termSafe(counts, width), paint(termSafe(report, width), 'dim', color), ''].join('\n');
 }
