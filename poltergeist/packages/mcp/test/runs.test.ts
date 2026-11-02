@@ -13,7 +13,8 @@ function fakeSummon() {
     ({
       runId, runDir: `/w/.poltergeist/runs/${runId}`, specDir: '/w/s', target: 't', criteria: [{ id: '3.1' }, { id: '3.2' }], compiled: [],
       verdicts: { reps: 1, threshold: 1, pairs: [], counts: {}, criteria: [{ criterion: '3.1', verdict: 'clean', personas: {} }, { criterion: '3.2', verdict: haunted.length ? 'haunted' : 'clean', personas: {} }] },
-      haunted, allResetsFailed: false, reportPaths: { markdownPath: '/w/s/haunting-report.md', jsonPath: '/w/s/haunting-report.json' },
+      haunted, allResetsFailed: false, reportPaths: { markdownPath: '/w/s/haunting-report.md', jsonPath: '/w/s/haunting-report.json' }, changes: [],
+      merged: [{ id: '3.1', verdict: 'clean' }, { id: '3.2', verdict: haunted.length ? 'haunted' : 'clean' }],
     }) as unknown as SummonResult;
   const emit = (e: Record<string, unknown>) => calls.at(-1)!.onEvent!({ t: 0, ...e } as SummonEvent);
   return { summon, calls, settle, result, emit };

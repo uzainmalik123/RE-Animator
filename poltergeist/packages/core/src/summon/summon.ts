@@ -7,6 +7,7 @@ import type { HauntingPlan } from '../compiler/dsl.js';
 import { createAnthropicClient } from '../compiler/llm.js';
 import { loadConfig } from '../config/load.js';
 import { isPersonaId, PERSONA_IDS, type PersonaId } from '../personas/registry.js';
+import { diffVerdicts, readReportJson } from '../report/merge.js';
 import { renderReport } from '../report/render.js';
 import { writeReport } from '../report/write.js';
 import { createEventSink } from '../runner/events.js';
@@ -130,10 +131,16 @@ export async function summon(opts: SummonOptions): Promise<SummonResult> {
   for (const c of verdicts.criteria) sink.emit({ type: 'verdict.criterion', criterion: c.criterion, verdict: c.verdict });
   await writeFile(join(runDir, 'verdicts.json'), json(verdicts));
 
-  const rendered = renderReport({ specDir, criteria, compiled: compiled.pairs, verdicts, run: { runId, runDir, target, reps: run.reps, model, startedAt } });
+  // Merge into the spec's previous report, so a subset run keeps the full picture (F14, D-42).
+  const previous = await readReportJson(specDir);
+  const rendered = renderReport({ specDir, criteria: all, compiled: compiled.pairs, verdicts, run: { runId, runDir, target, reps: run.reps, model, startedAt }, previous });
   const reportPaths = await writeReport(specDir, rendered);
+  const changes = diffVerdicts(previous, rendered.json);
 
-  const haunted = verdicts.criteria.filter((c) => c.verdict === 'haunted').map((c) => c.criterion);
+  // What the report says, so a persona-subset rerun can't hide a haunted persona it didn't run.
+  const reportVerdict = new Map(rendered.json.criteria.map((c) => [c.id, c.verdict]));
+  const merged = criteria.map((c) => ({ id: c.id, verdict: reportVerdict.get(c.id) ?? 'notRun' }));
+  const haunted = merged.filter((c) => c.verdict === 'haunted').map((c) => c.id);
   const allResetsFailed = run.resets.length > 0 && run.resets.every((r) => r === null);
   const finishedAt = Date.now();
   await writeFile(join(runDir, 'run.json'), json({ ...runJson, scoutHash: scouted.scoutHash, counts: verdicts.counts, finishedAt, durationMs: finishedAt - startedAt }));
@@ -144,5 +151,8 @@ export async function summon(opts: SummonOptions): Promise<SummonResult> {
     runId, runDir, specDir, target, criteria, compiled: compiled.pairs, verdicts, haunted, allResetsFailed,
     ...(resetError !== undefined ? { resetError } : {}),
     reportPaths,
+    changes,
+    merged,
+    ...(previous ? { previousRunId: previous.runId } : {}),
   };
 }

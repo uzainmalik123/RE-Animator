@@ -117,7 +117,7 @@ export function createServer(deps: ServerDeps): { server: McpServer; runs: RunMa
     'rehaunt',
     {
       description:
-        'Re-runs the tests for only the given criterion ids (for example after a fix) and returns counts and the ids still failing. If status is "running", call get_run_status with the runId.',
+        'Re-runs the tests for only the given criterion ids (for example after a fix) and returns counts, the ids still failing, and changes: each criterion whose verdict moved since the last run (from → to). If status is "running", call get_run_status with the runId.',
       inputSchema: { ...runShape, ids: z.array(z.string().min(1)).min(1).describe('Criterion ids to re-test, e.g. ["3.2"].'), waitMs },
     },
     (input) =>

@@ -41,7 +41,8 @@ describe('summarize', () => {
     },
     haunted: ['3.2'],
     allResetsFailed: false,
-    reportPaths: { markdownPath: '/w/.kiro/specs/s/haunting-report.md', jsonPath: '/w/.kiro/specs/s/haunting-report.json' },
+    reportPaths: { markdownPath: '/w/.kiro/specs/s/haunting-report.md', jsonPath: '/w/.kiro/specs/s/haunting-report.json' }, changes: [],
+    merged: [{ id: '3.1', verdict: 'clean' }, { id: '3.2', verdict: 'haunted' }, { id: '3.3', verdict: 'notRun' }],
   } as unknown as SummonResult;
 
   it('reports counts, haunted ids, a relative report path and a hint', () => {
@@ -54,8 +55,35 @@ describe('summarize', () => {
     expect(s.hint).toContain('3.2');
   });
 
+  it('counts the merged verdicts, so a carried haunted persona still shows (review I1)', () => {
+    const s = summarize({ ...result, verdicts: { ...result.verdicts, criteria: [{ criterion: '3.1', verdict: 'clean', personas: {} }, { criterion: '3.2', verdict: 'notApplicable', personas: {} }] } } as unknown as SummonResult, '/w');
+    expect(s.counts).toMatchObject({ haunted: 1, clean: 1, notRun: 1, notApplicable: 0 });
+  });
+
   it('flags a run where every reset failed', () => {
     const s = summarize({ ...result, haunted: [], allResetsFailed: true, resetError: 'boom' }, '/w');
     expect(s.error).toContain('boom');
+  });
+
+  it('lists criteria whose verdict changed and says which ones are fixed', () => {
+    const fixed = {
+      ...result,
+      haunted: [],
+      changes: [
+        { id: '3.2', from: 'haunted', to: 'clean', personas: [{ persona: 'doppelganger', from: 'haunted', to: 'clean' }] },
+        { id: '3.1', from: 'clean', to: 'clean', personas: [{ persona: 'wraith', from: 'flaky', to: 'clean' }] },
+      ],
+      previousRunId: 'r0',
+    } as unknown as SummonResult;
+    const s = summarize(fixed, '/w');
+    expect(s.changes).toEqual([{ id: '3.2', from: 'haunted', to: 'clean' }]);
+    expect(s.previousRunId).toBe('r0');
+    expect(s.hint).toMatch(/^Fixed: 3\.2\./);
+  });
+
+  it('has no changes key when only persona verdicts moved', () => {
+    const s = summarize({ ...result, changes: [{ id: '3.1', from: 'clean', to: 'clean', personas: [{ persona: 'wraith', from: 'flaky', to: 'clean' }] }] } as unknown as SummonResult, '/w');
+    expect(s).not.toHaveProperty('changes');
+    expect(s).not.toHaveProperty('previousRunId');
   });
 });

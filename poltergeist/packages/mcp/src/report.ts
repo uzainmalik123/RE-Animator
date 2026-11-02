@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { REPORT_FILES, ReportJsonSchema, type ReportJson } from '@poltergeist/core';
+import { readReportJson, REPORT_FILES } from '@poltergeist/core';
 import { capIds, capText } from './format.js';
 
 export class NoReportError extends Error {
@@ -8,14 +8,6 @@ export class NoReportError extends Error {
 }
 
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-async function readJson(specDir: string): Promise<ReportJson | undefined> {
-  try {
-    return ReportJsonSchema.parse(JSON.parse(await readFile(join(specDir, REPORT_FILES.json), 'utf8')));
-  } catch {
-    return undefined;
-  }
-}
 
 /** Where the section whose heading starts at `start` ends: the next line matching `next`, or the end. */
 function sectionEnd(markdown: string, start: number, next: RegExp): number {
@@ -50,7 +42,7 @@ export async function readReport(specDir: string, criterion?: string): Promise<s
     return capText(markdown.slice(start, sectionEnd(markdown, start, /^#{2,3} /m)).trimEnd() + '\n');
   }
 
-  const json = await readJson(specDir);
+  const json = await readReportJson(specDir);
   const row = json?.criteria.find((c) => c.id === criterion);
   if (!row) {
     const known = json ? capIds(json.criteria.map((c) => c.id)).join(', ') : 'none (haunting-report.json is missing)';

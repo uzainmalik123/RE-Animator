@@ -55,12 +55,14 @@
 | KI-44 | Candy Swap not yet built in Kiro: only the F10 prep kit exists (D-37) | Major | F10, KI-30/34/36/38/42, demo | Open |
 | KI-45 | F10 prep review minors: non-JSON dump gives no snippet, `db:dump` gets provider keys, unreadable spec crashes `candy:check`, no-op reset passes determinism, KI-30 note formatting | Minor | F10 | Open |
 | KI-46 | F11 Done-when (a Kiro session on Candy Swap runs summon → report → fix → rehaunt, haunted → clean) not yet run: built against a fixture (D-38) | Major | F11 sign-off | Open |
-| KI-47 | A `rehaunt` (subset) run rewrites `haunting-report.md`/`.json` with every other criterion as `notRun`, so the board loses the full picture | Minor | F14 | Open |
+| KI-47 | A `rehaunt` (subset) run rewrites `haunting-report.md`/`.json` with every other criterion as `notRun`, so the board loses the full picture | Minor | F14 | Resolved |
 | KI-48 | F11 review minors: `..foo` names rejected, a failed run isn't `isError`, missing config only fails in the background, misleading report errors (invalid JSON reads as missing; ids absent after a subset run read as unknown), unbounded `abortAll`, `capText` over its limit for tiny caps, missing server-level tests (retry after failure, absolute outside path), npm name `poltergeist-mcp` unreserved | Minor | F13, F14 | Open |
 | KI-49 | F12 Done-when on real Candy Swap (a 12-ghost run consumed live by Reanimator's R4 scene) not yet run: built against the claims fixture (D-40) | Major | F12 sign-off, R4 | Open |
 | KI-50 | F12 review minors: evidence prefers the first failing ghost even when only its partner has a frame, no `run.failed` event so an aborted run's live phase stays `running`, no test of a slow client draining and getting frames again, no subpath import test or lint rule keeping Node out of `core/src/live`, `LiveState` keeps every done ghost's JPEG, frames before `ghost.spawned` are ignored | Minor | F12, R4 | Open |
 | KI-51 | F13 Done-when in a real Kiro session not yet run: does `PostTaskExecution` fire the agent hook, and does Kiro load the `init`-written `mcp.json` and steering with no manual step | Major | F13 sign-off, R5 | Open |
 | KI-52 | F13 review minors: a symlinked `--dir` is reported as "not a directory", `--spec` is ignored with `--no-hook` and goes into the hook prompt unnormalised, the `mcp.json` write isn't atomic, the MCP SDK isn't a declared CLI devDependency, plus test gaps | Minor | F13, R5 | Open |
+| KI-53 | F14 Done-when on real Candy Swap (the video's exorcism loop: one `rehaunt` call in a Kiro session, haunted → clean in < 30 s) not yet run: built against the claims fixture (D-42) | Major | F14 sign-off, demo | Open |
+| KI-54 | F14 review minors: carried flaky/inconclusive pairs unmarked in the markdown, an all-resets-failed rerun overwrites good verdicts in the merged report, lost update when two processes rehaunt one spec at once, `target` compared as an exact string, `previousRunId` set even when the baseline was unusable, carried artifacts point at old run folders | Minor | F14, R5 | Open |
 
 ---
 
@@ -501,9 +503,10 @@
 - **Context:** F11 was built in Claude Code against the claims fixture with a fake LLM (D-38). The PRD Done-when needs a real Kiro session on Candy Swap, which needs F10 (KI-44).
 - **Next action:** follow "Manual F11 check in Kiro" in `docs/kiro-notes.md`. Record whether any tool call timed out (KI-12), whether all five tools show up, and how many polls a full run needs.
 
-### KI-47: `rehaunt` rewrites the full report as a subset · Minor · Open
+### KI-47: `rehaunt` rewrites the full report as a subset · Minor · Resolved
 - **Problem:** `rehaunt` calls `summon({ only })`, and F08's writer replaces `haunting-report.md`/`.json` whole, so every criterion outside `ids` shows as `notRun`. The CLI's `--only` has the same behaviour.
 - **Next action:** F14, which owns the diff against the previous `verdicts.json`, should merge subset verdicts into the previous full set before rendering.
+- **Resolved (2026-11-02, F14, D-42):** every run now merges into the spec's previous `haunting-report.json`. Criteria and personas not re-run are carried with `carriedFrom`, while the target and criterion text are unchanged. `summon` passes all spec criteria to the report.
 
 ### KI-48: F11 review minors · Minor · Open
 - **Context:** the final review of F11 (2026-11-01). Its Important findings were fixed before merge (D-38 review fixes).
@@ -519,6 +522,7 @@
 - **Tests:** no server-level test of a new `summon_ghosts` after a failed run, and none of an absolute outside path (`/etc`). The code handles both.
 - **npm name:** `poltergeist-mcp` is unclaimed on npm. Reserve it, or the scoped name, before F13 or F18 point anyone at npx.
 - **Next action:** fold into F13 (the installer touches the same paths) or F14 (`rehaunt` and the report).
+- **Update (2026-11-02, F14):** "ids absent after a subset run read as unknown" no longer happens, because the report keeps every spec criterion (D-42). The MCP server now reads the JSON through core's `readReportJson`; the other items are still open.
 
 ### KI-49: F12 Live Feed not yet checked on Candy Swap · Major · Open
 - **Context:** F12 was re-scoped to a headless Live Feed (D-40) and built against the claims fixture, because Candy Swap isn't built yet (KI-44).
@@ -549,3 +553,16 @@
 - **Dependency:** `init-done-when.test.ts` imports `@modelcontextprotocol/sdk` through workspace hoisting. Add it to `packages/cli` as a pinned devDependency.
 - **Tests:** none covers `main()` with the default `--dir .` via the `cwd` dep, a non-InitError fs error (a read-only dir → exit 2 with one line), or a path with spaces written to disk end to end.
 
+### KI-53: F14 Done-when not yet run on Candy Swap · Major · Open
+- **Context:** F14 was built in Claude Code against the claims fixture with a fake LLM (D-42). The fixture loop (summon → `fix()` → one `rehaunt` → `3.2 haunted → clean`) runs in a few seconds. The PRD Done-when is the video's exorcism loop on Candy Swap in Kiro, which needs F10 (KI-44).
+- **Next action:** after KI-46's Kiro session finds a haunted criterion and Kiro fixes it, time one `rehaunt` call with the criterion's ids, the default personas and reps 3. It must finish in < 30 s and show the change. If it's slower, try narrowing `personas` to the haunted ones and `reps` before touching the engine.
+
+### KI-54: F14 review minors · Minor · Open
+- **Context:** the final review of F14 (2026-11-02). Its two Important findings were fixed before merge (D-42 review fixes).
+- **Unmarked carried pairs:** only haunted sections mark a carried pair `_(earlier run …)_`. Flaky and inconclusive lines don't, and neither does a re-run criterion's board line whose verdict comes only from carried pairs. Add `earlier(p)` there.
+- **All resets failed:** a `rehaunt` with a broken `resetCommand` replaces the criterion's haunted evidence with inconclusive pairs, and that becomes the next baseline. Consider not merging re-run rows when `allResetsFailed`. (Before F14 the whole report was replaced, so this isn't a regression.)
+- **Lost update:** a CLI run and an MCP run on the same spec finishing at the same moment both read the same previous report, so the later write drops the other's re-run verdicts. MCP alone is serialised.
+- **Target string:** `usableRow` compares `target` exactly, so `http://localhost:4000` and `http://localhost:4000/` lose every carry and diff silently. Compare normalised origins.
+- **`previousRunId`** is returned whenever a previous report was read, even an unusable one (other target), which Reanimator could misread as "diffed against".
+- **Old artifacts:** carried pairs' `artifacts` point into older `.poltergeist/runs/<id>/` folders. Nothing prunes them today; a future cleanup must keep the folders a report still cites.
+- **Tests:** no test renders many carried haunted sections against the 300-line cap.

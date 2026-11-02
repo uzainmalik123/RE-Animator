@@ -167,10 +167,12 @@ The runner (F06) emits the `rep.*`, `reset.*`, `ghost.*`, `guard.*` and `assert.
     events.ndjson
     frames/<ghostId>/<seq>.jpg
     artifacts/<criterion>__<persona>__rep<k>/{screenshot-<actor>.png,trace-<actor>.zip}   failed reps only; no trace for an actor that started from a session or ran a login step (secrets)
-    verdicts.json       computeVerdicts() output (D-34); F14 diffs it by criterion + persona
+    verdicts.json       computeVerdicts() output (D-34)
 ```
 
 After every run, F09 calls `renderReport` and `writeReport` (`packages/core/src/report/`, D-35). Those write `haunting-report.md` and `haunting-report.json` (a versioned zod schema, `ReportJsonSchema`) into the spec folder and nothing else. The markdown is capped at 300 lines; the JSON keeps everything.
+
+F14 (D-42): before writing, `summon` reads the spec's previous `haunting-report.json` and merges it in. Criteria and personas not run this time are carried with `carriedFrom` (same target and criterion text only), and re-run criteria roll up over the merged pairs. `diffVerdicts` then lists each re-run criterion whose verdict moved (`SummonResult.changes`).
 
 ## 10. MCP tools
 
@@ -180,7 +182,7 @@ After every run, F09 calls `renderReport` and `writeReport` (`packages/core/src/
 | `summon_ghosts` | `{specDir, configPath?, personas?, reps?, recompile?, waitMs?}` | `{runId, status, counts, haunted, flaky, reportPath, hint}`, or `{runId, status: 'running', progress}` |
 | `get_run_status` | `{runId, waitMs?}` | Same as `summon_ghosts` |
 | `get_haunting_report` | `{specDir, criterion?}` | Header and board, or one criterion's section (JSON fallback) |
-| `rehaunt` | `{specDir, ids, configPath?, personas?, reps?, waitMs?}` | Same as `summon_ghosts`. F14 adds `changes: [{id, from, to}]` |
+| `rehaunt` | `{specDir, ids, configPath?, personas?, reps?, waitMs?}` | Same as `summon_ghosts`, plus `changes: [{id, from, to}]` and `previousRunId` when a verdict moved (F14, D-42; run results from `summon_ghosts` carry them too) |
 
 `packages/mcp` (`poltergeist-mcp --root <dir>`, stdio, D-38):
 - **Long-poll:** run tools wait up to `waitMs` (default 50 s, max 100 s), so no call outlives Kiro's request timeout (KI-12). `get_run_status` keeps waiting.

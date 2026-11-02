@@ -169,3 +169,30 @@ describe('F12 Done-when (fixture)', () => {
     expect(existsSync(join(runDir, evidence!.frame!))).toBe(true);
   }, 180_000);
 });
+
+// PRD F14 Done-when, fixture-first (D-42): the exorcism loop from the CLI. The real one on Candy Swap is KI-53.
+describe('F14 Done-when (fixture)', () => {
+  it('re-runs only 3.2 after the fix and shows it going from haunted to clean in under 30 s', async () => {
+    const own = await makeClaimsProject();
+    try {
+      const out = { stdout: '', stderr: '' };
+      const deps = (): MainDeps => ({
+        stdout: { write: (s) => void (out.stdout += s), isTTY: false, columns: 100 },
+        stderr: { write: (s) => void (out.stderr += s) },
+        env: { ...own.env, NO_COLOR: '1' },
+        summonOverrides: { llm: own.llm().client, runOptions: { frameFps: 0 } },
+      });
+      const args = ['summon', '--spec', own.specDir, '--config', own.configPath];
+      expect(await main([...args, '--personas', 'wraith,doppelganger'], deps())).toBe(1);
+      own.fixture.fix();
+      out.stdout = '';
+      const started = Date.now();
+      const code = await main([...args, '--only', '3.2', '--personas', 'doppelganger', '--reps', '1'], deps());
+      expect(Date.now() - started).toBeLessThan(30_000);
+      expect(code, out.stderr).toBe(0);
+      expect(out.stdout).toMatch(/changes since \S+:\n {2}3\.2 \[!!\] → \[ok\]/);
+    } finally {
+      await own.close();
+    }
+  }, 120_000);
+});
