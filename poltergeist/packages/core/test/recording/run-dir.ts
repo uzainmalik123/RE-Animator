@@ -10,7 +10,7 @@ export const B = '3.1__wraith__r1__a';
 /** A finished run: 3.2's doppelganger (ghost A) fails an assertion, 3.1's wraith (ghost B) passes. */
 export const runEvents: SummonEvent[] = [
   {
-    type: 'run.started', t: 1000, runId: '20261102-120000-abcd', runDir: '/run', specDir: '/spec', target: 'http://127.0.0.1:4000',
+    type: 'run.started', t: 1000, runId: '20261102-120000-abcd', runDir: '/home/someone/project/.poltergeist/runs/20261102-120000-abcd', specDir: '/spec', target: 'http://127.0.0.1:4000',
     criteria: ['3.1', '3.2'], personas: ['wraith', 'doppelganger'], reps: 1,
   },
   { type: 'rep.started', t: 1010, rep: 1 },

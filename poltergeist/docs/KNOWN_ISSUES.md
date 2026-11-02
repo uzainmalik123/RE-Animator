@@ -64,6 +64,7 @@
 | KI-53 | F14 Done-when on real Candy Swap (the video's exorcism loop: one `rehaunt` call in a Kiro session, haunted → clean in < 30 s) not yet run: built against the claims fixture (D-42) | Major | F14 sign-off, demo | Open |
 | KI-54 | F14 review minors: carried flaky/inconclusive pairs unmarked in the markdown, an all-resets-failed rerun overwrites good verdicts in the merged report, lost update when two processes rehaunt one spec at once, `target` compared as an exact string, `previousRunId` set even when the baseline was unusable, carried artifacts point at old run folders | Minor | F14, R5 | Open |
 | KI-55 | F15 Done-when on the hero Candy Swap run not yet checked: export it, host the bundle from Reanimator's R11 and replay it in a fresh browser (D-43) | Major | F15 sign-off, R11 | Open |
+| KI-56 | F15 review minors: two Review Focus tests weaker than claimed (aborted run not via `main`, server close on abort not asserted), a heavily haunted run's protected frames alone can exceed the cap, re-exporting a pre-F15 run hides estimated frame times, O(k²) per-ghost array building, real idle gaps kept at 1×, symlinked `--out` not resolved, `stateAt` refolds from the start, CLI tests import a core test helper | Minor | F15, R11 | Open |
 
 ---
 
@@ -571,4 +572,14 @@
 ### KI-55: F15 Done-when not yet run on the hero Candy Swap run · Major · Open
 - **Context:** F15 was built in Claude Code against the claims fixture (D-43). The PRD Done-when is "the public URL replays the hero Candy Swap run in a fresh browser", which needs F10 (KI-44), a frame-rich 12-ghost run (KI-49) and Reanimator's R11 to host and play the bundle.
 - **Next action:** after the hero run, `poltergeist export .poltergeist/runs/<id> --out <R11 public folder>`. Check the size line is under 50 MB without much thinning; if it's thinned hard, lower `frameFps` for the hero run rather than raising the cap. R11 plays it with `buildTimeline`/`stateAt` (static) or by pointing R4's scene at `poltergeist replay` (local).
+
+### KI-56: F15 review minors · Minor · Open
+- **Context:** the final review of F15 (2026-11-02). Its one Important finding (absolute paths in a public bundle) was fixed before merge (D-43 review fixes).
+- **Tests:** the "aborted run" replay test strips `run.finished` in memory rather than loading such a folder through `main` (exit 0 unasserted); the abort → 130 test doesn't prove the server closed (reconnect or rebind the port).
+- **Cap on a haunted run:** every frame of a failed ghost is protected, so a run where Doppelgänger fails every rep can exceed 50 MB on protected frames alone and export refuses. Fallback: thin failed ghosts too, keeping frames near the failing assertion. Until then, lower `frameFps` for the hero run (KI-55).
+- **Estimated times laundered:** exporting a pre-F15 run writes estimated `t`s into `frames.ndjson`, so the bundle loads as `estimatedFrames: false`. Add `estimatedFrames?: true` to `recording.json` and warn in `export`.
+- **Performance:** `[...arr, f]` per frame in `export.ts`/`timeline.ts` is O(k²) per ghost (use `push`); `stateAt` refolds from 0 per scrub (add checkpoints if R11 scrubs a long run).
+- **Idle gaps:** replay keeps the compile phase's real gap (minutes at 1×). Consider capping each gap (for example 2 s ÷ speed) for the demo.
+- **Symlinks:** `checkOutDir` compares resolved paths without `realpath`, so a symlinked `--out` into the run folder passes (it only adds files).
+- **Test layout:** CLI tests import `core/test/recording/run-dir.ts` across packages.
 

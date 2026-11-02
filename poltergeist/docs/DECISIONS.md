@@ -638,6 +638,9 @@
   - **Scrubbing** is the renderer's: `@poltergeist/core/live` adds the pure `buildTimeline(events, frames)` (ms since the first event; events before frames on ties; orphan frames dropped), `timelineDuration`, `stateAt(timeline, ms, frameData?)` and `estimateFrameTimes`.
   - Requirement 11.4's subject becomes `Recording`.
   - **Done-when (fixture):** on the claims fixture with frames on, summon → close the app → `export` (bundle < 50 MB, `recorded: true`, 3.2 haunted) → `replay --speed 16` → a client gets the recorded hello first and folds the same board as `foldLive(events.ndjson)`, with 3.2 `haunted` and an evidence frame that exists in the bundle (`packages/cli/test/recording-done-when.test.ts`).
+- **Review fixes (2026-11-02):**
+  - **No local paths in a bundle.** Export rewrites `run.started` with `runDir: '.'` (evidence frames resolve against the bundle) and `specDir` as its folder name, so a published recording doesn't reveal the user's home directory or layout.
+  - Deferred minors are in KI-56.
 - **Consequences:**
   - The public URL replaying the hero Candy Swap run is Reanimator's R11, tracked as KI-55.
   - F21 (hosted live sandbox) still depends on F15 in name only; it is out of scope under D-39.

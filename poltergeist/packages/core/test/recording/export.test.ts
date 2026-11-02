@@ -27,7 +27,7 @@ describe('exportRecording', () => {
     expect(bytes).toBeGreaterThanOrEqual(12 * FRAME_BYTES);
     expect((await readdir(outDir)).sort()).toEqual(['events.ndjson', 'frames', 'frames.ndjson', 'recording.json', 'verdicts.json']);
     const back = await loadRecording(outDir);
-    expect(back.events).toEqual(runEvents);
+    expect(back.events.slice(1)).toEqual(runEvents.slice(1));
     expect(back.frames).toHaveLength(12);
     expect(back.estimatedFrames).toBe(false);
   });
@@ -61,6 +61,17 @@ describe('exportRecording', () => {
     expect(await readdir(outDir)).toEqual(['keep.txt']);
     await expect(exportRecording({ runDir: dir, outDir: join(dir, 'x') })).rejects.toThrow(/inside the run folder/);
     await expect(exportRecording({ runDir: dir, outDir: dir })).rejects.toThrow(RecordingError);
+  });
+
+  it('strips local paths from the public bundle: runDir becomes the bundle itself, specDir its folder name (review)', async () => {
+    const { dir } = await writeRunDir(1);
+    const outDir = await freshOut();
+    await exportRecording({ runDir: dir, outDir });
+    const text = await readFile(join(outDir, 'events.ndjson'), 'utf8');
+    expect(text).not.toContain(dir);
+    expect(text).not.toContain('/home/someone');
+    expect(text).not.toContain('"/spec"');
+    expect((await loadRecording(outDir)).events[0]).toMatchObject({ type: 'run.started', runDir: '.', specDir: 'spec' });
   });
 
   it('accepts an existing empty out dir', async () => {
