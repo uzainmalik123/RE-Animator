@@ -41,6 +41,13 @@ class StepFailure extends Error {}
 
 const now = () => performance.timeOrigin + performance.now();
 const firstLine = (s: string) => s.split('\n')[0]?.trim() ?? '';
+const originOf = (url: string) => {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return undefined;
+  }
+};
 
 const ACTIONS: ReadonlySet<string> = new Set(['goto', 'click', 'dblclick', 'fill', 'press', 'back', 'reload', 'login', 'logout']);
 
@@ -111,8 +118,12 @@ export function startActor(steps: readonly Step[], env: ActorEnv): { run: ActorR
       const r = await login(page, account, { origin: env.origin, deadline: Date.now() + stepTimeoutMs, redactor: env.loaded.redactor });
       if (!r.ok) throw new StepFailure(r.reason);
     } else if ('logout' in step) {
-      await context.clearCookies();
-      await page.evaluate('try { localStorage.clear(); sessionStorage.clear(); } catch {}').catch(() => undefined);
+      // Only the target's own session (F16, D-44): cookies for its hostname, storage only on its origin.
+      const target = new URL(env.origin);
+      await context.clearCookies({ domain: target.hostname });
+      if (originOf(page.url()) === target.origin) {
+        await page.evaluate('try { localStorage.clear(); sessionStorage.clear(); } catch {}').catch(() => undefined);
+      }
     }
     return undefined;
   };
