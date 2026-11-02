@@ -158,4 +158,18 @@ describe('summon', () => {
       await own.close();
     }
   }, 120_000);
+
+  it('a persona-subset rerun cannot hide a haunted persona it did not run (review I1)', async () => {
+    const own = await makeClaimsProject();
+    try {
+      const base = { specDir: own.specDir, configPath: own.configPath, env: own.env, runOptions: { frameFps: 0 } };
+      await summon({ ...base, llm: own.llm().client, personas: ['wraith', 'doppelganger'] });
+      const r = await summon({ ...base, llm: own.llm().client, only: ['3.2'], personas: ['wraith'], reps: 1 });
+      expect(r.verdicts.criteria).toEqual([expect.objectContaining({ criterion: '3.2', verdict: 'notApplicable' })]);
+      expect(r.merged).toEqual([{ id: '3.2', verdict: 'haunted' }]);
+      expect(r.haunted).toEqual(['3.2']);
+    } finally {
+      await own.close();
+    }
+  }, 120_000);
 });

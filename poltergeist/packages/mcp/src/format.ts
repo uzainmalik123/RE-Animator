@@ -37,7 +37,7 @@ export type RunSummary = {
 /** The agent-sized summary of a finished run: counts and ids, never artifacts (Req 10.2). */
 export function summarize(result: SummonResult, cwdForPaths: string): RunSummary {
   const counts: Record<CriterionVerdict | 'notRun', number> = { haunted: 0, flaky: 0, inconclusive: 0, clean: 0, notApplicable: 0, notRun: 0 };
-  const verdictOf = new Map(result.verdicts.criteria.map((c) => [c.criterion, c.verdict]));
+  const verdictOf = new Map(result.merged.map((c) => [c.id, c.verdict]));
   for (const c of result.criteria) counts[verdictOf.get(c.id) ?? 'notRun']++;
   const flaky = result.criteria.filter((c) => verdictOf.get(c.id) === 'flaky').map((c) => c.id);
   const summary: RunSummary = {

@@ -612,6 +612,10 @@
   - **Surfaces:** the CLI board prints `changes since <runId>:` and `  3.2 [!!] → [ok]` lines. MCP run results (`summon_ghosts`, `rehaunt`, `get_run_status`) add `changes: [{id, from, to}]` (criterion-level, at most 20) and `previousRunId` when something moved, and the hint says `Fixed: <ids>` when nothing is still haunted. Exit codes are unchanged.
   - **Plan cache:** unchanged. `cacheKey` already includes the criterion hash, which meets "cached unless the criterion text changed".
   - **Done-when (fixture):** on the claims fixture, summon (3.2 haunted), then a test-only `fix()` making the claim atomic, then one `rehaunt ["3.2"]` gives `3.2 haunted → clean` in under 30 s with 3.1 still `[ok]` on the board, over MCP and the CLI. The real exorcism on Candy Swap in Kiro is KI-53.
+- **Review fixes (2026-11-02):**
+  - **Results follow the merged verdict.** `SummonResult.merged` holds the selected criteria's verdicts as the report states them. `haunted`, the CLI board rows, the MCP counts and the exit code all use it, so `rehaunt 3.2` with only one persona still says `haunted` (exit 1) while another persona's carried pair is haunted. `verdicts` stays this run's own.
+  - **The CLI change block lists only criterion-level moves,** like MCP. Persona-only movement stays in the JSON.
+  - Deferred minors are in KI-54.
 - **Consequences:**
   - Reanimator's heal loop can read `changes` (or diff two reports itself) to animate a wound closing.
   - `verdicts.json` is still written per run, but nothing reads it back.

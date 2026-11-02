@@ -51,6 +51,7 @@ function result(): SummonResult {
   return {
     runId: 'r1', runDir: '/p/.poltergeist/runs/r1', specDir: '/p/spec', target: 'http://127.0.0.1:4000', criteria, compiled: [], verdicts,
     haunted: ['3.2'], allResetsFailed: false, reportPaths: { markdownPath: '/p/spec/haunting-report.md', jsonPath: '/p/spec/haunting-report.json' }, changes: [],
+    merged: [{ id: '3.1', verdict: 'clean' }, { id: '3.2', verdict: 'haunted' }, { id: '4.1', verdict: 'notRun' }],
   };
 }
 
@@ -77,6 +78,15 @@ describe('renderBoard', () => {
     const r = { ...result(), changes: [{ id: '3.2', from: 'haunted' as const, to: 'clean' as const, personas: [] }], previousRunId: 'r0' };
     expect(renderBoard(r, { color: false, width: 80, cwd: '/p' })).toContain('changes since r0:\n  3.2 [!!] → [ok]\n');
     expect(renderBoard(result(), { color: false, width: 80, cwd: '/p' })).not.toContain('changes since');
+  });
+  it('shows the merged verdict, not only what this run saw (review I1)', () => {
+    const r = result();
+    r.verdicts.criteria[1] = { criterion: '3.2', verdict: 'notApplicable', personas: {} };
+    expect(renderBoard(r, { color: false, width: 80, cwd: '/p' })).toMatch(/^\[!!\] 3\.2/m);
+  });
+  it('leaves out changes where only a persona moved (review I2)', () => {
+    const r = { ...result(), changes: [{ id: '3.2', from: 'haunted' as const, to: 'haunted' as const, personas: [{ persona: 'doppelganger' as const, from: 'haunted' as const, to: 'clean' as const }] }], previousRunId: 'r0' };
+    expect(renderBoard(r, { color: false, width: 80, cwd: '/p' })).not.toContain('changes since');
   });
   it('strips escape sequences from criterion text', () => {
     const r = result();

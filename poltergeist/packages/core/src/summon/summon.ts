@@ -137,7 +137,10 @@ export async function summon(opts: SummonOptions): Promise<SummonResult> {
   const reportPaths = await writeReport(specDir, rendered);
   const changes = diffVerdicts(previous, rendered.json);
 
-  const haunted = verdicts.criteria.filter((c) => c.verdict === 'haunted').map((c) => c.criterion);
+  // What the report says, so a persona-subset rerun can't hide a haunted persona it didn't run.
+  const reportVerdict = new Map(rendered.json.criteria.map((c) => [c.id, c.verdict]));
+  const merged = criteria.map((c) => ({ id: c.id, verdict: reportVerdict.get(c.id) ?? 'notRun' }));
+  const haunted = merged.filter((c) => c.verdict === 'haunted').map((c) => c.id);
   const allResetsFailed = run.resets.length > 0 && run.resets.every((r) => r === null);
   const finishedAt = Date.now();
   await writeFile(join(runDir, 'run.json'), json({ ...runJson, scoutHash: scouted.scoutHash, counts: verdicts.counts, finishedAt, durationMs: finishedAt - startedAt }));
@@ -149,6 +152,7 @@ export async function summon(opts: SummonOptions): Promise<SummonResult> {
     ...(resetError !== undefined ? { resetError } : {}),
     reportPaths,
     changes,
+    merged,
     ...(previous ? { previousRunId: previous.runId } : {}),
   };
 }

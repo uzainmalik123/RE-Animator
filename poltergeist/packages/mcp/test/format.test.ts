@@ -42,6 +42,7 @@ describe('summarize', () => {
     haunted: ['3.2'],
     allResetsFailed: false,
     reportPaths: { markdownPath: '/w/.kiro/specs/s/haunting-report.md', jsonPath: '/w/.kiro/specs/s/haunting-report.json' }, changes: [],
+    merged: [{ id: '3.1', verdict: 'clean' }, { id: '3.2', verdict: 'haunted' }, { id: '3.3', verdict: 'notRun' }],
   } as unknown as SummonResult;
 
   it('reports counts, haunted ids, a relative report path and a hint', () => {
@@ -52,6 +53,11 @@ describe('summarize', () => {
     expect(s.counts).toMatchObject({ haunted: 1, clean: 1, notRun: 1, flaky: 0 });
     expect(s.reportPath).toBe('.kiro/specs/s/haunting-report.md');
     expect(s.hint).toContain('3.2');
+  });
+
+  it('counts the merged verdicts, so a carried haunted persona still shows (review I1)', () => {
+    const s = summarize({ ...result, verdicts: { ...result.verdicts, criteria: [{ criterion: '3.1', verdict: 'clean', personas: {} }, { criterion: '3.2', verdict: 'notApplicable', personas: {} }] } } as unknown as SummonResult, '/w');
+    expect(s.counts).toMatchObject({ haunted: 1, clean: 1, notRun: 1, notApplicable: 0 });
   });
 
   it('flags a run where every reset failed', () => {

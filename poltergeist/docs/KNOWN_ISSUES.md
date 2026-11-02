@@ -62,6 +62,7 @@
 | KI-51 | F13 Done-when in a real Kiro session not yet run: does `PostTaskExecution` fire the agent hook, and does Kiro load the `init`-written `mcp.json` and steering with no manual step | Major | F13 sign-off, R5 | Open |
 | KI-52 | F13 review minors: a symlinked `--dir` is reported as "not a directory", `--spec` is ignored with `--no-hook` and goes into the hook prompt unnormalised, the `mcp.json` write isn't atomic, the MCP SDK isn't a declared CLI devDependency, plus test gaps | Minor | F13, R5 | Open |
 | KI-53 | F14 Done-when on real Candy Swap (the video's exorcism loop: one `rehaunt` call in a Kiro session, haunted → clean in < 30 s) not yet run: built against the claims fixture (D-42) | Major | F14 sign-off, demo | Open |
+| KI-54 | F14 review minors: carried flaky/inconclusive pairs unmarked in the markdown, an all-resets-failed rerun overwrites good verdicts in the merged report, lost update when two processes rehaunt one spec at once, `target` compared as an exact string, `previousRunId` set even when the baseline was unusable, carried artifacts point at old run folders | Minor | F14, R5 | Open |
 
 ---
 
@@ -555,3 +556,13 @@
 ### KI-53: F14 Done-when not yet run on Candy Swap · Major · Open
 - **Context:** F14 was built in Claude Code against the claims fixture with a fake LLM (D-42). The fixture loop (summon → `fix()` → one `rehaunt` → `3.2 haunted → clean`) runs in a few seconds. The PRD Done-when is the video's exorcism loop on Candy Swap in Kiro, which needs F10 (KI-44).
 - **Next action:** after KI-46's Kiro session finds a haunted criterion and Kiro fixes it, time one `rehaunt` call with the criterion's ids, the default personas and reps 3. It must finish in < 30 s and show the change. If it's slower, try narrowing `personas` to the haunted ones and `reps` before touching the engine.
+
+### KI-54: F14 review minors · Minor · Open
+- **Context:** the final review of F14 (2026-11-02). Its two Important findings were fixed before merge (D-42 review fixes).
+- **Unmarked carried pairs:** only haunted sections mark a carried pair `_(earlier run …)_`. Flaky and inconclusive lines don't, and neither does a re-run criterion's board line whose verdict comes only from carried pairs. Add `earlier(p)` there.
+- **All resets failed:** a `rehaunt` with a broken `resetCommand` replaces the criterion's haunted evidence with inconclusive pairs, and that becomes the next baseline. Consider not merging re-run rows when `allResetsFailed`. (Before F14 the whole report was replaced, so this isn't a regression.)
+- **Lost update:** a CLI run and an MCP run on the same spec finishing at the same moment both read the same previous report, so the later write drops the other's re-run verdicts. MCP alone is serialised.
+- **Target string:** `usableRow` compares `target` exactly, so `http://localhost:4000` and `http://localhost:4000/` lose every carry and diff silently. Compare normalised origins.
+- **`previousRunId`** is returned whenever a previous report was read, even an unusable one (other target), which Reanimator could misread as "diffed against".
+- **Old artifacts:** carried pairs' `artifacts` point into older `.poltergeist/runs/<id>/` folders. Nothing prunes them today; a future cleanup must keep the folders a report still cites.
+- **Tests:** no test renders many carried haunted sections against the 300-line cap.
