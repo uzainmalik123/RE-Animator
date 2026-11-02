@@ -44,6 +44,13 @@ describe('createEventSink', () => {
     expect(await readdir(join(outDir, 'frames', 'g1'))).toEqual(['00000.jpg', '00001.jpg']);
     expect(await readFile(join(outDir, 'frames', 'g2', '00000.jpg'))).toEqual(jpeg);
     expect((await lines(outDir)).map((e) => e.type)).toEqual(['rep.started']);
+    const marks = (await readFile(join(outDir, 'frames.ndjson'), 'utf8')).trim().split('\n').map((l) => JSON.parse(l) as unknown);
+    const ts = got.flatMap((e) => (e.type === 'ghost.frame' ? [e.t] : []));
+    expect(marks).toEqual([
+      { ghostId: 'g1', seq: 0, t: ts[0] },
+      { ghostId: 'g1', seq: 1, t: ts[1] },
+      { ghostId: 'g2', seq: 0, t: ts[2] },
+    ]);
   });
 
   it('redacts secrets in onEvent and on disk', async () => {

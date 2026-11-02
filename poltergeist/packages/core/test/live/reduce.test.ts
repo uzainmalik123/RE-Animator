@@ -49,6 +49,13 @@ describe('reduceLive', () => {
   it('records the protocol from live.hello', () => {
     const s = reduceLive(initialLiveState(), { type: 'live.hello', protocol: LIVE_PROTOCOL, runId: 'r1', t: 0 });
     expect(s).toMatchObject({ protocol: 1, runId: 'r1' });
+    expect(s.recorded).toBeUndefined();
+  });
+
+  it('marks a recording from a recorded live.hello, and keeps it across run.started (F15)', () => {
+    const s = foldLive([{ type: 'live.hello', protocol: 1, runId: 'r1', t: 0, recorded: true, speed: 4 }, started]);
+    expect(s.recorded).toBe(true);
+    expect(s.phase).toBe('scouting');
   });
 
   it('moves through compiling and running phases', () => {

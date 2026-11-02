@@ -19,11 +19,12 @@ function withLine(lines: LiveLine[], id: string, fn: (l: LiveLine) => LiveLine):
 export function reduceLive(s: LiveState, m: LiveMessage): LiveState {
   switch (m.type) {
     case 'live.hello':
-      return { ...s, protocol: m.protocol, runId: m.runId };
+      return { ...s, protocol: m.protocol, runId: m.runId, ...(m.recorded ? { recorded: true } : {}) };
     case 'run.started':
-      // A new run starts clean (a heal-loop rerun folded into the old state must not keep its ghosts).
+      // A new run starts clean (a heal-loop rerun folded into the old state must not keep its ghosts); the stream's
+      // protocol and recording label survive.
       return {
-        ...initialLiveState(), protocol: s.protocol, phase: 'scouting', runId: m.runId, runDir: m.runDir, target: m.target, reps: m.reps,
+        ...initialLiveState(), protocol: s.protocol, ...(s.recorded ? { recorded: true } : {}), phase: 'scouting', runId: m.runId, runDir: m.runDir, target: m.target, reps: m.reps,
         lines: m.criteria.map((id) => ({ id, status: 'waiting', failures: [] })),
       };
     case 'plan.compiled':

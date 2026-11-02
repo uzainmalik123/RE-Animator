@@ -9,7 +9,16 @@ import type { CriterionVerdict, PairVerdict } from '../verdicts/types.js';
 export const LIVE_PROTOCOL = 1;
 
 /** The event server's first message to every client. */
-export type LiveHello = { type: 'live.hello'; protocol: number; runId: string; t: number };
+export type LiveHello = {
+  type: 'live.hello';
+  protocol: number;
+  runId: string;
+  t: number;
+  /** Set by `poltergeist replay`: this stream is a recording, not a live run (Req 11.4, F15). */
+  recorded?: boolean;
+  /** Replay speed multiplier, with `recorded`. */
+  speed?: number;
+};
 
 export type LiveMessage = SummonEvent | LiveHello;
 
@@ -39,6 +48,8 @@ export type LiveGhost = {
 
 export type LiveState = {
   protocol?: number;
+  /** A replayed recording (Req 11.4): the renderer must label it as one. */
+  recorded?: boolean;
   runId?: string;
   runDir?: string;
   target?: string;
