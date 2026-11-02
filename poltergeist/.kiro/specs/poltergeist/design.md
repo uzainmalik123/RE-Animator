@@ -140,7 +140,7 @@ Every browser Poltergeist launches goes through one path:
 | **Banshee** (chaotic input) | Naughty strings, emoji, RTL, 10k chars, whitespace, empty | Validation gaps, 500s | ectoplasm |
 | **Doppelgänger** (twin) | Same account in two contexts, racing via barrier + held requests | Double-claims, lost updates | ectoplasm (two sprites) |
 | **Lich** (ancient device) | Fixed `small-slow` device (360×640, mobile, touch, 4× CPU) on every actor, plus a `throttle` step (`fast-3g`/`slow-3g`) | Controls hidden on small screens (`usable` failure), slow-network double submits | ectoplasm |
-| **Revenant** (returning) | Two tabs, one session: tab b signs out (app control, or `logout`, target origin only), tab a carries on from its stale page | Actions on a dead session, private data after sign-out, crashes on stale state | ectoplasm (two sprites) |
+| **Revenant** (returning) | Two tabs of one context that logs in for itself (never Scout's shared session): tab b signs out (app control, or `logout`, target origin only), tab a carries on from its stale page | Actions on a dead session, private data after sign-out, crashes on stale state | ectoplasm (two sprites) |
 | **Changeling** (keyboard-only) | Tab, Enter and Space only | Unreachable controls | ectoplasm |
 
 Device presets live in `core/personas/devices.ts` and are applied by the runner through `newGuardedContext` options plus CDP `Emulation.setCPUThrottlingRate`; the LLM never picks one. When a device persona's action step times out, the runner probes the target: present but not visible → the rep is `completed` with one failed assertion `{type: 'usable', index: assert.length, failure: 'app'}`; any other timeout stays `timeout` (D-44, Req 6.9, 7.5).
