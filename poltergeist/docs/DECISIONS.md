@@ -47,6 +47,7 @@
 | D-38 | F11 MCP server rulings (extends D-36, D-01): five snake_case tools, long-poll runs (`waitMs` ≤ 100 s, `get_run_status`), one run per process, 6 000-char results, root-confined paths, `rehaunt` without diff until F14, SDK 1.32.2, fixture Done-when (KI-46) | Accepted |
 | D-39 | Poltergeist becomes the headless red-team **engine inside Reanimator**; the entry is Reanimator/Frankenstein; standalone UI (F12 Séance) and costume (F26) are deprioritised | Accepted |
 | D-40 | F12 re-scoped to a headless **Live Feed** for Reanimator (extends D-39, D-36): pure `reduceLive`/`foldLive` → `LiveState` in `@poltergeist/core/live`, `live.hello` protocol 1, late joiners get the backlog with latest frames in place, frame-only backpressure at 1 MiB, `run.started.runDir`; no React Séance | Accepted |
+| D-41 | F13 `poltergeist init` (extends D-38, D-01): writes `poltergeist.config.json` and merges the MCP entry, steering and a `PostTaskExecution` agent hook into a project's `.kiro/` from `integrations/kiro/` templates; per-file created/unchanged/skipped/overwritten, exit 1 on skips, never through symlinks, never rewrites an unparseable `mcp.json`; exported for Reanimator's heal loop | Accepted |
 
 ---
 
@@ -575,4 +576,28 @@
   - Done-when is fixture-first: on the claims fixture, a client that joins after the first ghost spawns folds a finished board equal to `foldLive(events.ndjson)`, with 3.2 `haunted` and an evidence frame on disk (`packages/cli/test/done-when.test.ts`). The 12-ghost Candy Swap check is KI-49.
   - F15 replay can start from `foldLive` over `events.ndjson`, but frames aren't in ndjson, so a replay reads them from `frames/`.
   - F22 (Séance atmosphere) has nothing to polish in the engine; it moves to Reanimator if anywhere.
+
+### D-41: F13 Kiro installer rulings (extends D-38, D-01)
+- **Context:** grilling F13 (2026-11-02) in Claude Code, without Kiro. The user asked to accept the recommended answers. Kiro's hook docs were re-read for KI-06 (kiro.dev/docs/hooks, /hooks/types).
+- **Decision:**
+  - **Still worth building under D-39.** Reanimator's R5 heal loop has Kiro editing the revived repo; `init` is how that repo gets Poltergeist's MCP tools, steering and hook. It ships as the CLI command `poltergeist init` and as `init()` exported from `@poltergeist/cli`.
+  - **Templates stay in `integrations/kiro/`** (D-01): `mcp.json`, `steering/poltergeist.md`, `hooks/poltergeist-summon.json`. `init` reads and fills them; nothing is duplicated in code.
+  - **Flags:** `--dir` (default `.`), `--target` (default `http://localhost:3000`), `--spec`, `--no-hook`, `--force`. Summon-only flags on `init` (and the reverse) are usage errors.
+  - **Four files:**
+    - `poltergeist.config.json`: target, `routes: [{path:'/',auth:false}]`, concurrency 12, reps 3, validated with `parseConfig` before anything is written (D-05: a non-loopback target is a `ConfigError`, exit 2);
+    - `.kiro/settings/mcp.json`: only `mcpServers.poltergeist` is merged in (`node <abs bin> --root <abs dir>`, D-38); other servers and keys are always kept;
+    - `.kiro/steering/poltergeist.md`: `inclusion: always`, the loop in plain QA wording (D-09), an empty `## House rules` section for F17;
+    - `.kiro/hooks/poltergeist-summon.json`: v1, trigger `PostTaskExecution`, an `agent` action asking the agent to call `summon_ghosts`, read the report, fix, then `rehaunt`. `summon_ghosts` isn't auto-approved, so the user still confirms each browser run.
+  - **Idempotent (Req 10.3):** each file is `created`, `unchanged` (identical; the MCP entry is compared by deep equality), `skipped` (differs, no `--force`) or `overwritten`. Exit 0, or 1 if anything was skipped (the output names `--force`), or 2 on any error.
+  - **Safety:** every outcome is decided before any write, so a refusal writes nothing. `init` refuses to write through a symlink anywhere below `--dir` and refuses an `mcp.json` that isn't a JSON object (even with `--force`). It never touches `requirements.md`, `design.md` or `tasks.md` (D-14).
+  - **Done-when (fixture):** the real bin wires a temp project; reruns are idempotent; skip and force behave; the server command written into `mcp.json` lists the five tools with no other setup. The real Kiro check is KI-51.
+- **Review fixes (2026-11-02):**
+  - **`poltergeist.config.json` is the user's once it exists.** It is created, then never replaced, not even by `--force`. A differing one is reported `kept`, which isn't a skip (it doesn't make the exit code 1). Before this fix, `--force`, the obvious way to refresh a stale bin path after moving the checkout, also wiped the user's routes and accounts.
+  - **`--force` keeps the steering file's `## House rules` section.** The rest of the file is refreshed from the template.
+  - **The skip hint names the files `--force` would replace.**
+  - Deferred minors are in KI-52.
+- **Consequences:**
+  - F17 parses `## House rules` in the steering file that `init` writes.
+  - F18 can reuse the same templates for the Power.
+  - Reanimator's R5 can call `init({dir: revivedRepo, target})` before handing a wound to Kiro.
 

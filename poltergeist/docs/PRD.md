@@ -33,7 +33,7 @@
 | 14 | F12 | Live Feed (headless, for Reanimator; D-40) | High | Done (fixture; Candy Swap check pending, KI-49) | F06, F09 |
 | 15 | F14 | Re-haunt & Verdict Diff | Med | TBD | F09 |
 | 16 | F15 | Replay Mode & Deployed Séance | Med | TBD | F12 |
-| 17 | F13 | Kiro Installer (`init`) + Agent Hook | Med | TBD | F11 |
+| 17 | F13 | Kiro Installer (`init`) + Agent Hook | Med | Done (fixture, D-41; Kiro check KI-51) | F11 |
 | 18 | F16 | Extended Personas: Lich & Revenant | Med | TBD | F04 |
 | 19 | F17 | Steering-driven House Rules | Med | TBD | F13 |
 | 20 | F18 | Kiro Power Packaging | Med | TBD | F11, F17 |
@@ -358,7 +358,9 @@ Implements Requirement 12.
   - Clearly labelled **RECORDED** in the costume style.
 - **Done when:** the public URL replays the hero Candy Swap run in a fresh browser.
 
-### F13: Kiro Installer (`init`) + Agent Hook · Med · TBD
+### F13: Kiro Installer (`init`) + Agent Hook · Med · Done (fixture, D-41; Kiro check KI-51)
+
+> 2026-11-02: built in Claude Code without Kiro. Plan `docs/plans/2026-11-02-F13-kiro-installer.md`. `poltergeist init [--dir] [--target] [--spec] [--no-hook] [--force]` and `init()` from `@poltergeist/cli` fill `integrations/kiro/` templates: `poltergeist.config.json`, the merged `.kiro/settings/mcp.json` entry, `.kiro/steering/poltergeist.md` and a `PostTaskExecution` agent hook. Per-file created/unchanged/skipped/overwritten; exit 1 on skips; no writes through symlinks. Done-when (fixture): `packages/cli/test/init-done-when.test.ts`. **Still to do:** the real Kiro session (KI-51).
 
 **Owns:** `poltergeist init` (scaffolds the config) and writing the MCP entry, `steering/poltergeist.md` and the agent hook into a target's `.kiro/`, idempotently, never overwriting without `--force`. Implements Requirement 10.3.
 **Not this feature:** reading steering (F17) · the Power (F18).
@@ -476,3 +478,4 @@ Implements Requirement 12.
 - 2026-11-01: **F10 prep done** (D-37). Kiro brief, Candy Swap's `poltergeist.config.json`, `npm run candy:check` (F10's Done-when) and a skipped real-spec F01 test. The app itself is built in Kiro (KI-44). Candy Swap is a standalone package, not a root workspace.
 - 2026-11-01: **F11 Done against a fixture** (D-38). `@poltergeist/mcp` (`poltergeist-mcp --root`): five tools including `get_run_status`, long-poll runs (resolves KI-12), 6 000-char results, root-confined paths. `docs/kiro-notes.md` holds the MCP facts (KI-06 Investigating). `integrations/kiro/mcp.json` is the template. The Kiro check is KI-46; the subset-report issue is KI-47 (F14).
 - 2026-11-02: **F12 Done against a fixture, re-scoped to a headless Live Feed** (D-40, under D-39). Pure `LiveState` reducer in core for Reanimator's R4, `live.hello` protocol, late-join frames and frame backpressure on the `--seance` server (KI-43 item fixed), `run.started.runDir`. Requirement 11.1–11.3 reworded. The Candy Swap check is KI-49.
+- 2026-11-02: **F13 Done against a fixture** (D-41). `poltergeist init` wires a project into Kiro from the `integrations/kiro/` templates (config, merged MCP entry, steering, `PostTaskExecution` agent hook), idempotently and never through symlinks; exported for Reanimator's heal loop. Hook format re-read from the docs (KI-06). The Kiro check is KI-51.
