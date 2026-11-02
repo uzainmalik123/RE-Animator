@@ -63,6 +63,7 @@
 | KI-52 | F13 review minors: a symlinked `--dir` is reported as "not a directory", `--spec` is ignored with `--no-hook` and goes into the hook prompt unnormalised, the `mcp.json` write isn't atomic, the MCP SDK isn't a declared CLI devDependency, plus test gaps | Minor | F13, R5 | Open |
 | KI-53 | F14 Done-when on real Candy Swap (the video's exorcism loop: one `rehaunt` call in a Kiro session, haunted → clean in < 30 s) not yet run: built against the claims fixture (D-42) | Major | F14 sign-off, demo | Open |
 | KI-54 | F14 review minors: carried flaky/inconclusive pairs unmarked in the markdown, an all-resets-failed rerun overwrites good verdicts in the merged report, lost update when two processes rehaunt one spec at once, `target` compared as an exact string, `previousRunId` set even when the baseline was unusable, carried artifacts point at old run folders | Minor | F14, R5 | Open |
+| KI-55 | F15 Done-when on the hero Candy Swap run not yet checked: export it, host the bundle from Reanimator's R11 and replay it in a fresh browser (D-43) | Major | F15 sign-off, R11 | Open |
 
 ---
 
@@ -566,3 +567,8 @@
 - **`previousRunId`** is returned whenever a previous report was read, even an unusable one (other target), which Reanimator could misread as "diffed against".
 - **Old artifacts:** carried pairs' `artifacts` point into older `.poltergeist/runs/<id>/` folders. Nothing prunes them today; a future cleanup must keep the folders a report still cites.
 - **Tests:** no test renders many carried haunted sections against the 300-line cap.
+
+### KI-55: F15 Done-when not yet run on the hero Candy Swap run · Major · Open
+- **Context:** F15 was built in Claude Code against the claims fixture (D-43). The PRD Done-when is "the public URL replays the hero Candy Swap run in a fresh browser", which needs F10 (KI-44), a frame-rich 12-ghost run (KI-49) and Reanimator's R11 to host and play the bundle.
+- **Next action:** after the hero run, `poltergeist export .poltergeist/runs/<id> --out <R11 public folder>`. Check the size line is under 50 MB without much thinning; if it's thinned hard, lower `frameFps` for the hero run rather than raising the cap. R11 plays it with `buildTimeline`/`stateAt` (static) or by pointing R4's scene at `poltergeist replay` (local).
+

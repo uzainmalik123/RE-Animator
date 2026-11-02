@@ -166,9 +166,12 @@ The runner (F06) emits the `rep.*`, `reset.*`, `ghost.*`, `guard.*` and `assert.
     plans/<criterion>__<persona>.json
     events.ndjson
     frames/<ghostId>/<seq>.jpg
+    frames.ndjson       {ghostId, seq, t} per frame jpg, so a replay can place it in time (F15, D-43)
     artifacts/<criterion>__<persona>__rep<k>/{screenshot-<actor>.png,trace-<actor>.zip}   failed reps only; no trace for an actor that started from a session or ran a login step (secrets)
     verdicts.json       computeVerdicts() output (D-34)
 ```
+
+**Recordings (F15, D-43).** `poltergeist export <runDir> --out <dir> [--max-mb 50]` (`exportRecording` in `packages/core/src/recording/`) copies `events.ndjson`, `frames.ndjson`, the kept `frames/**` and `verdicts.json` into a new or empty folder, with `recording.json` (`format: 'poltergeist-recording'`, version 1, `recorded: true`, run id, target, criteria, counts, haunted, duration, frame counts). It never copies `run.json`, plans, scout or artifacts. Over the cap, every other frame of each ghost is dropped, repeatedly; each ghost's last frame and every frame of a ghost that failed an assertion are kept. `poltergeist replay <dir> [--speed 1–16]` loads a run folder or bundle (`loadRecording`; frame times are estimated for a run without `frames.ndjson`) and, once a client connects, re-publishes it on the `--seance` WebSocket at its recorded pace ÷ speed, with `live.hello {recorded: true, speed}`. It touches no target, LLM or browser. For scrubbing, `@poltergeist/core/live` exports the pure `buildTimeline(events, frames)` and `stateAt(timeline, ms, frameData?)`. Hosting a bundle is Reanimator's R11.
 
 After every run, F09 calls `renderReport` and `writeReport` (`packages/core/src/report/`, D-35). Those write `haunting-report.md` and `haunting-report.json` (a versioned zod schema, `ReportJsonSchema`) into the spec folder and nothing else. The markdown is capped at 300 lines; the JSON keeps everything.
 

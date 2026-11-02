@@ -32,7 +32,7 @@
 | 13 | F11 | Kiro MCP Server | High | Done (fixture, KI-46) | F09 |
 | 14 | F12 | Live Feed (headless, for Reanimator; D-40) | High | Done (fixture; Candy Swap check pending, KI-49) | F06, F09 |
 | 15 | F14 | Re-haunt & Verdict Diff | Med | Done (fixture, D-42; Candy Swap check KI-53) | F09 |
-| 16 | F15 | Replay Mode & Deployed Séance | Med | TBD | F12 |
+| 16 | F15 | Recordings: export & replay (headless, D-43) | Med | Done (fixture, D-43; hero run + R11 hosting KI-55) | F12 |
 | 17 | F13 | Kiro Installer (`init`) + Agent Hook | Med | Done (fixture, D-41; Kiro check KI-51) | F11 |
 | 18 | F16 | Extended Personas: Lich & Revenant | Med | TBD | F04 |
 | 19 | F17 | Steering-driven House Rules | Med | TBD | F13 |
@@ -345,9 +345,12 @@ Implements Requirement 12.
   - < 30 s per criterion.
 - **Done when:** the video's exorcism loop completes with one `rehaunt` call in < 30 s.
 
-### F15: Replay Mode & Deployed Séance · Med · TBD
+### F15: Recordings: export & replay · Med · Done (fixture, D-43; hero run + R11 hosting KI-55)
 
-**Owns:** `poltergeist replay <runDir>`, the Séance replay reader, `poltergeist export` (run → static bundle), and deploying the static replay site. Implements Requirement 11.4.
+> 2026-11-02: re-scoped by D-43 under D-39. No Séance reader and no deploy in the engine. `frames.ndjson` places frames in time; `poltergeist export <runDir> --out <dir>` writes a static bundle (≤ 50 MB, `recording.json` with `recorded: true`, thinned frames, no config or artifacts); `poltergeist replay <dir> [--speed]` re-streams it on the live-feed WebSocket with `live.hello.recorded`; `buildTimeline`/`stateAt` in `@poltergeist/core/live` let Reanimator scrub. Plan `docs/plans/2026-11-02-F15-recording.md`. Done-when (fixture): `packages/cli/test/recording-done-when.test.ts`. **Still to do:** the hero Candy Swap run hosted by Reanimator's R11 (KI-55). The original scope below is kept for history.
+
+
+**Owns (original, superseded by D-43):** `poltergeist replay <runDir>`, the Séance replay reader, `poltergeist export` (run → static bundle), and deploying the static replay site. Implements Requirement 11.4.
 **Not this feature:** live mode (F12) · a live hosted runner (F21).
 
 - **User story:** As a judge, I want to open a URL and watch a real recorded haunting without installing anything.
@@ -480,3 +483,4 @@ Implements Requirement 12.
 - 2026-11-02: **F12 Done against a fixture, re-scoped to a headless Live Feed** (D-40, under D-39). Pure `LiveState` reducer in core for Reanimator's R4, `live.hello` protocol, late-join frames and frame backpressure on the `--seance` server (KI-43 item fixed), `run.started.runDir`. Requirement 11.1–11.3 reworded. The Candy Swap check is KI-49.
 - 2026-11-02: **F13 Done against a fixture** (D-41). `poltergeist init` wires a project into Kiro from the `integrations/kiro/` templates (config, merged MCP entry, steering, `PostTaskExecution` agent hook), idempotently and never through symlinks; exported for Reanimator's heal loop. Hook format re-read from the docs (KI-06). The Kiro check is KI-51.
 - 2026-11-02: **F14 Done against a fixture** (D-42). Every run merges into the spec's previous `haunting-report.json` (carried lines marked `carriedFrom`, resolves KI-47) and diffs the re-run criteria: CLI `changes since <run>:` with `3.2 [!!] → [ok]`, MCP `changes: [{id, from, to}]`. The real Candy Swap exorcism check is KI-53.
+- 2026-11-02: **F15 Done against a fixture, re-scoped to headless Recordings** (D-43, under D-39). `frames.ndjson`, `poltergeist export` (static bundle, 50 MB cap with evidence-preserving thinning), `poltergeist replay` (live-feed WebSocket, `recorded` hello, 1–16× speed), pure `buildTimeline`/`stateAt`. Requirement 11.4 reworded. Hosting and the hero run are KI-55 (Reanimator R11).

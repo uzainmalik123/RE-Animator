@@ -20,7 +20,8 @@ Criterion IDs follow Kiro's convention (`N.M`, D-16), so Poltergeist's own Spec 
 - **Haunting Plan:** a JSON program in the Poltergeist DSL for one criterion × one persona. The LLM writes it; it is validated and run deterministically.
 - **Run / Haunting:** one execution of all plans for a spec against a target.
 - **Verdict:** per pair or criterion: `haunted`, `flaky`, `inconclusive`, `clean` (plus `notApplicable` / `uncompilable` for pairs).
-- **Séance Room:** the web dashboard showing a run live or as a replay.
+- **Séance Room:** the web dashboard showing a run live or as a replay (deprioritised by D-39; Reanimator renders runs).
+- **Recording:** a finished run's events and sampled frames, replayed from its run folder or an exported static bundle (F15, D-43).
 - **Costume Kit:** the shared ASCII theme (glyph renderer, sprites, palette, wordmark) used by the CLI, the report and the Séance Room.
 
 ## Requirements
@@ -158,7 +159,7 @@ Criterion IDs follow Kiro's convention (`N.M`, D-16), so Poltergeist's own Spec 
 1. WHILE a run is live, THE Live_Feed SHALL provide one ghost entry per active ghost with its current step, cursor position and latest frame.
 2. THE Live_Feed SHALL provide the requirement board: each criterion line with its live status (`waiting`, `running`, then its verdict).
 3. WHEN a criterion becomes `haunted`, THE Live_Feed SHALL link its line to the failing ghost and that ghost's evidence frame in the run folder.
-4. THE Seance_Room SHALL replay a finished run from its run folder with no live target, LLM or browser, and SHALL label it as a recording [F15].
+4. THE Recording SHALL replay a finished run from its run folder or an exported bundle with no live target, LLM or browser, and SHALL label it as a recording [F15].
 
 ### Requirement 12: Costume [F26, F22]
 

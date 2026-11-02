@@ -49,6 +49,7 @@
 | D-40 | F12 re-scoped to a headless **Live Feed** for Reanimator (extends D-39, D-36): pure `reduceLive`/`foldLive` → `LiveState` in `@poltergeist/core/live`, `live.hello` protocol 1, late joiners get the backlog with latest frames in place, frame-only backpressure at 1 MiB, `run.started.runDir`; no React Séance | Accepted |
 | D-41 | F13 `poltergeist init` (extends D-38, D-01): writes `poltergeist.config.json` and merges the MCP entry, steering and a `PostTaskExecution` agent hook into a project's `.kiro/` from `integrations/kiro/` templates; per-file created/unchanged/skipped/overwritten, exit 1 on skips, never through symlinks, never rewrites an unparseable `mcp.json`; exported for Reanimator's heal loop | Accepted |
 | D-42 | F14 re-haunt rulings (refines D-34, D-35, D-38): the baseline is the spec's previous `haunting-report.json`; every run merges into it (unrun criteria and personas are carried with `carriedFrom`, only for the same target and criterion text) and diffs re-run criteria (`changes`); CLI change block, MCP `changes` on run results; fixture Done-when (KI-53) | Accepted |
+| D-43 | F15 re-scoped to headless **Recordings** (extends D-39, D-40): `frames.ndjson` frame index, `poltergeist export` (a static bundle ≤ 50 MB with `recording.json`, thinned frames, no config or artifacts), `poltergeist replay` on the live-feed WebSocket with `live.hello.recorded`, pure `buildTimeline`/`stateAt` for scrubbing; hosting moves to Reanimator R11 | Accepted |
 
 ---
 
@@ -620,3 +621,24 @@
   - Reanimator's heal loop can read `changes` (or diff two reports itself) to animate a wound closing.
   - `verdicts.json` is still written per run, but nothing reads it back.
   - A report can now mix runs with different `reps` or models; the carried marks say which lines are older.
+
+### D-43: F15 becomes headless Recordings (extends D-39, D-40)
+- **Context:** grilling F15 (2026-11-02). Under D-39 the engine draws no UI, and Reanimator's R11 owns "a recorded replay a judge can open". The PRD's F15 (a React Séance replay reader and a deployed site) no longer fits. The user asked to accept the recommended answers.
+- **Decision:**
+  - **The engine provides the recording, export and replay. Reanimator plays and hosts it.** No Séance reader, no deploy step in the engine.
+  - **Frame timing:** the event sink appends `{ghostId, seq, t}` to `frames.ndjson` next to each jpg (same `t` as the live `ghost.frame`). `events.ndjson` stays frame-free. A run without `frames.ndjson` still loads: each ghost's frames are spread evenly between its `ghost.spawned` and its rep's `rep.finished` (or the last event).
+  - **`loadRecording(dir)`** reads a run folder or a bundle: `events.ndjson` with a `run.started` is required (`RecordingError` otherwise), a torn line is skipped with a warning, and frame marks whose jpg is missing are dropped (so a mark can only name a jpg that's really on disk).
+  - **`poltergeist export <runDir> --out <dir> [--max-mb n]`** (`exportRecording`):
+    - writes `recording.json`, `events.ndjson`, `frames.ndjson`, the kept `frames/**` and `verdicts.json`;
+    - never `run.json` (config snapshot), `plans/`, `scout/` or `artifacts/` (traces): the bundle is meant to be public;
+    - a cap of 50 MB by default (1–1000 MB): over it, every other unprotected frame of each ghost is dropped, repeatedly, keeping each ghost's last frame and every frame of a ghost that failed an assertion (the evidence). Still over → `RecordingError` before anything is written;
+    - `--out` must be new or empty and outside the run folder. It never deletes anything (no `--force`).
+  - **`poltergeist replay <dir> [--speed 1–16]`** serves the same WebSocket as `--seance` (`:6660/runs/<runId>`). The hello carries `recorded: true` and `speed` (additive, `LIVE_PROTOCOL` stays 1). It waits for the first client, then re-publishes events and frames at their recorded gaps ÷ speed, lingers 500 ms after the last one, and exits 0 (130 on Ctrl-C, 2 on a bad folder). Late joiners get the usual backlog. No target, LLM or browser is touched (Req 11.4).
+  - **`LiveState.recorded`** is set from the hello and survives `run.started`, so a renderer can label the scene RECORDED.
+  - **Scrubbing** is the renderer's: `@poltergeist/core/live` adds the pure `buildTimeline(events, frames)` (ms since the first event; events before frames on ties; orphan frames dropped), `timelineDuration`, `stateAt(timeline, ms, frameData?)` and `estimateFrameTimes`.
+  - Requirement 11.4's subject becomes `Recording`.
+  - **Done-when (fixture):** on the claims fixture with frames on, summon → close the app → `export` (bundle < 50 MB, `recorded: true`, 3.2 haunted) → `replay --speed 16` → a client gets the recorded hello first and folds the same board as `foldLive(events.ndjson)`, with 3.2 `haunted` and an evidence frame that exists in the bundle (`packages/cli/test/recording-done-when.test.ts`).
+- **Consequences:**
+  - The public URL replaying the hero Candy Swap run is Reanimator's R11, tracked as KI-55.
+  - F21 (hosted live sandbox) still depends on F15 in name only; it is out of scope under D-39.
+
