@@ -4,12 +4,15 @@ import type { Browser, BrowserContext, Page } from 'playwright-core';
 import type { HauntingPlan } from '../compiler/dsl.js';
 import type { LoadedConfig } from '../config/load.js';
 import { runReset, type ResetResult } from '../config/reset.js';
+import { getDevice } from '../personas/devices.js';
+import { getPersona } from '../personas/registry.js';
 import { compileForbidden } from '../safety/forbidden.js';
 import { newGuardedContext, type BlockedRequest } from '../safety/guard.js';
 import { markBlockedByRule, startActor, type ActorRun } from './actor.js';
 import { ASSERT_POLL_MS, runAssertions, type ConsoleRecord } from './assertions.js';
 import { BarrierSet } from './barrier.js';
 import { RunnerSafetyError } from './errors.js';
+import { deviceContextOptions } from './device.js';
 import { createEventSink, type EventSink } from './events.js';
 import { startFrames } from './frames.js';
 import { installHolds, type Holds } from './holds.js';
@@ -182,6 +185,8 @@ async function runPair(plan: HauntingPlan, rep: number, s: Shared): Promise<Pair
   const storageState = id.identity === 'anonymous' ? undefined : s.opts.sessions.get(id.identity);
   if (id.identity !== 'anonymous' && !storageState) return finish('systemError', `no session for account "${id.identity}"`);
 
+  const deviceId = getPersona(plan.persona).device;
+  const device = deviceId ? getDevice(deviceId) : undefined;
   const names: ActorName[] = plan.actors.b ? ['a', 'b'] : ['a'];
   const origin = loaded.config.target;
   const consoleErrors: ConsoleRecord[] = [];
@@ -209,7 +214,7 @@ async function runPair(plan: HauntingPlan, rep: number, s: Shared): Promise<Pair
       const context = await newGuardedContext(
         s.browser,
         { allowedHosts: loaded.allowedHosts, forbidden: loaded.config.forbidden, onBlocked },
-        storageState ? { storageState } : {},
+        { ...(storageState ? { storageState } : {}), ...(device ? deviceContextOptions(device) : {}) },
       );
       const holds = await installHolds(context, origin);
       await installOverlay(context);
@@ -243,6 +248,7 @@ async function runPair(plan: HauntingPlan, rep: number, s: Shared): Promise<Pair
         seed,
         stepTimeoutMs: s.stepTimeoutMs,
         signal,
+        ...(device ? { device } : {}),
         onStep: (r, xy) => {
           if (!pairStop.signal.aborted) sink.emit({ type: 'ghost.step', ghostId: a.ghost, index: r.index, step: r.type, outcome: r.outcome, ...xy });
         },
@@ -282,7 +288,15 @@ async function runPair(plan: HauntingPlan, rep: number, s: Shared): Promise<Pair
       [outcome, error] = ['planError', (ended.find((a) => a.run!.end !== 'broken') ?? ended[0]!).run!.error];
     }
 
-    if (outcome === 'completed') {
+    // A step timeout on a target the device can't use is the app's failure, not an unknown (D-44, KI-39).
+    const unusable = outcome === 'timeout' && !timedOut ? result.steps.find((st) => st.outcome === 'timeout' && st.unusable) : undefined;
+    if (unusable && device) {
+      [outcome, error] = ['completed', undefined];
+      result.assertions = [
+        { index: plan.assert.length, type: 'usable', ok: false, failure: 'app', detail: `${unusable.unusable} (${device.label})` },
+      ];
+      sink.emit({ type: 'assert.result', criterion: plan.criterion, persona: plan.persona, rep, index: plan.assert.length, ok: false, detail: result.assertions[0]!.detail });
+    } else if (outcome === 'completed') {
       const first = actors[0]!;
       result.assertions = await runAssertions(plan.assert, {
         page: first.page,

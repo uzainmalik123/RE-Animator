@@ -54,6 +54,13 @@ const FORM = page(
 </script>`,
 );
 
+/** A checkout button that a small-screen layout hides: what a Lich should catch (F16). */
+const NARROW = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Narrow</title><style>@media (max-width: 600px) { #checkout { display: none; } }</style></head>
+<body><h1>Basket</h1><button id="checkout">Checkout</button><p id="done"></p>
+<script>document.getElementById('checkout').addEventListener('click', () => { document.getElementById('done').textContent = 'Ordered'; });</script>
+</body></html>`;
+
 /** The session cookie for the fixture, as scout would hand it over. */
 export function sessionState(origin: string): StorageState {
   const { hostname } = new URL(origin);
@@ -96,6 +103,7 @@ export async function startClaimsFixture(): Promise<ClaimsFixture> {
       const authed = cookies(req).sid === SESSION;
       const path = url.pathname;
       if (path === '/') return send(res, 200, page('Home', '<h1>Home</h1><a href="/claims">Claims</a>'));
+      if (path === '/narrow') return send(res, 200, NARROW);
       if (path === '/login') {
         if (req.method === 'POST') {
           const form = new URLSearchParams(await readBody(req));
