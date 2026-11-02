@@ -41,7 +41,7 @@ describe('summarize', () => {
     },
     haunted: ['3.2'],
     allResetsFailed: false,
-    reportPaths: { markdownPath: '/w/.kiro/specs/s/haunting-report.md', jsonPath: '/w/.kiro/specs/s/haunting-report.json' },
+    reportPaths: { markdownPath: '/w/.kiro/specs/s/haunting-report.md', jsonPath: '/w/.kiro/specs/s/haunting-report.json' }, changes: [],
   } as unknown as SummonResult;
 
   it('reports counts, haunted ids, a relative report path and a hint', () => {

@@ -49,7 +49,7 @@ function fakeSummon() {
       runId: o.runId!, runDir: '', specDir: '', target: '', criteria: [{ id: '1.1' }], compiled: [],
       verdicts: { reps: 1, threshold: 1, pairs: [], counts: {}, criteria: [{ criterion: '1.1', verdict: 'haunted', personas: {} }] },
       haunted: ['1.1'], allResetsFailed: false,
-      reportPaths: { markdownPath: join(root, 'app/.kiro/specs/small/haunting-report.md'), jsonPath: '' },
+      reportPaths: { markdownPath: join(root, 'app/.kiro/specs/small/haunting-report.md'), jsonPath: '' }, changes: [],
     } as unknown as SummonResult);
   };
   return { summon, calls, finish };

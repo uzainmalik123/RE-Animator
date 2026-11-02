@@ -136,4 +136,26 @@ describe('summon', () => {
     await summon(opts({ llm: fresh.client, only: ['3.1'], reps: 1, recompile: true }));
     expect(fresh.calls.length).toBeGreaterThan(0);
   }, 60_000);
+
+  it('a subset run keeps the full report and diffs against the previous one', async () => {
+    const own = await makeClaimsProject();
+    try {
+      const base = { specDir: own.specDir, configPath: own.configPath, env: own.env, runOptions: { frameFps: 0 }, llm: own.llm().client };
+      const r1 = await summon({ ...base, personas: ['wraith', 'doppelganger'] });
+      expect(r1.haunted).toEqual(['3.2']);
+      expect(r1.changes).toEqual([]);
+      own.fixture.fix();
+      const r2 = await summon({ ...base, llm: own.llm().client, only: ['3.2'], personas: ['doppelganger'], reps: 1 });
+      expect(r2.changes).toEqual([{ id: '3.2', from: 'haunted', to: 'clean', personas: [{ persona: 'doppelganger', from: 'haunted', to: 'clean' }] }]);
+      expect(r2.previousRunId).toBe(r1.runId);
+      expect(r2.criteria.map((c) => c.id)).toEqual(['3.2']);
+      const report = await readJson(r2.reportPaths.jsonPath);
+      expect(report.criteria.map((c: { id: string }) => c.id)).toEqual(['3.1', '3.2']);
+      expect(report.criteria[0]).toMatchObject({ id: '3.1', verdict: 'clean', carriedFrom: r1.runId });
+      expect(report.criteria[1]).toMatchObject({ id: '3.2', verdict: 'clean' });
+      expect(report.criteria[1].carriedFrom).toBeUndefined();
+    } finally {
+      await own.close();
+    }
+  }, 120_000);
 });

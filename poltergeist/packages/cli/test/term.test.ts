@@ -50,7 +50,7 @@ function result(): SummonResult {
   };
   return {
     runId: 'r1', runDir: '/p/.poltergeist/runs/r1', specDir: '/p/spec', target: 'http://127.0.0.1:4000', criteria, compiled: [], verdicts,
-    haunted: ['3.2'], allResetsFailed: false, reportPaths: { markdownPath: '/p/spec/haunting-report.md', jsonPath: '/p/spec/haunting-report.json' },
+    haunted: ['3.2'], allResetsFailed: false, reportPaths: { markdownPath: '/p/spec/haunting-report.md', jsonPath: '/p/spec/haunting-report.json' }, changes: [],
   };
 }
 

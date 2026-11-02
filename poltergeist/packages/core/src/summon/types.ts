@@ -4,6 +4,7 @@ import type { LlmClient } from '../compiler/llm.js';
 import type { PersonaId } from '../personas/registry.js';
 import type { RunEvent, RunOptions } from '../runner/types.js';
 import type { RouteStatus } from '../scout/types.js';
+import type { VerdictChange } from '../report/merge.js';
 import type { Criterion } from '../spec/types.js';
 import type { Verdicts } from '../verdicts/compute.js';
 import type { CriterionVerdict, PairVerdict } from '../verdicts/types.js';
@@ -62,4 +63,8 @@ export type SummonResult = {
   allResetsFailed: boolean;
   resetError?: string;
   reportPaths: { markdownPath: string; jsonPath: string };
+  /** Re-run criteria whose verdict changed since the spec's previous report (F14, D-42). */
+  changes: VerdictChange[];
+  /** The previous report's run id, when there was one to merge and diff against. */
+  previousRunId?: string;
 };

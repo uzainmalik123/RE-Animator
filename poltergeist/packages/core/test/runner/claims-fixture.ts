@@ -13,6 +13,8 @@ export type ClaimsFixture = {
   resets(): number;
   /** Paths of every request seen, for "never sent" checks. */
   seen(): string[];
+  /** Makes the claim atomic (check and insert with no wait between), as a fix would; resets keep it. */
+  fix(): void;
 };
 
 const page = (title: string, body: string) =>
@@ -84,6 +86,7 @@ export async function startClaimsFixture(): Promise<ClaimsFixture> {
   let claims = new Map<string, string[]>();
   let arrivals: number[] = [];
   let resets = 0;
+  let fixed = false;
   const seen: string[] = [];
 
   const server = createServer((req, res) => {
@@ -121,6 +124,10 @@ export async function startClaimsFixture(): Promise<ClaimsFixture> {
         arrivals.push(performance.now());
         const { candy } = JSON.parse(await readBody(req)) as { candy: string };
         if ((claims.get(candy) ?? []).length > 0) return json(res, 409, { error: 'already claimed' });
+        if (fixed) {
+          claims.set(candy, [cookies(req).sid ?? 'anonymous']);
+          return json(res, 201, { ok: true });
+        }
         await new Promise((r) => setTimeout(r, 30)); // a slow write between the check and the insert
         claims.set(candy, [...(claims.get(candy) ?? []), cookies(req).sid ?? 'anonymous']); // INSERT appends a row
         return json(res, 201, { ok: true });
@@ -173,6 +180,9 @@ export async function startClaimsFixture(): Promise<ClaimsFixture> {
     arrivals: () => [...arrivals],
     resets: () => resets,
     seen: () => [...seen],
+    fix: () => {
+      fixed = true;
+    },
     close: async () => {
       server.closeAllConnections();
       await new Promise<void>((resolve) => server.close(() => resolve()));
