@@ -62,3 +62,45 @@ describe('F11 Done-when (fixture)', () => {
     await client.close();
   }, 120_000);
 });
+
+// PRD F14 Done-when, fixture-first (D-42): the video's exorcism loop with one rehaunt call. The real
+// loop on Candy Swap in Kiro is KI-53.
+describe('F14 Done-when (fixture)', () => {
+  it('summon → fix → one rehaunt call shows 3.2 haunted → clean in under 30 s and keeps the full board', async () => {
+    const own = await makeClaimsProject();
+    const { server } = createServer({
+      root: own.root,
+      env: own.env,
+      log: () => undefined,
+      summonOverrides: { llm: own.llm().client, runOptions: { frameFps: 0 } },
+    });
+    const [a, b] = InMemoryTransport.createLinkedPair();
+    await server.connect(a);
+    const client = new Client({ name: 'kiro-like', version: '0' });
+    await client.connect(b);
+    const call = async (name: string, args: Record<string, unknown>) => {
+      const r = (await client.callTool({ name, arguments: args })) as { isError?: boolean; content: { text: string }[] };
+      expect(r.isError ?? false, r.content[0]!.text).toBe(false);
+      return r.content[0]!.text;
+    };
+    try {
+      const specDir = relative(own.root, own.specDir);
+      const summoned = JSON.parse(await call('summon_ghosts', { specDir, personas: ['wraith', 'doppelganger'], waitMs: 100_000 }));
+      expect(summoned).toMatchObject({ status: 'finished', haunted: ['3.2'] });
+      expect(summoned).not.toHaveProperty('changes');
+
+      own.fixture.fix();
+      const started = Date.now();
+      const rehaunted = JSON.parse(await call('rehaunt', { specDir, ids: ['3.2'], personas: ['doppelganger'], reps: 1, waitMs: 100_000 }));
+      expect(Date.now() - started).toBeLessThan(30_000);
+      expect(rehaunted).toMatchObject({ status: 'finished', haunted: [], changes: [{ id: '3.2', from: 'haunted', to: 'clean' }], previousRunId: summoned.runId });
+
+      const board = await call('get_haunting_report', { specDir });
+      expect(board).toMatch(/\[ok\] 3\.1 — /);
+      expect(board).toMatch(/\[ok\] 3\.2 — /);
+    } finally {
+      await client.close();
+      await own.close();
+    }
+  }, 120_000);
+});

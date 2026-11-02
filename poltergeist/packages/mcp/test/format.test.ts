@@ -58,4 +58,26 @@ describe('summarize', () => {
     const s = summarize({ ...result, haunted: [], allResetsFailed: true, resetError: 'boom' }, '/w');
     expect(s.error).toContain('boom');
   });
+
+  it('lists criteria whose verdict changed and says which ones are fixed', () => {
+    const fixed = {
+      ...result,
+      haunted: [],
+      changes: [
+        { id: '3.2', from: 'haunted', to: 'clean', personas: [{ persona: 'doppelganger', from: 'haunted', to: 'clean' }] },
+        { id: '3.1', from: 'clean', to: 'clean', personas: [{ persona: 'wraith', from: 'flaky', to: 'clean' }] },
+      ],
+      previousRunId: 'r0',
+    } as unknown as SummonResult;
+    const s = summarize(fixed, '/w');
+    expect(s.changes).toEqual([{ id: '3.2', from: 'haunted', to: 'clean' }]);
+    expect(s.previousRunId).toBe('r0');
+    expect(s.hint).toMatch(/^Fixed: 3\.2\./);
+  });
+
+  it('has no changes key when only persona verdicts moved', () => {
+    const s = summarize({ ...result, changes: [{ id: '3.1', from: 'clean', to: 'clean', personas: [{ persona: 'wraith', from: 'flaky', to: 'clean' }] }] } as unknown as SummonResult, '/w');
+    expect(s).not.toHaveProperty('changes');
+    expect(s).not.toHaveProperty('previousRunId');
+  });
 });

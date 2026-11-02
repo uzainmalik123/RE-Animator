@@ -1,5 +1,5 @@
 import { relative } from 'node:path';
-import type { CriterionVerdict, SummonResult } from '@poltergeist/core';
+import type { CriterionVerdict, ReportVerdict, SummonResult } from '@poltergeist/core';
 
 /** Every tool result's text stays under this (≈ < 2k tokens, PRD F11, Req 10.2). */
 export const MAX_TEXT = 6000;
@@ -26,6 +26,9 @@ export type RunSummary = {
   haunted?: string[];
   flaky?: string[];
   reportPath?: string;
+  /** Re-run criteria whose verdict changed since `previousRunId` (F14, D-42). */
+  changes?: { id: string; from: ReportVerdict; to: ReportVerdict }[];
+  previousRunId?: string;
   progress?: RunProgress;
   error?: string;
   hint?: string;
@@ -45,11 +48,19 @@ export function summarize(result: SummonResult, cwdForPaths: string): RunSummary
     flaky: capIds(flaky),
     reportPath: relative(cwdForPaths, result.reportPaths.markdownPath).split('\\').join('/'),
   };
+  const changes = result.changes.filter((c) => c.from !== c.to).slice(0, MAX_IDS).map(({ id, from, to }) => ({ id, from, to }));
+  if (changes.length > 0) {
+    summary.changes = changes;
+    if (result.previousRunId !== undefined) summary.previousRunId = result.previousRunId;
+  }
+  const fixed = changes.filter((c) => c.to === 'clean').map((c) => c.id);
   if (result.allResetsFailed) {
     summary.error = `every reset failed, so nothing ran: ${result.resetError ?? 'unknown error'}`;
     summary.hint = 'Fix resetCommand in poltergeist.config.json, then call summon_ghosts again.';
   } else if (result.haunted.length > 0) {
     summary.hint = `Call get_haunting_report with criterion "${result.haunted[0]}" for the failing steps, fix the code, then call rehaunt with the fixed ids.`;
+  } else if (fixed.length > 0) {
+    summary.hint = `Fixed: ${fixed.join(', ')}. Call summon_ghosts to check the whole spec.`;
   }
   return summary;
 }
