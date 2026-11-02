@@ -14,7 +14,7 @@
 | KI-03 | Choosing which route a criterion belongs to | Major | F03, F05 | Investigating (deterministic picker, D-32; measure in the spike) |
 | KI-04 | Candy Swap might not contain any interesting real bugs | Major | F10, demo | Open |
 | KI-05 | 2026 rules, tracks, deadline and "new projects only" are unconfirmed | Blocker | submission, D-02 | Open |
-| KI-06 | Kiro hook schema, MCP config location and Power format are not verified | Major | F13, F18 | Investigating (MCP facts in `docs/kiro-notes.md`, F11; hooks, Power, IDE `requestTimeout` and `cwd` open) |
+| KI-06 | Kiro hook schema, MCP config location and Power format are not verified | Major | F13, F18 | Investigating (MCP facts F11, hook format from the docs F13, in `docs/kiro-notes.md`; hook firing in the IDE (KI-51), Power, IDE `requestTimeout` and `cwd` open) |
 | KI-07 | Race windows may be too narrow to hit reliably | Major | F06 (Doppelgänger) | Investigating (found on the fixture, D-33; confirm on Candy Swap, KI-36) |
 | KI-08 | Frame streaming from 12 ghosts may be too heavy | Minor | F12 | Open |
 | KI-09 | Judges may not be able to run a live haunting themselves | Major | F15, F21 | Open |
@@ -59,6 +59,7 @@
 | KI-48 | F11 review minors: `..foo` names rejected, a failed run isn't `isError`, missing config only fails in the background, misleading report errors (invalid JSON reads as missing; ids absent after a subset run read as unknown), unbounded `abortAll`, `capText` over its limit for tiny caps, missing server-level tests (retry after failure, absolute outside path), npm name `poltergeist-mcp` unreserved | Minor | F13, F14 | Open |
 | KI-49 | F12 Done-when on real Candy Swap (a 12-ghost run consumed live by Reanimator's R4 scene) not yet run: built against the claims fixture (D-40) | Major | F12 sign-off, R4 | Open |
 | KI-50 | F12 review minors: evidence prefers the first failing ghost even when only its partner has a frame, no `run.failed` event so an aborted run's live phase stays `running`, no test of a slow client draining and getting frames again, no subpath import test or lint rule keeping Node out of `core/src/live`, `LiveState` keeps every done ghost's JPEG, frames before `ghost.spawned` are ignored | Minor | F12, R4 | Open |
+| KI-51 | F13 Done-when in a real Kiro session not yet run: does `PostTaskExecution` fire the agent hook, and does Kiro load the `init`-written `mcp.json` and steering with no manual step | Major | F13 sign-off, R5 | Open |
 
 ---
 
@@ -116,6 +117,7 @@
   1. Before starting F11, F13 or F18, write the confirmed facts to `docs/kiro-notes.md` (hook triggers, hook file format, MCP settings path, Power manifest).
   2. Update SPEC §6.8.
 - **2026-11-01 (F11): Investigating.** `docs/kiro-notes.md` has the MCP facts from kiro.dev with sources: config paths and merge, fields, `${VAR}`, the tool-name regex and 64-char limit, transports. Still unverified: the hook format, the Power `plugin.json`, whether the IDE honours `requestTimeout` in `mcp.json`, and a `cwd` field. F13 and F18 must re-check these in a real Kiro session.
+- **2026-11-02 (F13):** the hook file format and trigger names were re-read from kiro.dev and written to `docs/kiro-notes.md`. `init` writes a v1 `PostTaskExecution` agent hook (D-41). Whether it fires in the IDE is KI-51.
 
 ### KI-07: Race windows may be too narrow to hit · Major · Investigating
 - **Mitigation already in the design:** `barrier` + `holdRequests`/`releaseRequests` (SPEC R6.3–R6.4).
@@ -528,4 +530,12 @@
 - **Tests:** no test of a slow client going over the limit, draining and getting frames again; nothing imports `@poltergeist/core/live` through the subpath; nothing stops Node imports in `core/src/live` (an eslint `no-restricted-imports` scoped to that folder would).
 - **Memory:** `LiveState` keeps `jpegBase64` of every done ghost (a few MB per run). A renderer with history multiplies it; drop the payload from done, non-evidence ghosts if that bites.
 - **First frame:** `startFrames` starts before `ghost.spawned` is emitted, so a frame in that gap is ignored. Harmless (the next arrives within 1/fps); check during KI-49.
+
+### KI-51: F13 not yet checked in Kiro · Major · Open
+- **Context:** F13 was built and tested in Claude Code without Kiro (D-41). The hook shape and the `PostTaskExecution` trigger come from kiro.dev's docs; the docs' own pages disagree on some trigger spellings (`FileSave` vs `PostFileSave`, `Stop` vs `AgentStop`).
+- **Next action:** in a fresh Kiro project, run `poltergeist init --dir <project> --target <origin>`, open it in Kiro, approve `ANTHROPIC_API_KEY`, and check:
+  1. the MCP panel lists the five tools with no manual edits;
+  2. the steering file loads;
+  3. finishing a spec task fires the hook and the agent calls `summon_ghosts`.
+  If the trigger name is wrong, fix `integrations/kiro/hooks/poltergeist-summon.json` and `docs/kiro-notes.md`.
 
