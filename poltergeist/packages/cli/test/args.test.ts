@@ -38,3 +38,30 @@ describe('parseCliArgs', () => {
     for (const code of ['0', '1', '2']) expect(HELP_TEXT).toMatch(new RegExp(`\\b${code}\\b`));
   });
 });
+
+describe('parseCliArgs init (F13)', () => {
+  it('defaults hook on and force off', () => {
+    expect(parseCliArgs(['init'])).toEqual({ command: 'init', hook: true, force: false });
+  });
+
+  it('parses every init flag', () => {
+    const argv = ['init', '--dir', 'a', '--target', 'http://localhost:5173', '--spec', 's', '--no-hook', '--force'];
+    expect(parseCliArgs(argv)).toEqual({ command: 'init', dir: 'a', target: 'http://localhost:5173', spec: 's', hook: false, force: true });
+  });
+
+  it.each([
+    [['init', '--reps', '2'], /--reps is not an init option/],
+    [['init', '--seance'], /--seance is not an init option/],
+    [['summon', '--spec', 'x', '--force'], /--force is not a summon option/],
+    [['summon', '--spec', 'x', '--dir', 'd'], /--dir is not a summon option/],
+    [['init', 'extra'], /unexpected argument: extra/],
+  ])('%j is a usage error', (argv, message) => {
+    expect(() => parseCliArgs(argv)).toThrow(UsageError);
+    expect(() => parseCliArgs(argv)).toThrow(message);
+  });
+
+  it('documents init and its flags', () => {
+    expect(HELP_TEXT).toContain('poltergeist init');
+    for (const flag of ['--dir', '--target', '--no-hook', '--force']) expect(HELP_TEXT).toContain(flag);
+  });
+});

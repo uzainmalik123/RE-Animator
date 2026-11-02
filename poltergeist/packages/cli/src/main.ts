@@ -1,7 +1,9 @@
+import { resolve } from 'node:path';
 import process from 'node:process';
 import { newRunId, summon, UsageError, type PersonaId, type SummonEvent, type SummonOptions } from '@poltergeist/core';
 import { HELP_TEXT, parseCliArgs } from './args.js';
 import { exitCodeFor } from './exit.js';
+import { init } from './init/index.js';
 import { SEANCE_EVENT_PORT, startEventServer, type EventServer } from './seance-server.js';
 import { renderBoard, renderHeader } from './term/board.js';
 import { colorEnabled, paint, termSafe } from './term/color.js';
@@ -45,6 +47,20 @@ export async function main(argv: readonly string[], deps: MainDeps = {}): Promis
   if (args.command === 'help') {
     stdout.write(HELP_TEXT);
     return 0;
+  }
+  if (args.command === 'init') {
+    try {
+      const result = await init({ ...args, dir: resolve(cwd, args.dir ?? '.') });
+      for (const f of result.files) stdout.write(`${f.outcome.padEnd(11)} ${f.path}\n`);
+      const skipped = result.files.filter((f) => f.outcome === 'skipped').map((f) => f.path);
+      if (skipped.length) stdout.write(`some files differ and were kept; --force would replace: ${skipped.join(', ')}\n`);
+      stdout.write('next: start your app on the target in poltergeist.config.json, open the project in Kiro and approve ANTHROPIC_API_KEY\n');
+      return skipped.length ? 1 : 0;
+    } catch (err) {
+      // ConfigError, InitError, or an fs error such as EACCES: nothing was half-written by a refusal.
+      fail(termSafe(message(err), 2000));
+      return 2;
+    }
   }
 
   let signal = deps.signal;

@@ -196,4 +196,4 @@ After every run, F09 calls `renderReport` and `writeReport` (`packages/core/src/
 4. The agent calls `summon_ghosts`, then reads `haunting-report.md`.
 5. The agent fixes the code and calls `rehaunt`. The lines go from possessed to clean.
 
-> The MCP settings path and format are confirmed in `docs/kiro-notes.md` (F11). Hook triggers, the hook JSON schema and the Power format are still **unverified** (KI-06): re-check them there before F13 or F18.
+> The MCP settings path and format are confirmed in `docs/kiro-notes.md` (F11). The hook format is taken from the docs (F13, D-41): `init` writes `.kiro/hooks/poltergeist-summon.json`, a v1 `PostTaskExecution` agent hook, and merges only `mcpServers.poltergeist` into `.kiro/settings/mcp.json`. Seeing it fire in the IDE is KI-51; the Power format is still unverified (KI-06).

@@ -32,7 +32,7 @@ Source: <https://kiro.dev/docs/mcp/configuration/> and <https://kiro.dev/docs/mc
 - **Progress notifications:** not documented. Assume they're ignored.
 - **Tool output size limit:** not documented. Poltergeist caps every result at 6 000 chars (D-38).
 
-## Hooks (F13): unverified
+## Hooks (F13): from the docs, not yet seen firing (KI-51)
 
 Source: <https://kiro.dev/docs/hooks/> and <https://kiro.dev/docs/hooks/types/>
 
@@ -41,6 +41,8 @@ Source: <https://kiro.dev/docs/hooks/> and <https://kiro.dev/docs/hooks/types/>
 - **IDE triggers:** Prompt Submit, Agent Stop, Session Start, Pre/Post Tool Use, File Create/Save/Delete, and Pre/Post Task Execution.
 - **"Manual" triggers** existed only in IDE 0.x.
 - The older `.kiro.hook` format isn't mentioned in the current docs.
+- **Re-read 2026-11-02 (F13):** fields are `version` (`"v1"`), `hooks[]` with `name`, optional `description`, `trigger` (PascalCase), optional `matcher` (regex for file and tool triggers), `action` (`{type:"command",command}` or `{type:"agent",prompt}`), optional `timeout` (seconds, default 60), `enabled` (default true) and `confirm`. Trigger ids on the types page: `PromptSubmit`, `AgentStop`, `SessionStart`, `PreToolUse`, `PostToolUse`, `FileCreate`, `FileSave`, `FileDelete`, `PreTaskExecution`, `PostTaskExecution` (`Manual` only in CLI V3). The overview page's example uses `PostFileSave` and `Stop`, so the spellings aren't fully consistent; KI-51 checks the one `init` uses.
+- **`poltergeist init` writes** `.kiro/hooks/poltergeist-summon.json`: one `PostTaskExecution` hook with an `agent` action (D-41).
 
 ## Powers (F18): unverified
 
