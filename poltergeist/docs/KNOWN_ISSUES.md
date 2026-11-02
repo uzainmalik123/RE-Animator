@@ -65,6 +65,7 @@
 | KI-54 | F14 review minors: carried flaky/inconclusive pairs unmarked in the markdown, an all-resets-failed rerun overwrites good verdicts in the merged report, lost update when two processes rehaunt one spec at once, `target` compared as an exact string, `previousRunId` set even when the baseline was unusable, carried artifacts point at old run folders | Minor | F14, R5 | Open |
 | KI-55 | F15 Done-when on the hero Candy Swap run not yet checked: export it, host the bundle from Reanimator's R11 and replay it in a fresh browser (D-43) | Major | F15 sign-off, R11 | Open |
 | KI-56 | F15 review minors: two Review Focus tests weaker than claimed (aborted run not via `main`, server close on abort not asserted), a heavily haunted run's protected frames alone can exceed the cap, re-exporting a pre-F15 run hides estimated frame times, O(k²) per-ghost array building, real idle gaps kept at 1×, symlinked `--out` not resolved, `stateAt` refolds from the start, CLI tests import a core test helper | Minor | F15, R11 | Open |
+| KI-57 | Frame capture can hide a race: at the default 4 fps, the F15 Done-when's summon came back clean for 3.2 on a 2-vCPU CI runner (the claims fixture's race window is 30 ms) | Major | F06, demo, Reanimator R4 | Open |
 
 ---
 
@@ -582,4 +583,10 @@
 - **Idle gaps:** replay keeps the compile phase's real gap (minutes at 1×). Consider capping each gap (for example 2 s ÷ speed) for the demo.
 - **Symlinks:** `checkOutDir` compares resolved paths without `realpath`, so a symlinked `--out` into the run folder passes (it only adds files).
 - **Test layout:** CLI tests import `core/test/recording/run-dir.ts` across packages.
+
+### KI-57: Frame capture can hide a race · Major · Open
+- **Context (2026-11-02):** PR #20's first CI run failed: the F15 Done-when's summon, with `frameFps: 4` (the runner default), exited 0 because the Doppelgänger's race on 3.2 didn't reach `haunted`. The same test passed locally, also pinned to one CPU. F12's Done-when uses 2 fps and is green on CI. The CDP screencast (every frame acked and decoded in Node, KI-33 notes) slows the actors enough on a small runner to spread the two clicks past the fixture's 30 ms check-then-insert window.
+- **Fix in the test:** the F15 Done-when uses 2 fps, like F12's.
+- **Why it matters beyond tests:** real summons default to 4 fps, so a slow machine (or 12+ ghosts) could turn a real race `flaky` or `clean` just because frames are being recorded. That's the reverse of D-06 (verdicts must reproduce).
+- **Next action:** during KI-36/KI-49 on Candy Swap, compare 3.2's verdict at `frameFps` 0, 2 and 4 with 12 ghosts. If capture changes verdicts, pace frame capture away from barrier steps, lower the default, or use `everyNthFrame` (KI-33).
 

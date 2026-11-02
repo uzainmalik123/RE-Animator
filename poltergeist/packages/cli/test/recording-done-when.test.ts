@@ -23,7 +23,9 @@ function capture(onStdout?: (s: string) => void) {
     stdout: { write: (s) => { out.stdout += s; onStdout?.(s); }, isTTY: false },
     stderr: { write: (s) => void (out.stderr += s) },
     env: { ...project.env, NO_COLOR: '1' },
-    summonOverrides: { llm: project.llm().client, runOptions: { frameFps: 4 } },
+    // 2 fps as in F12's Done-when: at 4 fps the screencast load on a 2-vCPU CI runner can spread the race's
+    // clicks past the fixture's 30 ms window, so 3.2 isn't haunted (KI-57).
+    summonOverrides: { llm: project.llm().client, runOptions: { frameFps: 2 } },
   };
   return { out, deps };
 }
@@ -31,7 +33,8 @@ function capture(onStdout?: (s: string) => void) {
 describe('F15 Done-when (fixture)', () => {
   it('summons, exports a labelled bundle under 50 MB, and replays it to the same board with 3.2 haunted and its evidence frame', async () => {
     const summoned = capture();
-    expect(await main(['summon', '--spec', project.specDir, '--config', project.configPath, '--personas', 'wraith,doppelganger'], summoned.deps)).toBe(1);
+    const summonCode = await main(['summon', '--spec', project.specDir, '--config', project.configPath, '--personas', 'wraith,doppelganger'], summoned.deps);
+    expect(summonCode, summoned.out.stdout + summoned.out.stderr).toBe(1);
     const runs = join(dirname(project.configPath), '.poltergeist', 'runs');
     const [runId] = await readdir(runs);
     const runDir = join(runs, runId!);
