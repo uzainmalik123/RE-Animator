@@ -179,3 +179,25 @@ describe('startEventServer', () => {
     await expect(closed).resolves.toBeDefined();
   });
 });
+
+describe('startEventServer for a recording (F15)', () => {
+  it('labels the hello as recorded with its speed', async () => {
+    const s = await startEventServer('r1', { port: 0, hello: { recorded: true, speed: 4 } });
+    servers.push(s);
+    const { ws, messages } = await collect(s.url, 1);
+    expect((await messages)[0]).toMatchObject({ ...hello, recorded: true, speed: 4 });
+    ws.close();
+  });
+
+  it('resolves firstClient once a client connects', async () => {
+    const s = await start();
+    let connected = false;
+    const first = s.firstClient().then(() => (connected = true));
+    await new Promise((r) => setTimeout(r, 20));
+    expect(connected).toBe(false);
+    const { ws } = await collect(s.url, 1);
+    await first;
+    expect(connected).toBe(true);
+    ws.close();
+  });
+});

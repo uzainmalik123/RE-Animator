@@ -9,3 +9,4 @@ export * from './verdicts/index.js';
 export * from './report/index.js';
 export * from './summon/index.js';
 export * from './live/index.js';
+export * from './recording/index.js';

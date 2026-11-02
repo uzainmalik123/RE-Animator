@@ -36,4 +36,6 @@ Work happens one PRD feature at a time, through the grill → plan → implement
 - [x] 15a. F13 Kiro installer `init` + agent hook (D-41; Kiro check KI-51)
 - [x] 15b. F14 Re-haunt & Verdict Diff (D-42; Candy Swap check KI-53)
   - _Requirements: 9.3_
+- [x] 15c. F15 Recordings: export & replay (headless, D-43; hero run + R11 hosting KI-55)
+  - _Requirements: 11.4_
 - [ ] 15. Remaining Med features in PRD order (F15–F18), then Low (F19–F22)

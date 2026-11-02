@@ -13,7 +13,7 @@ export type EventSink<E extends { type: string; t: number } = RunEvent> = {
 
 /**
  * Fans run events out to `onEvent` and appends them to `<outDir>/events.ndjson` (design §8). Frames go to
- * `onEvent` and `<outDir>/frames/<ghostId>/<seq>.jpg`, never to ndjson. Every event is redacted (Req 2.8),
+ * `onEvent` and `<outDir>/frames/<ghostId>/<seq>.jpg` (indexed with their `t` in `frames.ndjson`), never to events.ndjson. Every event is redacted (Req 2.8),
  * and a throwing listener is swallowed.
  */
 export function createEventSink<E extends { type: string; t: number } = RunEvent>(opts: {
@@ -65,12 +65,15 @@ export function createEventSink<E extends { type: string; t: number } = RunEvent
     frame(ghostId, jpeg) {
       const seq = seqs.get(ghostId) ?? 0;
       seqs.set(ghostId, seq + 1);
-      deliver({ type: 'ghost.frame', ghostId, seq, jpegBase64: jpeg.toString('base64'), t: now() } as unknown as E);
+      const t = now();
+      deliver({ type: 'ghost.frame', ghostId, seq, jpegBase64: jpeg.toString('base64'), t } as unknown as E);
       if (outDir) {
         const dir = join(outDir, 'frames', ghostId);
         write(async () => {
           await mkdir(dir, { recursive: true });
           await writeFile(join(dir, `${String(seq).padStart(5, '0')}.jpg`), jpeg);
+          // The frame index places each jpg in time, for replay (F15).
+          await appendFile(join(outDir, 'frames.ndjson'), `${JSON.stringify({ ghostId, seq, t })}\n`);
         });
       }
     },

@@ -63,6 +63,10 @@
 | KI-52 | F13 review minors: a symlinked `--dir` is reported as "not a directory", `--spec` is ignored with `--no-hook` and goes into the hook prompt unnormalised, the `mcp.json` write isn't atomic, the MCP SDK isn't a declared CLI devDependency, plus test gaps | Minor | F13, R5 | Open |
 | KI-53 | F14 Done-when on real Candy Swap (the video's exorcism loop: one `rehaunt` call in a Kiro session, haunted → clean in < 30 s) not yet run: built against the claims fixture (D-42) | Major | F14 sign-off, demo | Open |
 | KI-54 | F14 review minors: carried flaky/inconclusive pairs unmarked in the markdown, an all-resets-failed rerun overwrites good verdicts in the merged report, lost update when two processes rehaunt one spec at once, `target` compared as an exact string, `previousRunId` set even when the baseline was unusable, carried artifacts point at old run folders | Minor | F14, R5 | Open |
+| KI-55 | F15 Done-when on the hero Candy Swap run not yet checked: export it, host the bundle from Reanimator's R11 and replay it in a fresh browser (D-43) | Major | F15 sign-off, R11 | Open |
+| KI-56 | F15 review minors: two Review Focus tests weaker than claimed (aborted run not via `main`, server close on abort not asserted), a heavily haunted run's protected frames alone can exceed the cap, re-exporting a pre-F15 run hides estimated frame times, O(k²) per-ghost array building, real idle gaps kept at 1×, symlinked `--out` not resolved, `stateAt` refolds from the start, CLI tests import a core test helper | Minor | F15, R11 | Open |
+| KI-57 | Frame capture can hide a race: at the default 4 fps, the F15 Done-when's summon came back clean for 3.2 on a 2-vCPU CI runner (the claims fixture's race window is 30 ms) | Major | F06, demo, Reanimator R4 | Open |
+| KI-58 | Race-dependent fixture tests flake intermittently on GitHub's runner and never locally: F06's barrier gap (52 ms and 91 ms vs < 50), summon's and F11's 3.2 not haunted; seen on `main` and PR runs | Major | CI health (D-19), D-06 | Investigating (race tests now run serially, last) |
 
 ---
 
@@ -566,3 +570,35 @@
 - **`previousRunId`** is returned whenever a previous report was read, even an unusable one (other target), which Reanimator could misread as "diffed against".
 - **Old artifacts:** carried pairs' `artifacts` point into older `.poltergeist/runs/<id>/` folders. Nothing prunes them today; a future cleanup must keep the folders a report still cites.
 - **Tests:** no test renders many carried haunted sections against the 300-line cap.
+
+### KI-55: F15 Done-when not yet run on the hero Candy Swap run · Major · Open
+- **Context:** F15 was built in Claude Code against the claims fixture (D-43). The PRD Done-when is "the public URL replays the hero Candy Swap run in a fresh browser", which needs F10 (KI-44), a frame-rich 12-ghost run (KI-49) and Reanimator's R11 to host and play the bundle.
+- **Next action:** after the hero run, `poltergeist export .poltergeist/runs/<id> --out <R11 public folder>`. Check the size line is under 50 MB without much thinning; if it's thinned hard, lower `frameFps` for the hero run rather than raising the cap. R11 plays it with `buildTimeline`/`stateAt` (static) or by pointing R4's scene at `poltergeist replay` (local).
+
+### KI-56: F15 review minors · Minor · Open
+- **Context:** the final review of F15 (2026-11-02). Its one Important finding (absolute paths in a public bundle) was fixed before merge (D-43 review fixes).
+- **Tests:** the "aborted run" replay test strips `run.finished` in memory rather than loading such a folder through `main` (exit 0 unasserted); the abort → 130 test doesn't prove the server closed (reconnect or rebind the port).
+- **Cap on a haunted run:** every frame of a failed ghost is protected, so a run where Doppelgänger fails every rep can exceed 50 MB on protected frames alone and export refuses. Fallback: thin failed ghosts too, keeping frames near the failing assertion. Until then, lower `frameFps` for the hero run (KI-55).
+- **Estimated times laundered:** exporting a pre-F15 run writes estimated `t`s into `frames.ndjson`, so the bundle loads as `estimatedFrames: false`. Add `estimatedFrames?: true` to `recording.json` and warn in `export`.
+- **Performance:** `[...arr, f]` per frame in `export.ts`/`timeline.ts` is O(k²) per ghost (use `push`); `stateAt` refolds from 0 per scrub (add checkpoints if R11 scrubs a long run).
+- **Idle gaps:** replay keeps the compile phase's real gap (minutes at 1×). Consider capping each gap (for example 2 s ÷ speed) for the demo.
+- **Symlinks:** `checkOutDir` compares resolved paths without `realpath`, so a symlinked `--out` into the run folder passes (it only adds files).
+- **Test layout:** CLI tests import `core/test/recording/run-dir.ts` across packages.
+
+### KI-57: Frame capture can hide a race · Major · Open
+- **Context (2026-11-02):** PR #20's first CI run failed: the F15 Done-when's summon, with `frameFps: 4` (the runner default), exited 0 because the Doppelgänger's race on 3.2 didn't reach `haunted`. The same test passed locally, also pinned to one CPU. F12's Done-when uses 2 fps and is green on CI. The CDP screencast (every frame acked and decoded in Node, KI-33 notes) slows the actors enough on a small runner to spread the two clicks past the fixture's 30 ms check-then-insert window.
+- **Fix in the test:** the F15 Done-when uses 2 fps, like F12's.
+- **Why it matters beyond tests:** real summons default to 4 fps, so a slow machine (or 12+ ghosts) could turn a real race `flaky` or `clean` just because frames are being recorded. That's the reverse of D-06 (verdicts must reproduce).
+- **Next action:** during KI-36/KI-49 on Candy Swap, compare 3.2's verdict at `frameFps` 0, 2 and 4 with 12 ghosts. If capture changes verdicts, pace frame capture away from barrier steps, lower the default, or use `everyNthFrame` (KI-33).
+
+### KI-58: Race-dependent fixture tests flake on CI only · Major · Open
+- **Evidence (2026-11-02):** Poltergeist CI failures on race-dependent claims-fixture tests, each passing on a re-run:
+  - `main` run 41434539063 (F06 Done-when barrier gap 52 ms, limit < 50);
+  - `main` run 41394113549 (F06: race found in 1 of 3 reps, needs ≥ 2; F11 Done-when not finished);
+  - `main` run 41303877125 (summon: 3.2 not haunted);
+  - PR #20 run 41438329974 attempt 1 (F06 barrier gap 91 ms), green on re-run.
+- **Not reproducible locally:** the full suite passed every time on this 12-core machine at 1 and 2 CPUs (`taskset`), including with `--maxWorkers=3` squeezed onto 1 core (CI has 4 vCPUs, so 3 workers). So it isn't plain CPU contention between test files. The CI runner differs in some other way (slower virtual CPUs, Chromium from `--with-deps`, scheduler).
+- **Mitigation (2026-11-02, PR #20):** `npm test` now runs in two passes: everything else in parallel (`POLTERGEIST_TESTS=rest`), then the 8 `RACE_TESTS` from `vitest.config.ts` one file at a time (`POLTERGEIST_TESTS=race`, `fileParallelism: false`). No assertion changed. Plain `npx vitest run` still runs everything at once. Watch the next CI runs: if a race test still flakes alone, contention wasn't the cause and the data-capture step below comes next.
+- **Risk:** it isn't only a test problem. The same timing sensitivity means a real Doppelgänger race can come back `flaky` or `clean` on a slow machine (D-06), as KI-07 and KI-57 warn.
+- **Next action:** capture data on CI rather than guess. Log each rep's barrier gap and POST arrival spread in the F06 Done-when and summon tests (as test output, not assertions), let a few CI runs collect them, then decide among: running race-sensitive files in a serial vitest pass, holding both actors' requests at the server-side barrier (`holdRequests`/`releaseRequests`) so the window doesn't depend on click timing, or widening only the fixture's write delay. Never loosen the assertions (AGENTS.md health rules).
+
