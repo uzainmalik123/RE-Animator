@@ -25,13 +25,22 @@ export type McpEntry = { command: 'node'; args: string[]; env: Record<string, st
 export const MCP_PATH = '.kiro/settings/mcp.json';
 
 export type PlannedFile =
-  | { path: string; kind: 'text'; content: string }
+  | {
+      path: string;
+      kind: 'text';
+      content: string;
+      /** The user's file once it exists: created, never replaced, not even by `--force`. */
+      scaffold?: boolean;
+      /** A trailing section the user owns; `--force` keeps the existing file's copy of it. */
+      keepSection?: string;
+    }
   | { path: typeof MCP_PATH; kind: 'mcp-entry'; entry: McpEntry };
 
 export const DEFAULT_TARGET = 'http://localhost:3000';
 
 const DEFAULT_MCP_BIN = fileURLToPath(new URL('../../../mcp/bin/poltergeist-mcp.js', import.meta.url));
 const DEFAULT_TEMPLATES = fileURLToPath(new URL('../../../../integrations/kiro/', import.meta.url));
+export const HOUSE_RULES = '## House rules';
 const GENERIC_SPEC = 'the spec whose tasks just ran';
 
 const json = (value: unknown) => `${JSON.stringify(value, null, 2)}\n`;
@@ -54,9 +63,9 @@ export async function planInit(opts: InitOptions): Promise<PlannedFile[]> {
   const entry: McpEntry = { command: template.command, args, env: { ...template.env }, autoApprove: [...template.autoApprove] };
 
   const files: PlannedFile[] = [
-    { path: 'poltergeist.config.json', kind: 'text', content: json(config) },
+    { path: 'poltergeist.config.json', kind: 'text', content: json(config), scaffold: true },
     { path: MCP_PATH, kind: 'mcp-entry', entry },
-    { path: '.kiro/steering/poltergeist.md', kind: 'text', content: await read('steering/poltergeist.md') },
+    { path: '.kiro/steering/poltergeist.md', kind: 'text', content: await read('steering/poltergeist.md'), keepSection: HOUSE_RULES },
   ];
   if (opts.hook !== false) {
     const spec = opts.spec === undefined ? GENERIC_SPEC : `the spec in \`${opts.spec}\``;

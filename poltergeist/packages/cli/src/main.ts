@@ -52,10 +52,10 @@ export async function main(argv: readonly string[], deps: MainDeps = {}): Promis
     try {
       const result = await init({ ...args, dir: resolve(cwd, args.dir ?? '.') });
       for (const f of result.files) stdout.write(`${f.outcome.padEnd(11)} ${f.path}\n`);
-      const skipped = result.files.some((f) => f.outcome === 'skipped');
-      if (skipped) stdout.write('some files differ and were kept; rerun with --force to replace them\n');
+      const skipped = result.files.filter((f) => f.outcome === 'skipped').map((f) => f.path);
+      if (skipped.length) stdout.write(`some files differ and were kept; --force would replace: ${skipped.join(', ')}\n`);
       stdout.write('next: start your app on the target in poltergeist.config.json, open the project in Kiro and approve ANTHROPIC_API_KEY\n');
-      return skipped ? 1 : 0;
+      return skipped.length ? 1 : 0;
     } catch (err) {
       // ConfigError, InitError, or an fs error such as EACCES: nothing was half-written by a refusal.
       fail(termSafe(message(err), 2000));

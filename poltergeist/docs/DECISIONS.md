@@ -591,6 +591,11 @@
   - **Idempotent (Req 10.3):** each file is `created`, `unchanged` (identical; the MCP entry is compared by deep equality), `skipped` (differs, no `--force`) or `overwritten`. Exit 0, or 1 if anything was skipped (the output names `--force`), or 2 on any error.
   - **Safety:** every outcome is decided before any write, so a refusal writes nothing. `init` refuses to write through a symlink anywhere below `--dir` and refuses an `mcp.json` that isn't a JSON object (even with `--force`). It never touches `requirements.md`, `design.md` or `tasks.md` (D-14).
   - **Done-when (fixture):** the real bin wires a temp project; reruns are idempotent; skip and force behave; the server command written into `mcp.json` lists the five tools with no other setup. The real Kiro check is KI-51.
+- **Review fixes (2026-11-02):**
+  - **`poltergeist.config.json` is the user's once it exists.** It is created, then never replaced, not even by `--force`. A differing one is reported `kept`, which isn't a skip (it doesn't make the exit code 1). Before this fix, `--force`, the obvious way to refresh a stale bin path after moving the checkout, also wiped the user's routes and accounts.
+  - **`--force` keeps the steering file's `## House rules` section.** The rest of the file is refreshed from the template.
+  - **The skip hint names the files `--force` would replace.**
+  - Deferred minors are in KI-52.
 - **Consequences:**
   - F17 parses `## House rules` in the steering file that `init` writes.
   - F18 can reuse the same templates for the Power.

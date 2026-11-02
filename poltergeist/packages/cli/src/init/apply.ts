@@ -3,7 +3,8 @@ import { dirname, join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { MCP_PATH, type PlannedFile } from './plan.js';
 
-export type InitOutcome = 'created' | 'unchanged' | 'skipped' | 'overwritten';
+/** `kept`: the user's scaffold (the config) differs, and is never replaced. Not a skip. */
+export type InitOutcome = 'created' | 'unchanged' | 'kept' | 'skipped' | 'overwritten';
 export type InitResult = { dir: string; files: { path: string; outcome: InitOutcome }[] };
 
 /** `init` can't write safely: a bad project dir, a symlink in the way, or an unreadable `mcp.json`. */
@@ -34,12 +35,22 @@ async function existing(dir: string, rel: string): Promise<string | undefined> {
   return readFile(abs, 'utf8');
 }
 
+/** `fresh` up to its `heading`, then `current`'s copy of that section when it has one. */
+function withSection(fresh: string, current: string, heading: string): string {
+  const at = (s: string) => s.search(new RegExp(`^${heading}\\s*$`, 'm'));
+  const mine = at(current);
+  const ours = at(fresh);
+  return mine < 0 || ours < 0 ? fresh : fresh.slice(0, ours) + current.slice(mine);
+}
+
 async function decide(dir: string, file: PlannedFile, force: boolean): Promise<Decision> {
   const current = await existing(dir, file.path);
   if (file.kind === 'text') {
     if (current === undefined) return { path: file.path, outcome: 'created', content: file.content };
-    if (current === file.content) return { path: file.path, outcome: 'unchanged', content: current };
-    return { path: file.path, outcome: force ? 'overwritten' : 'skipped', content: file.content };
+    const content = file.keepSection ? withSection(file.content, current, file.keepSection) : file.content;
+    if (current === content) return { path: file.path, outcome: 'unchanged', content: current };
+    if (file.scaffold) return { path: file.path, outcome: 'kept', content: current };
+    return { path: file.path, outcome: force ? 'overwritten' : 'skipped', content };
   }
 
   // mcp.json is shared with the user's other servers: merge one entry, never replace the file.

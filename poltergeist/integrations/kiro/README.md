@@ -6,7 +6,7 @@ Files here are installed **into other projects'** `.kiro/` folders (D-01). `polt
 npx poltergeist init --dir /path/to/your/project --target http://localhost:3000
 ```
 
-It writes four files, never overwriting one that differs unless you pass `--force`:
+It writes four files, never overwriting one that differs unless you pass `--force`. Your `poltergeist.config.json` is never replaced once it exists, and `--force` keeps the steering file's `## House rules` section:
 
 | Template | Written to | What it does |
 |---|---|---|

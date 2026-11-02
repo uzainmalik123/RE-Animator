@@ -45,7 +45,7 @@ describe('poltergeist init (Done-when)', () => {
     const third = await run(['init', '--dir', dir]);
     expect(third.code).toBe(1);
     expect(third.stdout).toMatch(/skipped\s+\.kiro\/steering\/poltergeist\.md/);
-    expect(third.stdout).toContain('--force');
+    expect(third.stdout).toContain('--force would replace: .kiro/steering/poltergeist.md');
 
     const forced = await run(['init', '--dir', dir, '--force']);
     expect(forced.code).toBe(0);

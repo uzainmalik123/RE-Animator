@@ -60,6 +60,7 @@
 | KI-49 | F12 Done-when on real Candy Swap (a 12-ghost run consumed live by Reanimator's R4 scene) not yet run: built against the claims fixture (D-40) | Major | F12 sign-off, R4 | Open |
 | KI-50 | F12 review minors: evidence prefers the first failing ghost even when only its partner has a frame, no `run.failed` event so an aborted run's live phase stays `running`, no test of a slow client draining and getting frames again, no subpath import test or lint rule keeping Node out of `core/src/live`, `LiveState` keeps every done ghost's JPEG, frames before `ghost.spawned` are ignored | Minor | F12, R4 | Open |
 | KI-51 | F13 Done-when in a real Kiro session not yet run: does `PostTaskExecution` fire the agent hook, and does Kiro load the `init`-written `mcp.json` and steering with no manual step | Major | F13 sign-off, R5 | Open |
+| KI-52 | F13 review minors: a symlinked `--dir` is reported as "not a directory", `--spec` is ignored with `--no-hook` and goes into the hook prompt unnormalised, the `mcp.json` write isn't atomic, the MCP SDK isn't a declared CLI devDependency, plus test gaps | Minor | F13, R5 | Open |
 
 ---
 
@@ -538,4 +539,13 @@
   2. the steering file loads;
   3. finishing a spec task fires the hook and the agent calls `summon_ghosts`.
   If the trigger name is wrong, fix `integrations/kiro/hooks/poltergeist-summon.json` and `docs/kiro-notes.md`.
+
+### KI-52: F13 review minors · Minor · Open
+- **Context:** the final review of F13 (2026-11-02). Its Important finding was fixed before merge: `--force` no longer replaces the user's `poltergeist.config.json` or the steering file's `## House rules` (D-41).
+- **Symlinked `--dir`:** `lstat(dir)` reports a symlinked project root as "not a directory" and swallows EACCES the same way. `stat` (follow links) the root itself, and keep `lstat` only for the segments below it.
+- **`--spec`:** it's silently ignored with `--no-hook`, so that combination should be a usage error. It also goes into the hook prompt verbatim, relative to the caller's cwd rather than the project. Resolve it against cwd and make it relative to `--dir`. Reject anything outside `--dir`, or containing a backtick or a newline, before Reanimator passes names taken from revived repos.
+- **Atomic write:** a crash in the middle of writing `mcp.json` could truncate the user's other servers. Write a temp file in the same directory, then rename it.
+- **Race window:** a symlink could be introduced between the decide and write phases. It needs a local attacker racing the CLI, so it's noted only.
+- **Dependency:** `init-done-when.test.ts` imports `@modelcontextprotocol/sdk` through workspace hoisting. Add it to `packages/cli` as a pinned devDependency.
+- **Tests:** none covers `main()` with the default `--dir .` via the `cwd` dep, a non-InitError fs error (a read-only dir → exit 2 with one line), or a path with spaces written to disk end to end.
 

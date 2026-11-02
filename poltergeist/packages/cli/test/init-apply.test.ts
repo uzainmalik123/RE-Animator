@@ -47,6 +47,27 @@ describe('init', () => {
     expect(await readFile(join(dir, STEERING), 'utf8')).toContain('# Poltergeist');
   });
 
+  it('keeps an edited config, even with force: it is the user\'s, not ours', async () => {
+    await init({ dir });
+    const mine = '{"target":"http://localhost:3000","routes":[{"path":"/shop","auth":false}]}\n';
+    await writeFile(join(dir, 'poltergeist.config.json'), mine);
+    for (const force of [false, true]) {
+      expect(outcomes(await init({ dir, force }))['poltergeist.config.json']).toBe('kept');
+      expect(await readFile(join(dir, 'poltergeist.config.json'), 'utf8')).toBe(mine);
+    }
+  });
+
+  it('carries the House rules over when force replaces the steering file', async () => {
+    await init({ dir });
+    const original = await readFile(join(dir, STEERING), 'utf8');
+    const rules = '## House rules\n\n- never test /admin\n';
+    await writeFile(join(dir, STEERING), `stale intro\n\n${rules}`);
+    expect(outcomes(await init({ dir, force: true }))[STEERING]).toBe('overwritten');
+    const now = await readFile(join(dir, STEERING), 'utf8');
+    expect(now).toBe(original.slice(0, original.indexOf('## House rules')) + rules);
+    expect(outcomes(await init({ dir }))[STEERING]).toBe('unchanged');
+  });
+
   it('keeps other servers and top-level keys in mcp.json', async () => {
     const other = { command: 'x', args: ['--y'] };
     await put(MCP, JSON.stringify({ mcpServers: { other }, extra: 1 }));
