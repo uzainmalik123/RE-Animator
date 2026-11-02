@@ -1,15 +1,17 @@
+import type { DeviceId } from './devices.js';
 import { UnknownPersonaError } from './errors.js';
 import type { GeneratorId } from './generators/index.js';
 import type { StepType } from './steps.js';
 
-/** Built-in personas (D-13). Lich and Revenant arrive in F16, Changeling in F20. */
-export const PERSONA_IDS = Object.freeze(['wraith', 'banshee', 'doppelganger'] as const);
+/** Built-in personas (D-13). Lich and Revenant arrived in F16 (D-44); Changeling arrives in F20. */
+export const PERSONA_IDS = Object.freeze(['wraith', 'banshee', 'doppelganger', 'lich', 'revenant'] as const);
 
 export type PersonaId = (typeof PERSONA_IDS)[number];
 
 /**
  * `name` and `tagline` are UI copy and may be themed. `behaviour` goes into the compiler's
- * prompt, so it uses plain QA wording (D-09). `sprite` is a key the Costume Kit resolves (F26).
+ * prompt, so it uses plain QA wording (D-09). `sprite` is a key the Costume Kit resolves (F26). `device`
+ * names a fixed preset the runner emulates for every actor (D-44).
  */
 export type Persona = {
   readonly id: PersonaId;
@@ -20,6 +22,7 @@ export type Persona = {
   readonly generators: readonly GeneratorId[];
   readonly actors: 1 | 2;
   readonly sprite: string;
+  readonly device?: DeviceId;
 };
 
 function define(p: Persona): Persona {
@@ -64,6 +67,29 @@ const PERSONAS: ReadonlyMap<PersonaId, Persona> = new Map(
       generators: ['plain'],
       actors: 2,
       sprite: 'doppelganger',
+    }),
+    define({
+      id: 'lich',
+      name: 'Lich',
+      tagline: 'Crawls in on a tiny phone, a weak CPU and a slow network.',
+      behaviour:
+        'A user on a small, slow phone: a narrow screen, a slow processor, and a slow mobile network (start the plan with a throttle step). Uses the page normally. Checks that the controls the task needs are visible and usable on the small screen, that loading states show while requests are slow, and that nothing breaks or happens twice on a slow connection.',
+      allowedSteps: ['goto', 'click', 'fill', 'press', 'back', 'reload', 'wait', 'throttle'],
+      generators: ['plain'],
+      actors: 1,
+      sprite: 'lich',
+      device: 'small-slow',
+    }),
+    define({
+      id: 'revenant',
+      name: 'Revenant',
+      tagline: 'Comes back to an open tab after the session has died.',
+      behaviour:
+        'The same signed-in user in two browser tabs whose session ends while a page is still open. Tab b ends the session, with the app\'s own sign-out control or with a logout step (which drops that tab\'s session cookies); a barrier then lets tab a continue on its old page. Checks that the app asks the user to sign in again or clearly refuses, instead of performing the action, crashing, or still showing private data.',
+      allowedSteps: ['goto', 'click', 'fill', 'press', 'back', 'reload', 'wait', 'barrier', 'login', 'logout'],
+      generators: ['plain'],
+      actors: 2,
+      sprite: 'revenant',
     }),
   ].map((p) => [p.id, p]),
 );

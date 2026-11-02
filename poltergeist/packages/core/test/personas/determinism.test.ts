@@ -38,6 +38,6 @@ describe('determinism (F04 Done-when)', () => {
   });
 
   it('is exported from the package index', () => {
-    expect(listPersonas()).toHaveLength(3);
+    expect(listPersonas()).toHaveLength(5);
   });
 });

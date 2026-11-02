@@ -1,3 +1,5 @@
+export type { DeviceId, DevicePreset } from './devices.js';
+export { DEVICE_IDS, getDevice } from './devices.js';
 export { UnknownGeneratorError, UnknownPersonaError } from './errors.js';
 export type { GeneratorId, GeneratorInfo } from './generators/index.js';
 export { GENERATOR_IDS, generate, isGeneratorId, listGenerators } from './generators/index.js';

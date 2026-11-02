@@ -4,6 +4,7 @@ import {
   PERSONA_IDS,
   STEP_TYPES,
   UnknownPersonaError,
+  getDevice,
   getPersona,
   isPersonaId,
   listPersonas,
@@ -21,10 +22,10 @@ describe('STEP_TYPES', () => {
 });
 
 describe('listPersonas', () => {
-  it('lists the three core personas in order', () => {
-    expect(listPersonas().map((p) => p.id)).toEqual(['wraith', 'banshee', 'doppelganger']);
-    expect(listPersonas().map((p) => p.name)).toEqual(['Wraith', 'Banshee', 'Doppelgänger']);
-    expect(PERSONA_IDS).toEqual(['wraith', 'banshee', 'doppelganger']);
+  it('lists the five built-in personas in order', () => {
+    expect(listPersonas().map((p) => p.id)).toEqual(['wraith', 'banshee', 'doppelganger', 'lich', 'revenant']);
+    expect(listPersonas().map((p) => p.name)).toEqual(['Wraith', 'Banshee', 'Doppelgänger', 'Lich', 'Revenant']);
+    expect(PERSONA_IDS).toEqual(['wraith', 'banshee', 'doppelganger', 'lich', 'revenant']);
   });
 
   it('uses the persona id as the sprite reference', () => {
@@ -55,6 +56,46 @@ describe('allocations', () => {
     expect(p.generators).toEqual(['plain']);
     expect(p.actors).toBe(2);
   });
+
+  it('lich', () => {
+    const p = getPersona('lich');
+    expect(p.allowedSteps).toEqual(['goto', 'click', 'fill', 'press', 'back', 'reload', 'wait', 'throttle']);
+    expect(p.generators).toEqual(['plain']);
+    expect(p.actors).toBe(1);
+    expect(p.device).toBe('small-slow');
+  });
+
+  it('revenant', () => {
+    const p = getPersona('revenant');
+    expect(p.allowedSteps).toEqual(['goto', 'click', 'fill', 'press', 'back', 'reload', 'wait', 'barrier', 'login', 'logout']);
+    expect(p.generators).toEqual(['plain']);
+    expect(p.actors).toBe(2);
+    expect(p.device).toBeUndefined();
+  });
+
+  it('only the lich has a device', () => {
+    expect(listPersonas().filter((p) => p.device).map((p) => p.id)).toEqual(['lich']);
+  });
+});
+
+describe('getDevice', () => {
+  it('small-slow is a fixed, frozen preset', () => {
+    const d = getDevice('small-slow');
+    expect(d).toEqual({
+      id: 'small-slow',
+      viewport: { width: 360, height: 640 },
+      isMobile: true,
+      hasTouch: true,
+      cpuSlowdown: 4,
+      label: '360×640 phone, 4× slower CPU',
+    });
+    expect(Object.isFrozen(d)).toBe(true);
+    expect(Object.isFrozen(d.viewport)).toBe(true);
+  });
+
+  it('throws on an unknown device', () => {
+    expect(() => getDevice('tablet' as never)).toThrow(/unknown device/);
+  });
 });
 
 describe('integrity', () => {
@@ -69,10 +110,11 @@ describe('integrity', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('leaves throttle, login and logout to the extended personas (F16)', () => {
-    for (const p of listPersonas()) {
-      for (const s of ['throttle', 'login', 'logout'] as const) expect(p.allowedSteps).not.toContain(s);
-    }
+  it('gives throttle only to the lich and login/logout only to the revenant (F16)', () => {
+    const having = (s: string) => listPersonas().filter((p) => (p.allowedSteps as readonly string[]).includes(s)).map((p) => p.id);
+    expect(having('throttle')).toEqual(['lich']);
+    expect(having('login')).toEqual(['revenant']);
+    expect(having('logout')).toEqual(['revenant']);
   });
 });
 
@@ -95,7 +137,7 @@ describe('text fields', () => {
 });
 
 describe('getPersona', () => {
-  it.each(['Wraith', '__proto__', 'toString', 'lich', ''])('unknown id %j throws UnknownPersonaError', (id) => {
+  it.each(['Wraith', '__proto__', 'toString', 'changeling', 'Lich', ''])('unknown id %j throws UnknownPersonaError', (id) => {
     expect(() => getPersona(id)).toThrow(UnknownPersonaError);
     try {
       getPersona(id);

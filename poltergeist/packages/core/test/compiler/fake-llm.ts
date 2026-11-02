@@ -54,6 +54,22 @@ export const VALID: Record<PersonaId, unknown> = {
       assert: [{ textVisible: '2 candies left' }],
     },
   },
+  lich: {
+    result: {
+      kind: 'plan',
+      intent: 'Claim on a slow, small phone; the claim works once.',
+      actors: { a: [{ throttle: { profile: 'fast-3g' } }, { goto: '/market' }, claim] },
+      assert: [{ textVisible: '2 candies left' }],
+    },
+  },
+  revenant: {
+    result: {
+      kind: 'plan',
+      intent: 'Claim from a tab whose session ended in another tab.',
+      actors: { a: [{ goto: '/market' }, { barrier: 'gone' }, claim], b: [{ goto: '/market' }, { logout: true }, { barrier: 'gone' }] },
+      assert: [{ textNotVisible: '2 candies left' }],
+    },
+  },
 };
 
 export const INVALID = {
