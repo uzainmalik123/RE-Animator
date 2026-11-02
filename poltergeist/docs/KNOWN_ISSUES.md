@@ -47,7 +47,7 @@
 | KI-36 | F06 Done-when (12 ghosts on real Candy Swap in < 5 min) not yet run against the real Candy Swap (built against a fixture, D-33) | Major | F06 sign-off | Open |
 | KI-37 | F06 review minors: plan timeout doesn't stop actors (late steps and events), `ghost.step` vs late `blocked-by-rule`, rep error names the broken-barrier actor, a 2-actor plan exceeds `concurrency: 1`, assertions after a leak abort, unredacted URL on `RunnerSafetyError`, screencast frames dropped in Node, small cleanups | Minor | F12 | Open (timeout, attribution and rep error fixed in F07; concurrency warned in F09) |
 | KI-38 | F08 Done-when (an agent reproduces a haunted Candy Swap criterion from the report alone, once with Kiro and once with Claude Code) not yet run on real Candy Swap or in Kiro | Major | F08 sign-off | Open |
-| KI-39 | Timeouts are `inconclusive` (D-34), so slow-device breakage (Lich: hidden buttons, timeouts) can never be `haunted` | Minor | F16 | Open |
+| KI-39 | Timeouts are `inconclusive` (D-34), so slow-device breakage (Lich: hidden buttons, timeouts) can never be `haunted` | Minor | F16 | Resolved (2026-11-02, D-44) |
 | KI-40 | The report uses core's draft wordmark and glyph table until F26 ships `@poltergeist/costume` | Minor | F26, F09 | Open |
 | KI-41 | F08 review minors: markdown/HTML in criterion text and plan strings outside code spans, bidi/invisible characters pass `oneLine`, flaky pairs under a haunted criterion hidden in markdown, orphan `.tmp` after a kill, non-atomic pair of files, long wordmark override, Windows cross-drive paths | Minor | F11 | Open (injection and bidi fixed 2026-11-01, F09) |
 | KI-42 | F09 Done-when (`npm ci && npx playwright-core install chromium && npm run summon` on Candy Swap from a clean clone) not yet run: built against a fixture (D-36) | Major | F09 sign-off | Open |
@@ -67,6 +67,8 @@
 | KI-56 | F15 review minors: two Review Focus tests weaker than claimed (aborted run not via `main`, server close on abort not asserted), a heavily haunted run's protected frames alone can exceed the cap, re-exporting a pre-F15 run hides estimated frame times, O(k²) per-ghost array building, real idle gaps kept at 1×, symlinked `--out` not resolved, `stateAt` refolds from the start, CLI tests import a core test helper | Minor | F15, R11 | Open |
 | KI-57 | Frame capture can hide a race: at the default 4 fps, the F15 Done-when's summon came back clean for 3.2 on a 2-vCPU CI runner (the claims fixture's race window is 30 ms) | Major | F06, demo, Reanimator R4 | Open |
 | KI-58 | Race-dependent fixture tests flake intermittently on GitHub's runner and never locally: F06's barrier gap (52 ms and 91 ms vs < 50), summon's and F11's 3.2 not haunted; seen on `main` and PR runs | Major | CI health (D-19), D-06 | Investigating (race tests now run serially, last) |
+| KI-59 | F16 Done-when on real Candy Swap (the live LLM writes sensible Lich and Revenant plans for ≥ 3 criteria) not yet run: built against fixtures (D-44) | Major | F16 sign-off | Open |
+| KI-60 | Scout captures at the desktop viewport only: a Lich can't target mobile-only controls (a hamburger menu), and a control hidden behind one fails as `usable` | Minor | F16 | Open |
 
 ---
 
@@ -449,10 +451,11 @@
   One fix went into F08: the artifact list now says its paths are relative to the report's folder.
 - **Next action:** once F10 and F09 exist, haunt Candy Swap. Give Kiro's agent only `haunting-report.md` and check it can find and reproduce a haunted criterion. Repeat with Claude Code on Candy Swap. Consider recording the `api` assertion's response body as evidence (F06) and the requests each click caused.
 
-### KI-39: Timeouts can never be `haunted` · Minor · Open
+### KI-39: Timeouts can never be `haunted` · Minor · Resolved
 - **Problem:** D-34 treats step and plan timeouts as `inconclusive`, because a timeout can't tell a slow app apart from a bad plan. A Lich run (slow 3G, small screen) that times out every rep on a hidden button therefore shows `[??]`, not `[!!]`.
 - **Blocks:** F16 (Lich) usefulness.
 - **Next action:** when F16 is built, decide whether a timeout on an action step that succeeds without throttling counts as an app failure (for example, through a control run).
+- **Resolved (2026-11-02, F16, D-44):** no control run (it would need a reset in the middle of a rep). Instead, a device persona's action step that times out on a target that is on the page but not visible becomes a failed `usable` app assertion in a completed rep, so it can reproduce into `haunted`. Missing, disabled and off-screen targets, and plan timeouts, stay `inconclusive`.
 
 ### KI-40: The report's wordmark and glyphs are core drafts until F26 · Minor · Open
 - **Problem:** F26 owns the wordmark and verdict glyphs, but it isn't built. `report/` holds THEME §4's drafts as defaults (D-35).
@@ -602,3 +605,12 @@
 - **Risk:** it isn't only a test problem. The same timing sensitivity means a real Doppelgänger race can come back `flaky` or `clean` on a slow machine (D-06), as KI-07 and KI-57 warn.
 - **Next action:** capture data on CI rather than guess. Log each rep's barrier gap and POST arrival spread in the F06 Done-when and summon tests (as test output, not assertions), let a few CI runs collect them, then decide among: running race-sensitive files in a serial vitest pass, holding both actors' requests at the server-side barrier (`holdRequests`/`releaseRequests`) so the window doesn't depend on click timing, or widening only the fixture's write delay. Never loosen the assertions (AGENTS.md health rules).
 
+### KI-59: F16 Done-when on real Candy Swap not yet run · Major · Open
+- **Problem:** F16 was built against the claims and Candy fixtures with a fake LLM (D-44). Its Done-when ("each persona produces sensible plans for at least 3 Candy Swap criteria") needs the real app (KI-44) and a live key.
+- **Blocks:** F16 sign-off.
+- **Next action:** once Candy Swap exists, run `npm run summon -- --personas lich,revenant` and read the plans in `plans/`: does the Lich start with `throttle`, does the Revenant's tab b sign out before tab a acts, and are the verdicts believable?
+
+### KI-60: Scout sees only the desktop layout · Minor · Open
+- **Problem:** Scout (F03) captures every route at the default desktop viewport. The Lich runs at 360×640, so a control that only exists on mobile (a menu toggle) is never offered to the compiler. A control that a responsive menu hides fails as `usable` even though a real user would open the menu first.
+- **Blocks:** F16 accuracy on responsive apps.
+- **Next action:** if Candy Swap or a demo app has a responsive menu, add a second Scout pass at the device viewport for device personas (its own route hash), and offer those targets to device personas only.

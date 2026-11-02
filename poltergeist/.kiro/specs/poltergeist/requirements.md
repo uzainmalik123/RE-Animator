@@ -79,6 +79,7 @@ Criterion IDs follow Kiro's convention (`N.M`, D-16), so Poltergeist's own Spec 
 1. THE Persona_Library SHALL define each built-in persona with an id, display name, one-line tagline, behaviour, allowed DSL steps, input generators, actor count and a sprite reference resolved by the Costume Kit.
 2. THE Input_Generators SHALL produce values deterministically from a generator id, a seed and an index, and the LLM SHALL only choose generator ids, never write values.
 3. WHERE the target project has a Poltergeist steering file, THE Persona_Library SHALL apply its persona enable/disable flags, and steering SHALL only ever tighten rules [F17].
+4. THE Persona_Library SHALL include the Lich, which runs on a fixed small, slow device preset (360×640, mobile, touch, 4× slower CPU) and may throttle the network, and the Revenant, which ends the session in one tab and continues on a stale page in another [F16].
 
 ### Requirement 5: Compiling plans [F05]
 
@@ -93,7 +94,7 @@ Criterion IDs follow Kiro's convention (`N.M`, D-16), so Poltergeist's own Spec 
 5. THE Compiler SHALL cache plans keyed by criterion hash, persona, the used routes' hashes, model and prompt version, and SHALL make no LLM call on a cache hit.
 6. THE Compiler SHALL describe the task as edge-case end-to-end test generation for an app the user owns, and SHALL keep theme words out of prompts (D-09).
 
-### Requirement 6: Running [F06]
+### Requirement 6: Running [F06, F16]
 
 **User Story:** As a developer, I want plans to run against my real app with many ghosts at once, so that race conditions and messy-user bugs actually show up.
 
@@ -107,8 +108,10 @@ Criterion IDs follow Kiro's convention (`N.M`, D-16), so Poltergeist's own Spec 
 6. THE Runner SHALL inject a visible ghost-cursor overlay into each page, so that frames and recordings show where each ghost acts.
 7. THE Runner SHALL save a screenshot on every failed assertion and a trace per failed repetition.
 8. IF a step exceeds 5 s or a plan exceeds 60 s, THEN THE Runner SHALL abort that repetition with a `timeout` outcome.
+9. WHERE a persona names a device preset, THE Runner SHALL apply it to every actor's context and page, and the LLM SHALL NOT choose the device.
+10. WHEN a plan runs a `logout` step, THE Runner SHALL clear only the target hostname's cookies, and the page's storage only while the page is on the target origin.
 
-### Requirement 7: Verdicts [F07]
+### Requirement 7: Verdicts [F07, F16]
 
 **User Story:** As a developer, I want a red mark only when a bug reproduces, so that I trust the report.
 
@@ -118,6 +121,7 @@ Criterion IDs follow Kiro's convention (`N.M`, D-16), so Poltergeist's own Spec 
 2. THE Verdict_Engine SHALL mark a pair `flaky` when an assertion fails at least once but fewer than ⌈2N/3⌉ times.
 3. THE Verdict_Engine SHALL mark a pair `inconclusive` when failures come from the plan or the system, not from an app assertion.
 4. THE Verdict_Engine SHALL roll pairs up per criterion with the precedence `haunted` > `flaky` > `inconclusive` > `clean`, ignoring `notApplicable`.
+5. IF a device persona's `click`, `dblclick` or `fill` step times out on a target that is on the page but not visible, THEN THE Runner SHALL record that repetition as completed with one failed `usable` app assertion, and every other timeout SHALL stay `inconclusive`.
 
 ### Requirement 8: Reporting [F08]
 
