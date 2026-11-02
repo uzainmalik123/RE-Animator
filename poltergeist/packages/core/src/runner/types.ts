@@ -18,6 +18,8 @@ export type StepResult = {
   durationMs: number;
   note?: string;
   error?: string;
+  /** Set when a device persona's action timed out on a target it couldn't use (D-44). */
+  unusable?: string;
 };
 
 /** `failure` says whose fault a failed assertion is: the app's, the plan's, or the guard stopped it. */
