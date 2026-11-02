@@ -76,6 +76,19 @@ describe('probeUsable', () => {
     expect(await probeUsable(page, button(name))).toBeUndefined();
   });
 
+  it('returns undefined when another match of the target is visible', async () => {
+    const { page } = await phonePage();
+    await page.setContent('<button style="display:none">Buy</button><button>Buy</button>');
+    expect(await probeUsable(page, button('Buy'))).toBeUndefined();
+  });
+
+  it('returns undefined while the page is still loading (network not idle)', async () => {
+    const { context, page } = await phonePage();
+    await context.route('**/pending', () => undefined); // never answered
+    await page.setContent(`<button style="display:none">Wait</button><script>fetch('${ORIGIN}/pending')</script>`);
+    expect(await probeUsable(page, button('Wait'))).toBeUndefined();
+  });
+
   it('never throws on a closed page', async () => {
     const { page } = await phonePage();
     await page.close();
@@ -111,6 +124,14 @@ describe('startActor on a device', () => {
     const run = await runActor([{ click: button('Locked') }], await actorEnv(true));
     expect(run.end).toBe('timeout');
     expect(run.steps[0]?.unusable).toBeUndefined();
+  });
+
+  it('a device that cannot be applied fails the actor instead of rejecting', async () => {
+    const e = await actorEnv(true);
+    await e.page.close();
+    const run = await runActor([{ click: button('Visible') }], e);
+    expect(run.end).toBe('failed');
+    expect(run.error).toMatch(/device/);
   });
 
   it('without a device nothing is probed', async () => {

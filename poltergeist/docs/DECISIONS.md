@@ -659,6 +659,11 @@
     - Rejected: a control run without emulation. It needs its own reset in the middle of a rep, which breaks the concurrent pairs.
   - Requirements 4.4, 6.9, 6.10 and 7.5 added.
   - **Done-when (fixture):** the fake LLM compiles ≥ 3 fixture criteria for each new persona (`test/compiler/done-when.test.ts`), and a Lich plan on a button hidden by a small-screen media query is `haunted` in 3 of 3 reps, while the same plan as the Wraith is clean (`test/runner/run.test.ts`).
+- **Review fixes (2026-11-02):**
+  - **The Revenant has its own session (`ownSession`).** Its two actors are two pages of one guarded context, so `logout` in tab b really ends tab a's session (separate contexts kept a's cookie and gave a reproducible false `haunted`). The pair logs in for itself with the plan's account (`login()`, 2 × step timeout; failure → `systemError`) instead of using Scout's shared `storageState`, so the app's sign-out can't end the session every other pair runs on. No trace is kept (a typed password). Guard reports in the shared context are attributed to actor a.
+  - **The probe is stricter:** it first waits up to 2 s for `networkidle` (a page still loading stays `timeout`), and reports `usable` only when no match of the target is visible (a hidden desktop copy next to a visible mobile one no longer counts).
+  - **A device that can't be applied** (CDP error, closed page) fails the actor (`planError`) instead of rejecting its promise.
+  - Deferred minors are in KI-61.
 - **Consequences:**
   - The real check, sensible plans for ≥ 3 Candy Swap criteria from the live LLM, is KI-59.
   - Scout still captures at the desktop viewport, so a Lich can't target a mobile-only control (a hamburger menu), and a control that a responsive menu hides fails as `usable` (KI-60).

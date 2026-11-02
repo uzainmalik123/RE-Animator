@@ -6,6 +6,7 @@ import type { LoadedConfig } from '../config/load.js';
 import { runReset, type ResetResult } from '../config/reset.js';
 import { getDevice } from '../personas/devices.js';
 import { getPersona } from '../personas/registry.js';
+import { login } from '../scout/login.js';
 import { compileForbidden } from '../safety/forbidden.js';
 import { newGuardedContext, type BlockedRequest } from '../safety/guard.js';
 import { markBlockedByRule, startActor, type ActorRun } from './actor.js';
@@ -182,10 +183,15 @@ async function runPair(plan: HauntingPlan, rep: number, s: Shared): Promise<Pair
 
   const id = planIdentity(plan);
   if ('error' in id) return finish('planError', id.error);
-  const storageState = id.identity === 'anonymous' ? undefined : s.opts.sessions.get(id.identity);
-  if (id.identity !== 'anonymous' && !storageState) return finish('systemError', `no session for account "${id.identity}"`);
+  const persona = getPersona(plan.persona);
+  // An own-session pair (Revenant) logs in for itself: its sign-out must not end Scout's shared session.
+  const account = persona.ownSession && id.identity !== 'anonymous' ? loaded.config.accounts?.[id.identity] : undefined;
+  if (persona.ownSession && id.identity !== 'anonymous' && !account) return finish('systemError', `unknown account "${id.identity}"`);
+  const storageState = id.identity === 'anonymous' || persona.ownSession ? undefined : s.opts.sessions.get(id.identity);
+  if (id.identity !== 'anonymous' && !persona.ownSession && !storageState) return finish('systemError', `no session for account "${id.identity}"`);
+  const secret = storageState !== undefined || account !== undefined;
 
-  const deviceId = getPersona(plan.persona).device;
+  const deviceId = persona.device;
   const device = deviceId ? getDevice(deviceId) : undefined;
   const names: ActorName[] = plan.actors.b ? ['a', 'b'] : ['a'];
   const origin = loaded.config.target;
@@ -211,15 +217,22 @@ async function runPair(plan: HauntingPlan, rep: number, s: Shared): Promise<Pair
           if (run) markBlockedByRule(run);
         }
       };
-      const context = await newGuardedContext(
-        s.browser,
-        { allowedHosts: loaded.allowedHosts, forbidden: loaded.config.forbidden, onBlocked },
-        { ...(storageState ? { storageState } : {}), ...(device ? deviceContextOptions(device) : {}) },
-      );
-      const holds = await installHolds(context, origin);
-      await installOverlay(context);
-      // A context seeded with a session would put its cookies in the trace (D-20, Req 2.8): no trace.
-      if (s.opts.outDir && !storageState) await context.tracing.start({ screenshots: true, snapshots: true });
+      // Own-session actors are tabs of one context, so a sign-out in one ends the other's session too.
+      // Guard reports in a shared context are attributed to actor a.
+      const shared = persona.ownSession ? actors[0] : undefined;
+      const context =
+        shared?.context ??
+        (await newGuardedContext(
+          s.browser,
+          { allowedHosts: loaded.allowedHosts, forbidden: loaded.config.forbidden, onBlocked },
+          { ...(storageState ? { storageState } : {}), ...(device ? deviceContextOptions(device) : {}) },
+        ));
+      const holds = shared?.holds ?? (await installHolds(context, origin));
+      if (!shared) {
+        await installOverlay(context);
+        // A context with a session would put its cookies (or a typed password) in the trace (D-20, Req 2.8).
+        if (s.opts.outDir && !secret) await context.tracing.start({ screenshots: true, snapshots: true });
+      }
       const page = await context.newPage();
       page.on('console', (m) => {
         if (m.type() === 'error') consoleErrors.push({ text: m.text(), url: m.location().url });
@@ -229,6 +242,11 @@ async function runPair(plan: HauntingPlan, rep: number, s: Shared): Promise<Pair
       if (s.fps > 0) actor.stopFrames = await startFrames(page, s.fps, (jpeg) => sink.frame(ghost, jpeg));
       actors.push(actor);
       sink.emit({ type: 'ghost.spawned', ghostId: ghost, criterion: plan.criterion, persona: plan.persona, rep, actor: name });
+    }
+
+    if (account) {
+      const r = await login(actors[0]!.page, account, { origin, deadline: Date.now() + 2 * s.stepTimeoutMs, redactor: loaded.redactor });
+      if (!r.ok) return finish('systemError', `login for account "${id.identity}" failed: ${r.reason}`);
     }
 
     const seed = pairSeed(s.seed, plan.criterion, plan.persona);
@@ -316,7 +334,7 @@ async function runPair(plan: HauntingPlan, rep: number, s: Shared): Promise<Pair
       }
     }
 
-    await keepEvidence(plan, rep, s, actors, result, outcome !== 'completed', result.assertions, storageState !== undefined);
+    await keepEvidence(plan, rep, s, actors, result, outcome !== 'completed', result.assertions, secret);
     finish(outcome, error);
     if (timedOut) {
       const settle = timer(SETTLE_MS);

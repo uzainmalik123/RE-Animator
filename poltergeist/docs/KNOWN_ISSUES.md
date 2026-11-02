@@ -69,6 +69,7 @@
 | KI-58 | Race-dependent fixture tests flake intermittently on GitHub's runner and never locally: F06's barrier gap (52 ms and 91 ms vs < 50), summon's and F11's 3.2 not haunted; seen on `main` and PR runs | Major | CI health (D-19), D-06 | Investigating (race tests now run serially, last) |
 | KI-59 | F16 Done-when on real Candy Swap (the live LLM writes sensible Lich and Revenant plans for ≥ 3 criteria) not yet run: built against fixtures (D-44) | Major | F16 sign-off | Open |
 | KI-60 | Scout captures at the desktop viewport only: a Lich can't target mobile-only controls (a hamburger menu), and a control hidden behind one fails as `usable` | Minor | F16 | Open |
+| KI-61 | F16 review minors: `logout` misses `Domain=`-attribute cookies (`.host`), the report says "Expected: usable", the plan-timeout test doesn't exercise the probe guard, slow-3g `goto` under 4× CPU often times out unprobed, a Lich step shows `timeout` live while its rep is a `completed` failure, an app that never goes network-idle never gets a `usable` failure | Minor | F16, R4 | Open |
 
 ---
 
@@ -614,3 +615,13 @@
 - **Problem:** Scout (F03) captures every route at the default desktop viewport. The Lich runs at 360×640, so a control that only exists on mobile (a menu toggle) is never offered to the compiler. A control that a responsive menu hides fails as `usable` even though a real user would open the menu first.
 - **Blocks:** F16 accuracy on responsive apps.
 - **Next action:** if Candy Swap or a demo app has a responsive menu, add a second Scout pass at the device viewport for device personas (its own route hash), and offer those targets to device personas only.
+
+### KI-61: F16 review minors · Minor · Open
+- **Context:** the final review of F16 (2026-11-02). Its Critical and Important findings were fixed before merge (D-44 review fixes).
+- **Items:**
+  - `context.clearCookies({domain})` matches the domain exactly, so a cookie set with a `Domain=` attribute (stored as `.host`) survives `logout`. Use a RegExp `^\.?<host>$`.
+  - The report's fix task falls back to the assertion type and reads `**Expected:** usable`. Map `usable` to a sentence ("the controls the flow uses are visible and usable on a 360×640 phone").
+  - "A plan timeout on a device persona stays a timeout" uses `wait`, which is never probed, so it doesn't pin the `!timedOut` guard. Use a hidden-target click with `planTimeoutMs` below the step timeout plus probe time.
+  - With `slow-3g` and 4× CPU, `goto` (`waitUntil: 'load'`) often exceeds the 5 s step timeout. That stays `timeout`, so many Lich pairs may end `inconclusive`. Consider a larger step budget for device personas (check during KI-59).
+  - The live feed shows the Lich's step as `timeout` while its rep is a `completed` app failure. Reanimator's R4 may want to draw it as a failure.
+  - An app that never goes network-idle (polling, long-poll) never gets a `usable` failure, because the probe needs the page to settle.

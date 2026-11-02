@@ -151,7 +151,14 @@ export function startActor(steps: readonly Step[], env: ActorEnv): { run: ActorR
 
   const done = (async () => {
     try {
-      if (env.device) await applyDevice(page, env.device);
+      if (env.device) {
+        const err = await applyDevice(page, env.device).then(() => undefined, (e: unknown) => e);
+        if (err !== undefined) {
+          run.end = 'failed';
+          run.error = env.loaded.redactor.redact(`device emulation failed: ${firstLine(err instanceof Error ? err.message : String(err))}`);
+          return run;
+        }
+      }
       for (const [index, step] of steps.entries()) {
         if (env.signal?.aborted) {
           run.end = 'failed';

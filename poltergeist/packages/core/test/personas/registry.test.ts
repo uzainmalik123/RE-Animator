@@ -71,6 +71,11 @@ describe('allocations', () => {
     expect(p.generators).toEqual(['plain']);
     expect(p.actors).toBe(2);
     expect(p.device).toBeUndefined();
+    expect(p.ownSession).toBe(true);
+  });
+
+  it('only the revenant runs on its own session', () => {
+    expect(listPersonas().filter((p) => p.ownSession).map((p) => p.id)).toEqual(['revenant']);
   });
 
   it('only the lich has a device', () => {

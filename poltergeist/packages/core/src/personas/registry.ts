@@ -11,7 +11,8 @@ export type PersonaId = (typeof PERSONA_IDS)[number];
 /**
  * `name` and `tagline` are UI copy and may be themed. `behaviour` goes into the compiler's
  * prompt, so it uses plain QA wording (D-09). `sprite` is a key the Costume Kit resolves (F26). `device`
- * names a fixed preset the runner emulates for every actor (D-44).
+ * names a fixed preset the runner emulates for every actor (D-44). `ownSession` personas run their actors as
+ * tabs of one browser context that logs in for itself, so signing out can't end Scout's shared session.
  */
 export type Persona = {
   readonly id: PersonaId;
@@ -23,6 +24,7 @@ export type Persona = {
   readonly actors: 1 | 2;
   readonly sprite: string;
   readonly device?: DeviceId;
+  readonly ownSession?: true;
 };
 
 function define(p: Persona): Persona {
@@ -90,6 +92,7 @@ const PERSONAS: ReadonlyMap<PersonaId, Persona> = new Map(
       generators: ['plain'],
       actors: 2,
       sprite: 'revenant',
+      ownSession: true,
     }),
   ].map((p) => [p.id, p]),
 );

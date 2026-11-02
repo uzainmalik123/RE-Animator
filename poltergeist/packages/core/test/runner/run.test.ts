@@ -150,6 +150,29 @@ describe('runPlans', () => {
     });
   });
 
+  describe('revenant pairs (F16 review)', () => {
+    it("a logout in tab b ends the session for tab a too: both tabs share one browser", async () => {
+      const p = plan(
+        '16.4',
+        'revenant',
+        { a: [{ goto: '/claims' }, { barrier: 'gone' }, { reload: true }], b: [{ goto: '/claims' }, { logout: true }, { barrier: 'gone' }] },
+        [{ urlMatches: '/login' }],
+      );
+      const run = await runPlans(browser, loadFor(fixture.origin), [p], { sessions, reps: 1, frameFps: 0 });
+      expect(run.results[0]).toMatchObject({ outcome: 'completed', assertions: [{ ok: true }] });
+    });
+
+    it("logs in for itself instead of reusing Scout's shared session", async () => {
+      const before = fixture.seen().filter((r) => r === 'POST /login').length;
+      const p = plan('16.5', 'revenant', { a: [{ goto: '/claims' }, { barrier: 'x' }], b: [{ goto: '/claims' }, { barrier: 'x' }] }, [
+        { textVisible: 'Claim Candy 1' },
+      ]);
+      const run = await runPlans(browser, loadFor(fixture.origin), [p], { sessions: new Map(), reps: 1, frameFps: 0 });
+      expect(run.results[0]).toMatchObject({ outcome: 'completed', assertions: [{ ok: true }] });
+      expect(fixture.seen().filter((r) => r === 'POST /login').length).toBe(before + 1);
+    });
+  });
+
   it('times out a rep at the plan budget, even while an actor waits at a barrier', async () => {
     const p = plan(
       '6.1',

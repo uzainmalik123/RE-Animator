@@ -3,8 +3,9 @@ import type { PlanTarget } from '../compiler/dsl.js';
 import type { DevicePreset } from '../personas/devices.js';
 import { locateTarget } from '../scout/login.js';
 
-/** How long the unusable-target probe may take before it gives up (it runs after a step timeout). */
-const PROBE_MS = 1000;
+/** How long the probe waits for the page to settle, and its hard limit (it runs after a step timeout). */
+const SETTLE_MS = 2000;
+const PROBE_MS = 2500;
 
 /** Context options for a persona's fixed device (F16, D-44). They go through `newGuardedContext`. */
 export function deviceContextOptions(d: DevicePreset): Pick<BrowserContextOptions, 'viewport' | 'isMobile' | 'hasTouch' | 'deviceScaleFactor'> {
@@ -31,10 +32,11 @@ function locateAny(page: Page, t: PlanTarget): Locator {
 }
 
 /**
- * Why a target that timed out can't be used on this device (D-44, KI-39): it is on the page but not
- * visible (for example hidden by a small-screen layout). `undefined` when it is missing, visible, or only
- * disabled (a control disabled while a slow request runs is correct behaviour). Off-screen targets don't
- * count: mobile layouts widen to fit them and Playwright scrolls them into view. Never throws.
+ * Why a target that timed out can't be used on this device (D-44, KI-39): it is on the page, but once the
+ * network is idle no match of it is visible (for example hidden by a small-screen layout). `undefined` when
+ * it is missing, any match is visible, it is only disabled (correct while a slow request runs), or the page
+ * hasn't settled (it may still be loading). Off-screen targets don't count: mobile layouts widen to fit
+ * them and Playwright scrolls them into view. Never throws.
  */
 export async function probeUsable(page: Page, target: PlanTarget): Promise<string | undefined> {
   let timer: NodeJS.Timeout | undefined;
@@ -42,9 +44,12 @@ export async function probeUsable(page: Page, target: PlanTarget): Promise<strin
     timer = setTimeout(() => resolve(undefined), PROBE_MS);
   });
   const probe = (async () => {
-    const all = locateAny(page, target);
-    if ((await all.count()) === 0) return undefined;
-    return (await all.first().isVisible()) ? undefined : `${describeTarget(target)} is on the page but not visible`;
+    const settled = await page.waitForLoadState('networkidle', { timeout: SETTLE_MS }).then(() => true, () => false);
+    if (!settled) return undefined;
+    const matches = await locateAny(page, target).all();
+    if (matches.length === 0) return undefined;
+    for (const m of matches) if (await m.isVisible()) return undefined;
+    return `${describeTarget(target)} is on the page but not visible`;
   })().catch(() => undefined);
   return Promise.race([probe, limit]).finally(() => clearTimeout(timer));
 }
