@@ -122,6 +122,26 @@ describe('runActor', () => {
     expect(new URL(e.page.url()).pathname).toBe('/login');
   });
 
+  it('logout clears only the target origin cookies and storage (F16)', async () => {
+    const e = await env();
+    await e.context.addCookies([{ name: 'keep', value: '1', domain: 'other.test', path: '/' }]);
+    expect((await runActor([{ goto: '/claims' }], e)).end).toBe('done');
+    await e.page.evaluate("localStorage.setItem('k', 'v')");
+    expect((await runActor([{ logout: true }], e)).end).toBe('done');
+    const { hostname } = new URL(fixture.origin);
+    const left = await e.context.cookies();
+    expect(left.filter((c) => c.domain === hostname)).toEqual([]);
+    expect(left.map((c) => c.name)).toEqual(['keep']);
+    expect(await e.page.evaluate("localStorage.getItem('k')")).toBeNull();
+  });
+
+  it('logout leaves storage alone on a page that is not on the target origin', async () => {
+    const e = await env();
+    const run = await runActor([{ logout: true }], e); // still on about:blank
+    expect(run.end).toBe('done');
+    expect(await e.context.cookies()).toEqual([]);
+  });
+
   it('counts a login that times out as logged in (the password may be typed)', async () => {
     const e = await env({ session: false, stepTimeoutMs: 500 });
     const run = await runActor([{ login: { account: 'slow' } }], e);

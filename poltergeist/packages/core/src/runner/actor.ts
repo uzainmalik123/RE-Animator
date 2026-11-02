@@ -3,7 +3,9 @@ import { stepType, type PlanTarget, type Step } from '../compiler/dsl.js';
 import type { LoadedConfig } from '../config/load.js';
 import { generate } from '../personas/generators/index.js';
 import { locateTarget, login } from '../scout/login.js';
+import type { DevicePreset } from '../personas/devices.js';
 import type { BarrierSet } from './barrier.js';
+import { applyDevice, probeUsable } from './device.js';
 import type { Holds } from './holds.js';
 import { moveCursor } from './overlay.js';
 import { applyThrottle } from './throttle.js';
@@ -23,6 +25,8 @@ export type ActorEnv = {
   onStep(r: StepResult, xy?: { x: number; y: number }): void;
   /** The run was stopped (a leak or the caller): no further step starts. */
   signal?: AbortSignal;
+  /** The persona's fixed device (D-44): CPU slowdown on the page, and timed-out targets get probed. */
+  device?: DevicePreset;
 };
 
 export type ActorRun = {
@@ -41,8 +45,23 @@ class StepFailure extends Error {}
 
 const now = () => performance.timeOrigin + performance.now();
 const firstLine = (s: string) => s.split('\n')[0]?.trim() ?? '';
+const originOf = (url: string) => {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return undefined;
+  }
+};
 
 const ACTIONS: ReadonlySet<string> = new Set(['goto', 'click', 'dblclick', 'fill', 'press', 'back', 'reload', 'login', 'logout']);
+
+/** The target of a step a slow, small device can fail to reach. */
+function actionTarget(step: Step): PlanTarget | undefined {
+  if ('click' in step) return step.click;
+  if ('dblclick' in step) return step.dblclick;
+  if ('fill' in step) return step.fill.target;
+  return undefined;
+}
 
 /**
  * The step a guard report belongs to: the latest started step that can send a request. Reports arrive
@@ -111,8 +130,12 @@ export function startActor(steps: readonly Step[], env: ActorEnv): { run: ActorR
       const r = await login(page, account, { origin: env.origin, deadline: Date.now() + stepTimeoutMs, redactor: env.loaded.redactor });
       if (!r.ok) throw new StepFailure(r.reason);
     } else if ('logout' in step) {
-      await context.clearCookies();
-      await page.evaluate('try { localStorage.clear(); sessionStorage.clear(); } catch {}').catch(() => undefined);
+      // Only the target's own session (F16, D-44): cookies for its hostname, storage only on its origin.
+      const target = new URL(env.origin);
+      await context.clearCookies({ domain: target.hostname });
+      if (originOf(page.url()) === target.origin) {
+        await page.evaluate('try { localStorage.clear(); sessionStorage.clear(); } catch {}').catch(() => undefined);
+      }
     }
     return undefined;
   };
@@ -128,6 +151,14 @@ export function startActor(steps: readonly Step[], env: ActorEnv): { run: ActorR
 
   const done = (async () => {
     try {
+      if (env.device) {
+        const err = await applyDevice(page, env.device).then(() => undefined, (e: unknown) => e);
+        if (err !== undefined) {
+          run.end = 'failed';
+          run.error = env.loaded.redactor.redact(`device emulation failed: ${firstLine(err instanceof Error ? err.message : String(err))}`);
+          return run;
+        }
+      }
       for (const [index, step] of steps.entries()) {
         if (env.signal?.aborted) {
           run.end = 'failed';
@@ -151,6 +182,11 @@ export function startActor(steps: readonly Step[], env: ActorEnv): { run: ActorR
           result.outcome = timeout ? 'timeout' : 'failed';
           result.error = env.loaded.redactor.redact(firstLine(err instanceof Error ? err.message : String(err)));
           run.end = timeout ? 'timeout' : 'failed';
+          const target = timeout && env.device ? actionTarget(step) : undefined;
+          if (target) {
+            const why = await probeUsable(page, target);
+            if (why !== undefined) result.unusable = env.loaded.redactor.redact(why);
+          }
         }
         // A guard report may already have marked the step `blocked-by-rule`; keep that.
         result.durationMs = Math.round(performance.now() - t);

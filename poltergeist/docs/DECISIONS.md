@@ -49,6 +49,7 @@
 | D-40 | F12 re-scoped to a headless **Live Feed** for Reanimator (extends D-39, D-36): pure `reduceLive`/`foldLive` → `LiveState` in `@poltergeist/core/live`, `live.hello` protocol 1, late joiners get the backlog with latest frames in place, frame-only backpressure at 1 MiB, `run.started.runDir`; no React Séance | Accepted |
 | D-41 | F13 `poltergeist init` (extends D-38, D-01): writes `poltergeist.config.json` and merges the MCP entry, steering and a `PostTaskExecution` agent hook into a project's `.kiro/` from `integrations/kiro/` templates; per-file created/unchanged/skipped/overwritten, exit 1 on skips, never through symlinks, never rewrites an unparseable `mcp.json`; exported for Reanimator's heal loop | Accepted |
 | D-42 | F14 re-haunt rulings (refines D-34, D-35, D-38): the baseline is the spec's previous `haunting-report.json`; every run merges into it (unrun criteria and personas are carried with `carriedFrom`, only for the same target and criterion text) and diffs re-run criteria (`changes`); CLI change block, MCP `changes` on run results; fixture Done-when (KI-53) | Accepted |
+| D-44 | F16 Lich & Revenant: fixed `small-slow` device preset (360×640 mobile, touch, 4× CPU) applied by the runner; Revenant = two tabs on one session; `logout` scoped to the target origin; a device persona's timeout on a present-but-hidden target is a failed `usable` app assertion (resolves KI-39); all five personas run by default | Accepted |
 | D-43 | F15 re-scoped to headless **Recordings** (extends D-39, D-40): `frames.ndjson` frame index, `poltergeist export` (a static bundle ≤ 50 MB with `recording.json`, thinned frames, no config or artifacts), `poltergeist replay` on the live-feed WebSocket with `live.hello.recorded`, pure `buildTimeline`/`stateAt` for scrubbing; hosting moves to Reanimator R11 | Accepted |
 
 ---
@@ -645,3 +646,25 @@
   - The public URL replaying the hero Candy Swap run is Reanimator's R11, tracked as KI-55.
   - F21 (hosted live sandbox) still depends on F15 in name only; it is out of scope under D-39.
 
+### D-44: F16 Lich & Revenant: device presets, origin-scoped logout, `usable` failures
+- **Context:** grilling F16 (2026-11-02). F06 already ran `throttle`, `login` and `logout`, and KI-20 was resolved (D-29). Still open: how the Lich becomes a small, slow device, what a stale session looks like, how far `logout` reaches, and KI-39 (timeouts can never be `haunted`, so slow-device breakage only ever showed `[??]`). The user asked to accept the recommended answers.
+- **Decision:**
+  - **Personas:** `PERSONA_IDS` is `wraith, banshee, doppelganger, lich, revenant`, and all five run by default (`--personas` narrows the list).
+    - **Lich:** 1 actor, steps `goto click fill press back reload wait throttle`, generator `plain`, `device: 'small-slow'`.
+    - **Revenant:** 2 actors on the same session (as Doppelgänger), steps `goto click fill press back reload wait barrier login logout`, generator `plain`. Tab b ends the session with the app's own sign-out control (server side) or `logout` (cookies); a barrier lets tab a carry on from its stale page.
+  - **Device presets are fixed data** (`core/personas/devices.ts`). The LLM never picks one. `small-slow` = 360×640 viewport, `isMobile`, `hasTouch`, `deviceScaleFactor` 1, CPU slowdown 4 (CDP `Emulation.setCPUThrottlingRate`, once per page before the first step). Context options go through `newGuardedContext` as usual. Network speed stays the `throttle` step.
+  - **`logout`** clears cookies for the target hostname only (`clearCookies({domain})`), and clears local/session storage only while the page is on the target origin (the PRD's "never touches cookies outside the target origin").
+  - **KI-39, the `usable` failure:** when a device persona's `click`, `dblclick` or `fill` step times out, the actor probes the target (role targets with `includeHidden`, within 1 s). If it is on the page but not visible, the step records `unusable`, and `runPair` turns that rep into `completed` with a single failed assertion `{index: assert.length, type: 'usable', failure: 'app', detail: '<target> is on the page but not visible (<device label>)'}`. The plan's own assertions don't run. F07's rules then apply unchanged, so the rep must reproduce to be `haunted` (D-06).
+    - **Stays `timeout`:** a missing target (it may still be loading), a disabled one (correct while a slow request runs), an off-screen one (mobile layouts widen to fit it, and Playwright scrolls it into view), plan timeouts, and every desktop persona.
+    - Rejected: a control run without emulation. It needs its own reset in the middle of a rep, which breaks the concurrent pairs.
+  - Requirements 4.4, 6.9, 6.10 and 7.5 added.
+  - **Done-when (fixture):** the fake LLM compiles ≥ 3 fixture criteria for each new persona (`test/compiler/done-when.test.ts`), and a Lich plan on a button hidden by a small-screen media query is `haunted` in 3 of 3 reps, while the same plan as the Wraith is clean (`test/runner/run.test.ts`).
+- **Review fixes (2026-11-02):**
+  - **The Revenant has its own session (`ownSession`).** Its two actors are two pages of one guarded context, so `logout` in tab b really ends tab a's session (separate contexts kept a's cookie and gave a reproducible false `haunted`). The pair logs in for itself with the plan's account (`login()`, 2 × step timeout; failure → `systemError`) instead of using Scout's shared `storageState`, so the app's sign-out can't end the session every other pair runs on. No trace is kept (a typed password). Guard reports in the shared context are attributed to actor a.
+  - **The probe is stricter:** it first waits up to 2 s for `networkidle` (a page still loading stays `timeout`), and reports `usable` only when no match of the target is visible (a hidden desktop copy next to a visible mobile one no longer counts).
+  - **A device that can't be applied** (CDP error, closed page) fails the actor (`planError`) instead of rejecting its promise.
+  - Deferred minors are in KI-61.
+- **Consequences:**
+  - The real check, sensible plans for ≥ 3 Candy Swap criteria from the live LLM, is KI-59.
+  - Scout still captures at the desktop viewport, so a Lich can't target a mobile-only control (a hamburger menu), and a control that a responsive menu hides fails as `usable` (KI-60).
+  - The Changeling (F20) can reuse `device` for its own preset if it needs one.

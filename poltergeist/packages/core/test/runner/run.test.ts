@@ -5,6 +5,7 @@ import { chromium, type Browser } from 'playwright-core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { generate } from '../../src/personas/generators/index.js';
 import { runPlans } from '../../src/runner/run.js';
+import { decidePair } from '../../src/verdicts/pair.js';
 import { DEFAULT_SEED, pairSeed } from '../../src/runner/seed.js';
 import type { RunEvent } from '../../src/runner/types.js';
 import { guardLaunchOptions } from '../../src/safety/guard.js';
@@ -111,6 +112,65 @@ describe('runPlans', () => {
     expect(res?.steps.map((s) => s.outcome)).toEqual(['ok', 'blocked-by-rule', 'ok']);
     expect(res?.blocked.map((b) => b.reason)).toEqual(['forbidden']);
     expect(fixture.seen()).not.toContain('DELETE /api/admin/all');
+  });
+
+  describe('device personas (F16, D-44)', () => {
+    const NARROW = [{ path: '/narrow', identity: 'anonymous' }];
+    const checkout = (persona: 'lich' | 'wraith') =>
+      plan('16.1', persona, { a: [{ goto: '/narrow' }, { click: { role: 'button', name: 'Checkout' } }] }, [{ textVisible: 'Ordered' }], NARROW);
+
+    it('a target hidden on the small device fails as an app bug in every rep, so the pair is haunted', async () => {
+      const run = await runPlans(browser, loadFor(fixture.origin), [checkout('lich')], { sessions, reps: 3, frameFps: 0, stepTimeoutMs: 800 });
+      for (const r of run.results) {
+        expect(r.outcome).toBe('completed');
+        expect(r.error).toBeUndefined();
+        expect(r.assertions).toEqual([
+          { index: 1, type: 'usable', ok: false, failure: 'app', detail: 'button "Checkout" is on the page but not visible (360×640 phone, 4× slower CPU)' },
+        ]);
+      }
+      expect(decidePair('16.1', 'lich', 3, run.results)).toMatchObject({ verdict: 'haunted', failingAssertion: { type: 'usable' } });
+    });
+
+    it('the same plan on a desktop persona is clean', async () => {
+      const run = await runPlans(browser, loadFor(fixture.origin), [checkout('wraith')], { sessions, reps: 1, frameFps: 0, stepTimeoutMs: 800 });
+      expect(run.results[0]).toMatchObject({ outcome: 'completed', assertions: [{ ok: true }] });
+    });
+
+    it('a lich actor runs at the phone viewport', async () => {
+      const p = plan('16.2', 'lich', { a: [{ goto: '/narrow' }] }, [{ textNotVisible: 'Checkout' }], NARROW);
+      const run = await runPlans(browser, loadFor(fixture.origin), [p], { sessions, reps: 1, frameFps: 0 });
+      expect(run.results[0]).toMatchObject({ outcome: 'completed', assertions: [{ ok: true }] });
+    });
+
+    it('a plan timeout on a device persona stays a timeout', async () => {
+      const p = plan('16.3', 'lich', { a: [{ goto: '/narrow' }, { wait: 3000 }] }, [{ textVisible: 'Basket' }], NARROW);
+      const run = await runPlans(browser, loadFor(fixture.origin), [p], { sessions, reps: 1, frameFps: 0, planTimeoutMs: 1000 });
+      expect(run.results[0]?.outcome).toBe('timeout');
+      expect(run.results[0]?.assertions).toEqual([]);
+    });
+  });
+
+  describe('revenant pairs (F16 review)', () => {
+    it("a logout in tab b ends the session for tab a too: both tabs share one browser", async () => {
+      const p = plan(
+        '16.4',
+        'revenant',
+        { a: [{ goto: '/claims' }, { barrier: 'gone' }, { reload: true }], b: [{ goto: '/claims' }, { logout: true }, { barrier: 'gone' }] },
+        [{ urlMatches: '/login' }],
+      );
+      const run = await runPlans(browser, loadFor(fixture.origin), [p], { sessions, reps: 1, frameFps: 0 });
+      expect(run.results[0]).toMatchObject({ outcome: 'completed', assertions: [{ ok: true }] });
+    });
+
+    it("logs in for itself instead of reusing Scout's shared session", async () => {
+      const before = fixture.seen().filter((r) => r === 'POST /login').length;
+      const p = plan('16.5', 'revenant', { a: [{ goto: '/claims' }, { barrier: 'x' }], b: [{ goto: '/claims' }, { barrier: 'x' }] }, [
+        { textVisible: 'Claim Candy 1' },
+      ]);
+      const run = await runPlans(browser, loadFor(fixture.origin), [p], { sessions: new Map(), reps: 1, frameFps: 0 });
+      expect(run.results[0]).toMatchObject({ outcome: 'completed', assertions: [{ ok: true }] });
+      expect(fixture.seen().filter((r) => r === 'POST /login').length).toBe(before + 1);
+    });
   });
 
   it('times out a rep at the plan budget, even while an actor waits at a barrier', async () => {

@@ -34,7 +34,7 @@
 | 15 | F14 | Re-haunt & Verdict Diff | Med | Done (fixture, D-42; Candy Swap check KI-53) | F09 |
 | 16 | F15 | Recordings: export & replay (headless, D-43) | Med | Done (fixture, D-43; hero run + R11 hosting KI-55) | F12 |
 | 17 | F13 | Kiro Installer (`init`) + Agent Hook | Med | Done (fixture, D-41; Kiro check KI-51) | F11 |
-| 18 | F16 | Extended Personas: Lich & Revenant | Med | TBD | F04 |
+| 18 | F16 | Extended Personas: Lich & Revenant | Med | Done (fixture, D-44; Candy Swap check KI-59) | F04 |
 | 19 | F17 | Steering-driven House Rules | Med | TBD | F13 |
 | 20 | F18 | Kiro Power Packaging | Med | TBD | F11, F17 |
 | 21 | F22 | Séance Atmosphere Polish (sound, trails, idle motion) | Low | TBD | F12 |
@@ -372,7 +372,9 @@ Implements Requirement 12.
 - **Constraints:** the hook schema and triggers must be verified first (KI-06).
 - **Done when:** in a fresh Kiro project, `init` and then a hook trigger start a haunting with no manual MCP setup.
 
-### F16: Extended Personas: Lich & Revenant · Med · TBD
+### F16: Extended Personas: Lich & Revenant · Med · Done (fixture)
+
+> 2026-11-02: built against the fixtures (D-44). Plan `docs/plans/2026-11-02-F16-lich-revenant.md`. The Lich runs on the fixed `small-slow` device; a target hidden at that size fails as a `usable` app assertion (resolves KI-39). The Revenant is two tabs on one session; `logout` only touches the target origin. **Still to do:** the Done-when on the real Candy Swap with a live LLM (KI-59).
 
 **Owns:** the Lich and Revenant definitions, plus the runner support for `throttle` profiles and `logout` / stale-session sequences.
 **Not this feature:** core personas (F04) · Changeling (F20) · their sprites (F26 already draws all six).
@@ -484,3 +486,4 @@ Implements Requirement 12.
 - 2026-11-02: **F13 Done against a fixture** (D-41). `poltergeist init` wires a project into Kiro from the `integrations/kiro/` templates (config, merged MCP entry, steering, `PostTaskExecution` agent hook), idempotently and never through symlinks; exported for Reanimator's heal loop. Hook format re-read from the docs (KI-06). The Kiro check is KI-51.
 - 2026-11-02: **F14 Done against a fixture** (D-42). Every run merges into the spec's previous `haunting-report.json` (carried lines marked `carriedFrom`, resolves KI-47) and diffs the re-run criteria: CLI `changes since <run>:` with `3.2 [!!] → [ok]`, MCP `changes: [{id, from, to}]`. The real Candy Swap exorcism check is KI-53.
 - 2026-11-02: **F15 Done against a fixture, re-scoped to headless Recordings** (D-43, under D-39). `frames.ndjson`, `poltergeist export` (static bundle, 50 MB cap with evidence-preserving thinning), `poltergeist replay` (live-feed WebSocket, `recorded` hello, 1–16× speed), pure `buildTimeline`/`stateAt`. Requirement 11.4 reworded. Hosting and the hero run are KI-55 (Reanimator R11).
+- 2026-11-02: **F16 Done against a fixture** (D-44). Lich (`small-slow` device: 360×640 mobile, 4× CPU; `throttle` step) and Revenant (two tabs, one session; origin-scoped `logout`). A device persona's timeout on a present-but-hidden target becomes a failed `usable` app assertion, so it can be `haunted` (KI-39 resolved). All five personas run by default. Requirement 4.4, 6.9, 6.10 and 7.5 added. Candy Swap check KI-59; desktop-only Scout risk KI-60.

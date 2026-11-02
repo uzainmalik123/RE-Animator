@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { compile, type CompileOptions } from '../../src/compiler/compile.js';
 import { CompilerError } from '../../src/compiler/errors.js';
-import { UnknownPersonaError } from '../../src/personas/index.js';
+import { PERSONA_IDS, UnknownPersonaError } from '../../src/personas/index.js';
 import { criterion } from './criteria.js';
 import { INVALID, VALID, fakeLlm, output, type FakeLlm } from './fake-llm.js';
 import { HOME_DOWN, MARKET, TRADE } from './scout-fixtures.js';
@@ -125,7 +125,7 @@ describe('compile', () => {
   it('no matching route → uncompilable with zero calls', async () => {
     const fake = valid();
     const res = await run(fake, [NOWHERE]);
-    expect(res.pairs).toHaveLength(3);
+    expect(res.pairs).toHaveLength(PERSONA_IDS.length);
     for (const p of res.pairs) expect(p).toMatchObject({ status: 'uncompilable', reason: 'no matching route', attempts: 0 });
     expect(fake.calls).toHaveLength(0);
   });
@@ -133,13 +133,14 @@ describe('compile', () => {
   it('second run is all cache hits with zero calls', async () => {
     const cacheDir = await mkdtemp(join(tmpdir(), 'compile-cache-'));
     const first = await run(valid(), [CLAIM], { cacheDir });
-    expect(first.llmCalls).toBe(3);
+    expect(first.llmCalls).toBe(PERSONA_IDS.length);
+    for (const p of first.pairs) expect(p.status, `${p.persona}: ${JSON.stringify(p)}`).not.toBe('uncompilable');
     expect(first.cacheHits).toBe(0);
     const fake = valid();
     const second = await run(fake, [CLAIM], { cacheDir });
     expect(fake.calls).toHaveLength(0);
     expect(second.llmCalls).toBe(0);
-    expect(second.cacheHits).toBe(3);
+    expect(second.cacheHits).toBe(PERSONA_IDS.length);
     for (const p of second.pairs) expect(p).toMatchObject({ cached: true, attempts: 0 });
     expect(second.pairs.map((p) => p.status)).toEqual(first.pairs.map((p) => p.status));
   });
@@ -168,7 +169,7 @@ describe('compile', () => {
       return output(VALID[req.meta.persona]);
     });
     const res = await run(fake, criteria);
-    expect(res.pairs).toHaveLength(18);
+    expect(res.pairs).toHaveLength(6 * PERSONA_IDS.length);
     expect(fake.maxInFlight).toBeLessThanOrEqual(4);
     expect(fake.maxInFlight).toBeGreaterThan(1);
   });
@@ -190,9 +191,7 @@ describe('compile', () => {
     const outDir = await mkdtemp(join(tmpdir(), 'compile-out-'));
     const res = await run(valid(), [CLAIM, NOWHERE], { outDir });
     const files = (await readdir(join(outDir, 'plans'))).sort();
-    expect(files).toEqual(
-      ['3.2__banshee', '3.2__doppelganger', '3.2__wraith', '9.1__banshee', '9.1__doppelganger', '9.1__wraith'].map((f) => `${f}.json`),
-    );
+    expect(files).toEqual(['3.2', '9.1'].flatMap((c) => [...PERSONA_IDS].sort().map((p) => `${c}__${p}.json`)));
     const wraith = JSON.parse(await readFile(join(outDir, 'plans', '3.2__wraith.json'), 'utf8'));
     expect(wraith).toEqual(res.pairs.find((p) => p.criterion === '3.2' && p.persona === 'wraith'));
   });
@@ -204,9 +203,7 @@ describe('compile', () => {
       return output(VALID[req.meta.persona]);
     });
     const res = await run(fake, [CLAIM, NOWHERE], { onPlan: (p) => seen.push(`${p.criterion}/${p.persona}`) });
-    expect(res.pairs.map((p) => `${p.criterion}/${p.persona}`)).toEqual([
-      '3.2/wraith', '3.2/banshee', '3.2/doppelganger', '9.1/wraith', '9.1/banshee', '9.1/doppelganger',
-    ]);
+    expect(res.pairs.map((p) => `${p.criterion}/${p.persona}`)).toEqual(['3.2', '9.1'].flatMap((c) => PERSONA_IDS.map((p) => `${c}/${p}`)));
     expect(seen.sort()).toEqual(res.pairs.map((p) => `${p.criterion}/${p.persona}`).sort());
   });
 
