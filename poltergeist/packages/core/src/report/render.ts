@@ -3,8 +3,10 @@ import type { PairResult } from '../compiler/compile.js';
 import type { HauntingPlan } from '../compiler/dsl.js';
 import type { Criterion } from '../spec/types.js';
 import type { Verdicts } from '../verdicts/compute.js';
-import type { CriterionVerdict, PairVerdictRecord } from '../verdicts/types.js';
+import { rollUp } from '../verdicts/compute.js';
+import type { PairVerdictRecord } from '../verdicts/types.js';
 import { DRAFT_WORDMARK, VERDICT_GLYPHS } from './glyphs.js';
+import { usableRow, type ReportVerdict } from './merge.js';
 import type { ReportJson } from './schema.js';
 import { codeSpan, describeAssertion, describeStep, mdText } from './text.js';
 
@@ -34,11 +36,16 @@ export type ReportInput = {
   run: RunMeta;
   /** Defaults to THEME §4's draft until F26 passes the Costume Kit's (KI-40). */
   wordmark?: string;
+  /**
+   * The spec's previous report (F14, D-42). Whatever this run didn't re-run, a criterion or a
+   * persona inside a re-run criterion, is carried over from it while it still applies.
+   */
+  previous?: ReportJson;
 };
 
 export type RenderedReport = { markdown: string; json: ReportJson };
 
-type Verdict = CriterionVerdict | 'notRun';
+type Verdict = ReportVerdict;
 type JsonPair = ReportJson['criteria'][number]['pairs'][number];
 
 /** Pure: the report's markdown and JSON for one run (Req 8, D-35). */
@@ -51,11 +58,22 @@ export function renderReport(input: ReportInput): RenderedReport {
   for (const p of input.verdicts.pairs) pairsOf.set(p.criterion, [...(pairsOf.get(p.criterion) ?? []), p]);
   const rel = (artifact: string) => relative(specDir, join(run.runDir, artifact)).split(sep).join('/');
 
-  const rows = input.criteria.map((c) => {
-    const verdict: Verdict = verdictOf.get(c.id) ?? 'notRun';
-    const pairs = (pairsOf.get(c.id) ?? []).map((p) => jsonPair(p, plans.get(pairKey(p.criterion, p.persona)), rel));
-    return { c, verdict, pairs };
+  const previous = input.previous;
+  const carry = (from: { carriedFrom?: string }) => from.carriedFrom ?? previous!.runId;
+  const rows = input.criteria.map((c): { c: Criterion; verdict: Verdict; pairs: JsonPair[]; carriedFrom?: string } => {
+    const before = usableRow(previous, run.target, c);
+    const ran = verdictOf.get(c.id);
+    if (ran === undefined) {
+      if (!before || before.verdict === 'notRun') return { c, verdict: 'notRun', pairs: [] };
+      return { c, verdict: before.verdict, pairs: before.pairs.map((p) => ({ ...p, carriedFrom: carry(p) })), carriedFrom: carry(before) };
+    }
+    const fresh = (pairsOf.get(c.id) ?? []).map((p) => jsonPair(p, plans.get(pairKey(p.criterion, p.persona)), rel));
+    const ranPersonas = new Set(fresh.map((p) => p.persona));
+    const kept = (before?.pairs ?? []).filter((p) => !ranPersonas.has(p.persona)).map((p) => ({ ...p, carriedFrom: carry(p) }));
+    const pairs = [...fresh, ...kept];
+    return { c, verdict: kept.length ? rollUp(pairs.map((p) => p.verdict)) : ran, pairs };
   });
+  const carriedRows = rows.filter((r) => r.carriedFrom !== undefined).length;
 
   const counts: Record<Verdict, number> = { haunted: 0, flaky: 0, inconclusive: 0, clean: 0, notApplicable: 0, notRun: 0 };
   for (const r of rows) counts[r.verdict]++;
@@ -69,8 +87,9 @@ export function renderReport(input: ReportInput): RenderedReport {
     '',
     `Run ${codeSpan(run.runId)} against ${codeSpan(run.target)} · ${run.reps} reps · ${mdText(run.model, 80)} · ${new Date(run.startedAt).toISOString()}`,
     `**${counts.haunted} haunted** [!!] · ${counts.flaky} flaky [~~] · ${counts.inconclusive} inconclusive [??] · ${counts.clean} clean [ok] · ${counts.notApplicable} n/a [--] · ${counts.notRun} not run [  ]`,
+    ...(carriedRows ? [`_Merged: ${carriedRows} criteria kept from earlier runs; re-run them to refresh._`] : []),
   ].join('\n').split('\n');
-  const board = rows.map((r) => `- ${VERDICT_GLYPHS[r.verdict]} ${r.c.id} — ${mdText(r.c.text)}`);
+  const board = rows.map((r) => `- ${VERDICT_GLYPHS[r.verdict]} ${r.c.id} — ${mdText(r.c.text)}${earlier(r)}`);
   const haunted = rows.filter((r) => r.verdict === 'haunted').map((r) => hauntedSection(r.c, r.pairs));
   const flaky = rows.filter((r) => r.verdict === 'flaky').map((r) => flakySection(r.c, r.pairs));
   const inconclusive = rows.flatMap((r) =>
@@ -109,11 +128,16 @@ export function renderReport(input: ReportInput): RenderedReport {
     startedAt: new Date(run.startedAt).toISOString(),
     specFile: 'requirements.md',
     counts,
-    criteria: rows.map(({ c, verdict, pairs }) => ({ id: c.id, requirement: c.requirement, text: c.text, line: c.line, verdict, pairs })),
+    criteria: rows.map(({ c, verdict, pairs, carriedFrom }) => ({
+      id: c.id, requirement: c.requirement, text: c.text, line: c.line, verdict, pairs, ...(carriedFrom !== undefined ? { carriedFrom } : {}),
+    })),
     truncated: result.dropped,
   };
   return { markdown: result.out.join('\n') + '\n', json };
 }
+
+/** ` _(earlier run `r1`)_` on anything carried over from an earlier run, else nothing. */
+const earlier = (x: { carriedFrom?: string }) => (x.carriedFrom === undefined ? '' : ` _(earlier run ${codeSpan(x.carriedFrom)})_`);
 
 const pairKey = (criterion: string, persona: string) => `${criterion}\u0000${persona}`;
 
@@ -150,7 +174,7 @@ function promise(c: Criterion): string {
 function hauntedSection(c: Criterion, pairs: JsonPair[]): string[] {
   const out = ['', `### ${VERDICT_GLYPHS.haunted} ${c.id} — ${mdText(c.text)}`, '', promise(c)];
   for (const p of pairs.filter((x) => x.verdict === 'haunted')) {
-    out.push('', `#### ${p.persona} — ${failedLine(p)}`);
+    out.push('', `#### ${p.persona} — ${failedLine(p)}${earlier(p)}`);
     if (p.intent) out.push('', `**Intent:** ${mdText(p.intent)}`);
     if (p.steps) {
       const actors: [string, string[]][] = p.steps.b ? [['Actor a:', p.steps.a], ['Actor b:', p.steps.b]] : [['Steps:', p.steps.a]];

@@ -5,3 +5,5 @@ export { ReportJsonSchema } from './schema.js';
 export type { ReportJson } from './schema.js';
 export { codeSpan, describeAssertion, describeStep, describeTarget, mdText, oneLine } from './text.js';
 export { REPORT_FILES, writeReport } from './write.js';
+export { diffVerdicts, readReportJson, usableRow } from './merge.js';
+export type { ReportVerdict, VerdictChange } from './merge.js';

@@ -24,6 +24,8 @@ const PairSchema = z.strictObject({
   outcomes: z.strictObject({ completed: z.int(), timeout: z.int(), planError: z.int(), systemError: z.int(), voided: z.int(), missing: z.int() }),
   /** Relative to the spec folder, `/` separators. */
   artifacts: z.array(z.string()),
+  /** Set when this pair wasn't re-run: the id of the run it comes from (F14, D-42). */
+  carriedFrom: z.string().optional(),
 });
 
 /** `haunting-report.json`, version 1 (D-35). F11's MCP tools read it. */
@@ -45,6 +47,8 @@ export const ReportJsonSchema = z.strictObject({
       line: z.int(),
       verdict: z.enum(CRITERION_VERDICTS),
       pairs: z.array(PairSchema),
+      /** Set when this criterion wasn't re-run: the id of the run its verdict comes from (F14, D-42). */
+      carriedFrom: z.string().optional(),
     }),
   ),
   /** How many markdown sections were trimmed to fit 300 lines; this file always has them all. */
