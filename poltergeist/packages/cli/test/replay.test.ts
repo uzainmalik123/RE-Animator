@@ -63,7 +63,7 @@ describe('poltergeist replay', () => {
       stdout: { write: (s) => void (stdout += s) }, stderr: { write: () => {} }, env: { NO_COLOR: '1' }, seancePort: 0, signal: ac.signal,
     });
     await new Promise((r) => setTimeout(r, 100));
-    expect(stdout).toMatch(/RECORDED  replay: ws:\/\/127\.0\.0\.1:\d+\/runs\/20261102-120000-abcd \(waiting for a client…\)/);
+    expect(stdout).toMatch(/RECORDED {2}replay: ws:\/\/127\.0\.0\.1:\d+\/runs\/20261102-120000-abcd \(waiting for a client…\)/);
     ac.abort(new DOMException('aborted', 'AbortError'));
     expect(await code).toBe(130);
   });
