@@ -13,9 +13,10 @@
 | D-R6 | v1 revives **one prepared demo repo** with real vitals; arbitrary GitHub URLs are a stretch goal (R9) | Accepted |
 | D-R7 | The revived app is served on **localhost**, so Poltergeist (localhost-only by design) can attack it | Accepted |
 | D-R8 | Reanimator supplies Poltergeist a **spec of the revived app** (the "chart"); hand-written for the demo repo in v1 | Accepted |
-| D-R9 | Stack: Vite + React + TypeScript + Canvas, with a small Node backend to run revive/attack. Pin versions | Proposed |
+| D-R9 | Stack: Vite + React + TypeScript + Canvas, with a small Node backend to run revive/attack. Pin versions | Superseded by D-R12 |
 | D-R10 | Humans open PRs. Reanimator produces a branch/patch/PR text; it never opens PRs on third-party repos | Accepted |
 | D-R11 | Nothing is faked for the camera: a pulse = real vitals, a wound = a real finding, a heal = a real fix + re-run | Accepted |
+| D-R12 | Stack confirmed and pinned in R0: one standalone package, Vite 8 + React 19 UI, Hono backend on 127.0.0.1:7070, own CI workflow | Accepted |
 
 ---
 
@@ -60,7 +61,7 @@
 ### D-R8: Reanimator gives Poltergeist a chart (spec)
 - **Decision:** Poltergeist tests against a spec. Reanimator provides one describing the revived app (the "chart", borrowing the original Reanimator's idea). For v1 it's hand-written for the demo repo; later an agent can write it.
 
-### D-R9: Stack (proposed)
+### D-R9: Stack (proposed) · Superseded by D-R12
 - **Proposal:** Vite + React + TypeScript for the app, Canvas 2D for the renderer, and a small Node backend (Express or Hono) to run revive and attack commands and stream status. Pin versions. Confirm once scaffolding (R0).
 
 ### D-R10: Humans open PRs
@@ -68,3 +69,14 @@
 
 ### D-R11: Nothing faked for the camera
 - Inherited and central to the story's integrity (STORY § Tone). A pulse means vitals passed, a wound means a finding reproduced, a heal means a real fix plus a real re-run passing.
+
+### D-R12: Stack confirmed and pinned (R0) · supersedes D-R9
+- **Decision (from the R0 grill, 2026-11-02):**
+  - `reanimator/` is **one standalone npm package** (not a workspace of Poltergeist): `src/` = Vite + React UI, `server/` = Hono backend.
+  - **Exact pins**, no ranges. Shared tools match Poltergeist (TypeScript 5.9.3, Vitest 4.1.12, ESLint 9.39.1, typescript-eslint 8.72.1). Full list in `STACK.md`.
+  - **Backend = Hono** (`createApp()` in `server/app.ts`), started by `server/main.ts` on **127.0.0.1:7070 only**. It will run install/build/attack commands, so it must never listen on the LAN.
+  - `npm run dev` = Vite on 5173 (strict port), proxying `/api` to 7070. `npm run server` starts the backend. No combined runner yet (YAGNI).
+  - Two tsconfigs: `tsconfig.app.json` (DOM, bundler, JSX) for `src/`; `tsconfig.node.json` (NodeNext) for `server/` and configs. `typecheck` runs both.
+  - Tests are Vitest in the **node** environment; UI smoke tests use `react-dom/server` (no jsdom until a feature needs a DOM).
+  - CI is its own workflow, `.github/workflows/reanimator-ci.yml`, separate from Poltergeist's.
+- **Consequences:** R1 draws onto the existing `.stage` canvas in `src/App.tsx`; R2/R3 add routes to `createApp()`.

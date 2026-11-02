@@ -1,0 +1,25 @@
+/* Palette tokens, verbatim from docs/THEME.md §4. Purple is the user's magic only; red is Death only. */
+:root {
+  --void: #06060a;
+  --bone: #cfc8b8;
+  --dim: #5d6470;
+  --magic: #b98cff;
+  --death: #ff3b4e;
+  --rot: #8fb26b;
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: var(--void);
+  overflow: hidden;
+}
+
+.stage {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}

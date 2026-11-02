@@ -81,6 +81,13 @@ Before you hand back, if anything changed:
 - **`docs/PRD.md`** and **`tasks.md`** — status, and a changelog line.
 - If nothing changed, say "docs: no changes."
 
+## Running it (from `reanimator/`)
+
+- `npm install` once.
+- `npm run dev` → the UI at http://localhost:5173 (a dark canvas until R1 draws on it).
+- `npm run server` → the backend at http://127.0.0.1:7070 (`/api/health`). The UI proxies `/api` to it.
+- `npm run health` → typecheck + lint + test.
+
 ## Health check (after every implementation)
 
 Run **`npm run health`** (typecheck + lint + test) before reporting back, committing, or handing off. It must be green. Don't weaken tests to pass it. Quote the result. CI runs the same.

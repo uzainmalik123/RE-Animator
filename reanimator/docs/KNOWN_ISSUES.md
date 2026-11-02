@@ -14,6 +14,9 @@
 | KI-R7 | Running revive + attack live for a judge may be too heavy; may need a recorded replay | Major | R11 | Open |
 | KI-R8 | Reviving arbitrary cloned repos runs untrusted code | Major | R9 | Open (deferred to R9) |
 | KI-R9 | Scene scope: four scenes is a lot for a vibe-coder; which are essential | Minor | R4, R6, R7 | Open |
+| KI-R10 | `npm audit`: moderate `minimatch` advisory in the ESLint dev chain | Minor | none (dev-only) | Accepted |
+| KI-R11 | Canvas sizing: CSS `100vw/100vh` vs `innerWidth/innerHeight`, and a DPR-only change isn't redrawn | Minor | R1 | Open |
+| KI-R12 | The backend has no Origin/Host check yet; needed once routes run commands | Major | R2, R3 | Open |
 
 ---
 
@@ -63,3 +66,16 @@
 - **Problem:** graveyard, raise, attack, grimoire is a lot of UI for a vibe-coder.
 - **Plan:** the raise (R2) and the attack (R4) are essential — they carry the story and the mash-up. Graveyard (R6) and grimoire (R7) are Med; keep them light or stub them for the video.
 - **Next action:** build the vertical slice (R0–R5) before any Med scene.
+
+### KI-R10: Dev-only audit advisory · Minor · Accepted
+- **Problem:** `npm audit` reports a moderate `minimatch` advisory inside ESLint / typescript-eslint at the pins Reanimator shares with Poltergeist (its KI-28). The suggested "fix" downgrades ESLint to 4.
+- **Why accepted:** dev-only; lint never sees untrusted globs; nothing ships to the browser or the backend.
+- **Next action:** before submission, check for patched pins and bump both projects together.
+
+### KI-R11: Canvas sizing for R1 · Minor · Open
+- **Problem (R0 review):** `.stage` is sized `100vw/100vh` in CSS but its backing store uses `innerWidth/innerHeight`; on mobile those differ (address bar), so dots would stretch slightly. Moving the window to a monitor with a different scale fires no `resize`, so the old DPR sticks until the next resize. Invisible on R0's solid fill.
+- **Next action:** in R1, size from `canvas.clientWidth/clientHeight` (CSS `width/height: 100%`) and listen for `matchMedia('(resolution: …dppx)')` changes.
+
+### KI-R12: Backend request origin checks · Major · Open
+- **Problem (R0 review):** the backend binds 127.0.0.1 only (D-R12), but a web page in the user's browser could still send requests to it (CSRF / DNS rebinding). Harmless with only `/api/health`; not harmless once R2/R3 add routes that install, build or attack.
+- **Next action:** R2's plan adds Host/Origin validation (allow only the Vite origin and loopback hosts), with tests, before any command-running route.
