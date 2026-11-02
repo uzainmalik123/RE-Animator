@@ -1,6 +1,6 @@
 # Reanimator: Stack
 
-> Proposed (D-R9). Confirm and pin exact versions when scaffolding (R0). The teammate is vibe-coding, so prefer boring, well-documented choices the agent knows well.
+> Confirmed and pinned in R0 (D-R12, superseding D-R9). The teammate is vibe-coding, so prefer boring, well-documented choices the agent knows well.
 
 ## Summary
 
@@ -55,4 +55,23 @@ UI reads vitals + report and draws the raise, Death's attack, and the wounds.
 
 ## Pinned versions
 
-Fill in when installed (R0). Reuse Poltergeist's pins where shared (TypeScript 5.9.x, Vitest 4.1.x, ESLint 9.39.x).
+Pinned exactly in `reanimator/package.json` (R0, D-R12). Shared tools match Poltergeist.
+
+| Package | Version | Kind |
+|---|---|---|
+| react, react-dom | 19.3.1 | runtime |
+| hono | 4.13.16 | runtime |
+| @hono/node-server | 2.1.5 | runtime |
+| vite | 8.3.5 | dev |
+| @vitejs/plugin-react | 6.2.1 | dev |
+| typescript | 5.9.3 | dev |
+| vitest | 4.1.12 | dev |
+| eslint, @eslint/js | 9.39.1 | dev |
+| typescript-eslint | 8.72.1 | dev |
+| eslint-plugin-react-hooks | 7.1.1 | dev |
+| globals | 17.14.0 | dev |
+| tsx | 4.23.15 | dev |
+| @types/node | 22.20.5 | dev |
+| @types/react, @types/react-dom | 19.3.0 | dev |
+
+`npm audit` reports a moderate `minimatch` advisory inside the ESLint chain. It's dev-only and the same chain Poltergeist pins; the suggested "fix" downgrades ESLint to 4. Left as is.

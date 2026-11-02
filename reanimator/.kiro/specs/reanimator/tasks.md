@@ -2,7 +2,7 @@
 
 Work one PRD feature at a time, through the grill → plan → implement → review cycle in `../../AGENTS.md`. Tick a box only when the feature's "Done when" in `docs/PRD.md` passes and `npm run health` is green. Build the vertical slice (0–5) on ONE repo before widening.
 
-- [ ] 0. R0 Scaffold (Vite + React + TS, canvas page, health gate, CI, backend entry)
+- [x] 0. R0 Scaffold (Vite + React + TS, canvas page, health gate, CI, backend entry)
   - _Requirements: none (infrastructure)_
 - [ ] 1. R1 Dot-matrix renderer (the art engine)
   - _Requirements: 4.1, 4.3, 4.4_

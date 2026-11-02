@@ -33,7 +33,7 @@
 
 | Order | ID | Feature | Priority | Status |
 |---|---|---|---|---|
-| 0 | R0 | Scaffold (Vite + React + TS, canvas, health gate, CI) | High | TBD |
+| 0 | R0 | Scaffold (Vite + React + TS, canvas, health gate, CI) | High | Done |
 | 1 | R1 | Dot-matrix renderer (the art engine) | High | TBD |
 | 2 | R2 | The Raise: revive one prepared dead repo, prove it with vitals | High | TBD |
 | 3 | R3 | Death's attack: wire in the Poltergeist engine | High | TBD |
@@ -62,7 +62,7 @@
 
 ## HIGH
 
-### R0: Scaffold · High · TBD
+### R0: Scaffold · High · Done
 **Owns:** the app skeleton: Vite + React + TypeScript, a `<canvas>` test page, ESLint, a test runner, `npm run health` (typecheck + lint + test), `.github/workflows` CI, and a backend entry (a small Node/Express or Hono server) for running revive/attack commands.
 **Not this feature:** any scene or art.
 - **User story:** As the builder, I want one command that says the app is healthy, from day one.
@@ -184,3 +184,4 @@
 
 ## Changelog
 - 2026-11-01: PRD created for the merged entry. Reanimator is the product; Poltergeist is its red-team engine (Death). Frankenstein category.
+- 2026-11-02: R0 Done. Vite + React canvas page, Hono backend (`/api/health`, 127.0.0.1:7070), `npm run health` green, CI `reanimator-ci.yml` (D-R12, plan `docs/plans/2026-11-02-R0-scaffold.md`).
