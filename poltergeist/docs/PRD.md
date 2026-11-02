@@ -31,7 +31,7 @@
 | 12 | F09 | CLI `summon` | High | Done (fixture; real Candy Swap check pending, KI-42) | F08, F26 |
 | 13 | F11 | Kiro MCP Server | High | Done (fixture, KI-46) | F09 |
 | 14 | F12 | Live Feed (headless, for Reanimator; D-40) | High | Done (fixture; Candy Swap check pending, KI-49) | F06, F09 |
-| 15 | F14 | Re-haunt & Verdict Diff | Med | TBD | F09 |
+| 15 | F14 | Re-haunt & Verdict Diff | Med | Done (fixture, D-42; Candy Swap check KI-53) | F09 |
 | 16 | F15 | Replay Mode & Deployed Séance | Med | TBD | F12 |
 | 17 | F13 | Kiro Installer (`init`) + Agent Hook | Med | Done (fixture, D-41; Kiro check KI-51) | F11 |
 | 18 | F16 | Extended Personas: Lich & Revenant | Med | TBD | F04 |
@@ -333,7 +333,7 @@ Implements Requirement 12.
 
 ## MED
 
-### F14: Re-haunt & Verdict Diff · Med · TBD
+### F14: Re-haunt & Verdict Diff · Med · Done (fixture, D-42; Candy Swap check KI-53)
 
 **Owns:** `--only <ids>` subset runs, and the diff against the previous `verdicts.json` in CLI output and the `rehaunt` response. Implements Requirement 9.3.
 **Not this feature:** the run engine (F06) · the exorcism animation (F26).
@@ -479,3 +479,4 @@ Implements Requirement 12.
 - 2026-11-01: **F11 Done against a fixture** (D-38). `@poltergeist/mcp` (`poltergeist-mcp --root`): five tools including `get_run_status`, long-poll runs (resolves KI-12), 6 000-char results, root-confined paths. `docs/kiro-notes.md` holds the MCP facts (KI-06 Investigating). `integrations/kiro/mcp.json` is the template. The Kiro check is KI-46; the subset-report issue is KI-47 (F14).
 - 2026-11-02: **F12 Done against a fixture, re-scoped to a headless Live Feed** (D-40, under D-39). Pure `LiveState` reducer in core for Reanimator's R4, `live.hello` protocol, late-join frames and frame backpressure on the `--seance` server (KI-43 item fixed), `run.started.runDir`. Requirement 11.1–11.3 reworded. The Candy Swap check is KI-49.
 - 2026-11-02: **F13 Done against a fixture** (D-41). `poltergeist init` wires a project into Kiro from the `integrations/kiro/` templates (config, merged MCP entry, steering, `PostTaskExecution` agent hook), idempotently and never through symlinks; exported for Reanimator's heal loop. Hook format re-read from the docs (KI-06). The Kiro check is KI-51.
+- 2026-11-02: **F14 Done against a fixture** (D-42). Every run merges into the spec's previous `haunting-report.json` (carried lines marked `carriedFrom`, resolves KI-47) and diffs the re-run criteria: CLI `changes since <run>:` with `3.2 [!!] → [ok]`, MCP `changes: [{id, from, to}]`. The real Candy Swap exorcism check is KI-53.

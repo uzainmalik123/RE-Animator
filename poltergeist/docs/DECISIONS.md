@@ -48,6 +48,7 @@
 | D-39 | Poltergeist becomes the headless red-team **engine inside Reanimator**; the entry is Reanimator/Frankenstein; standalone UI (F12 Séance) and costume (F26) are deprioritised | Accepted |
 | D-40 | F12 re-scoped to a headless **Live Feed** for Reanimator (extends D-39, D-36): pure `reduceLive`/`foldLive` → `LiveState` in `@poltergeist/core/live`, `live.hello` protocol 1, late joiners get the backlog with latest frames in place, frame-only backpressure at 1 MiB, `run.started.runDir`; no React Séance | Accepted |
 | D-41 | F13 `poltergeist init` (extends D-38, D-01): writes `poltergeist.config.json` and merges the MCP entry, steering and a `PostTaskExecution` agent hook into a project's `.kiro/` from `integrations/kiro/` templates; per-file created/unchanged/skipped/overwritten, exit 1 on skips, never through symlinks, never rewrites an unparseable `mcp.json`; exported for Reanimator's heal loop | Accepted |
+| D-42 | F14 re-haunt rulings (refines D-34, D-35, D-38): the baseline is the spec's previous `haunting-report.json`; every run merges into it (unrun criteria and personas are carried with `carriedFrom`, only for the same target and criterion text) and diffs re-run criteria (`changes`); CLI change block, MCP `changes` on run results; fixture Done-when (KI-53) | Accepted |
 
 ---
 
@@ -601,3 +602,17 @@
   - F18 can reuse the same templates for the Power.
   - Reanimator's R5 can call `init({dir: revivedRepo, target})` before handing a wound to Kiro.
 
+### D-42: F14 re-haunt rulings (refines D-34, D-35, D-38)
+- **Context:** grilling F14 (2026-11-02) in Claude Code. The user asked to accept the recommended answers. KI-47 (a subset run wiped the board) was F14's to fix.
+- **Decision:**
+  - **The baseline is the spec's previous `haunting-report.json`**, not a run folder's `verdicts.json` (which D-34 had pencilled in). It is per spec, needs no scan of `.poltergeist/runs/`, and after this decision it always holds the full picture. A missing, corrupt or other-version file means no baseline, never an error (`readReportJson`, shared with the MCP server).
+  - **Every run merges into the previous report (resolves KI-47):** a criterion not run this time is copied over, and so is a persona's pair inside a re-run criterion when that persona wasn't run. Both get `carriedFrom: <runId>` (the original run, kept across repeated subset runs). A re-run criterion rolls up over the merged pairs, so re-testing with one persona can't hide another persona's `haunted`. The markdown marks carried lines `_(earlier run `id`)_` and adds a `_Merged: N criteria kept…_` line. `haunting-report.json` stays version 1; both `carriedFrom` fields are optional.
+  - **Stale rows aren't carried or diffed:** a different `target`, or a criterion whose id is gone or whose text changed, is `notRun` with no `from`.
+  - **The diff** (`diffVerdicts`, pure): for each criterion that ran this time and has a usable previous verdict (not `notRun`), `{id, from, to, personas}` when the criterion verdict or a re-run persona's verdict changed. `summon` returns it as `changes` with `previousRunId`. It is computed on every run, not only `--only`.
+  - **Surfaces:** the CLI board prints `changes since <runId>:` and `  3.2 [!!] → [ok]` lines. MCP run results (`summon_ghosts`, `rehaunt`, `get_run_status`) add `changes: [{id, from, to}]` (criterion-level, at most 20) and `previousRunId` when something moved, and the hint says `Fixed: <ids>` when nothing is still haunted. Exit codes are unchanged.
+  - **Plan cache:** unchanged. `cacheKey` already includes the criterion hash, which meets "cached unless the criterion text changed".
+  - **Done-when (fixture):** on the claims fixture, summon (3.2 haunted), then a test-only `fix()` making the claim atomic, then one `rehaunt ["3.2"]` gives `3.2 haunted → clean` in under 30 s with 3.1 still `[ok]` on the board, over MCP and the CLI. The real exorcism on Candy Swap in Kiro is KI-53.
+- **Consequences:**
+  - Reanimator's heal loop can read `changes` (or diff two reports itself) to animate a wound closing.
+  - `verdicts.json` is still written per run, but nothing reads it back.
+  - A report can now mix runs with different `reps` or models; the carried marks say which lines are older.
