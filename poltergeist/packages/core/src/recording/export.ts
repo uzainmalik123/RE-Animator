@@ -1,9 +1,10 @@
 import { copyFile, mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
-import { basename, isAbsolute, join, relative, resolve } from 'node:path';
+import { isAbsolute, join, relative, resolve } from 'node:path';
 import { framePath, timelineDuration, type FrameMark } from '../live/index.js';
 import type { SummonEvent } from '../summon/types.js';
 import type { PairVerdict } from '../verdicts/types.js';
 import { loadRecording, RecordingError } from './load.js';
+import { publicEvent } from './public.js';
 
 /** `recording.json`: what a bundle holds, and the label that it is a recording (Req 11.4). */
 export type RecordingManifest = {
@@ -90,7 +91,7 @@ export async function exportRecording(opts: ExportOptions): Promise<{ outDir: st
   const size = new Map<FrameMark, number>();
   for (const f of rec.frames) size.set(f, (await stat(join(runDir, framePath(f.ghostId, f.seq)))).size);
   // The bundle is meant to be public: no absolute local paths. Evidence frames resolve against the bundle itself.
-  const eventsText = ndjson(rec.events.map((e) => (e.type === 'run.started' ? { ...e, runDir: '.', specDir: basename(e.specDir) } : e)));
+  const eventsText = ndjson(rec.events.map(publicEvent));
   const verdicts = await readOptional(join(runDir, 'verdicts.json'));
   const exportedAt = (opts.now ?? (() => new Date()))().toISOString();
   const manifestFor = (kept: readonly FrameMark[]): RecordingManifest => ({
