@@ -32,6 +32,8 @@ export type RunSummary = {
   progress?: RunProgress;
   error?: string;
   hint?: string;
+  /** What summon warned about (skipped house rules, literal passwords …), at most `MAX_IDS`. */
+  warnings?: string[];
 };
 
 /** The agent-sized summary of a finished run: counts and ids, never artifacts (Req 10.2). */

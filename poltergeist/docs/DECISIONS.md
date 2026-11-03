@@ -685,6 +685,11 @@
   - **Notes:** a `Project note: <text>` line under the page's `Page …` line in the user prompt (exact path match). The pair's notes are added to the cache key only when there are some, so pre-F17 cache entries stay valid. Note text is the user's own wording; D-09 governs only our prompts.
   - **`run.json`** records `houseRules` when a steering file exists.
   - **KI-17 redirect hops:** the guard listens to `request` events with `redirectedFrom()` and reports a hop that matches a forbidden rule as `forbidden` (which voids the rep, so the pair is `inconclusive`). Route handlers never see hops, so it is reported, not prevented (KI-62). Off-allowlist hops were already stopped by the dead proxy.
+- **Review fixes (2026-11-03):**
+  - **One heading pattern:** `HOUSE_RULES_HEADING` (any case, trailing spaces) is exported from `core/steering`, and `init --force` keeps the section with that same pattern. A `## House Rules` section is no longer replaced by the template.
+  - **Forgiving bullets:** `-`, `*` and `+` bullets, any whitespace after the bullet, and one pair of surrounding backticks (on the whole rule or on its value) are accepted, so a markdown habit doesn't silently drop a `forbid`.
+  - **Warnings reach the agent:** the MCP `RunSummary` carries `warnings` (capped like ids), so a skipped house rule is visible in Kiro, not only on the server's stderr.
+  - Deferred minors are in KI-64.
 - **Consequences:**
   - The template's `## House rules` comment now documents the syntax.
   - Req 4.3 is reworded to cover forbidden rules and notes.

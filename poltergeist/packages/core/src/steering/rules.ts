@@ -20,14 +20,18 @@ export type HouseRules = {
 
 export type HouseRulesResult = { rules: HouseRules; warnings: string[] };
 
-const HEADING = /^##\s+house rules\s*$/i;
-const RULE = /^-\s+(\w+)(?:\s+(\S+))?\s*:\s*(.*)$/;
+/** The section heading, any case; `init --force` finds the section with the same pattern (D-41, D-45). */
+export const HOUSE_RULES_HEADING = /^[ \t]*##[ \t]+house rules[ \t]*\r?$/im;
+const BULLET = /^[-*+]\s+/;
+const RULE = /^(\w+)(?:\s+(\S+))?\s*:\s*(.*)$/;
+/** One pair of surrounding backticks, as people write code in markdown. */
+const unquote = (s: string) => (/^`[^`]*`$/.test(s) ? s.slice(1, -1).trim() : s);
 
 /** Comments become blank lines with the same line breaks, so line numbers still match the file. */
 const stripComments = (md: string) => md.replace(/<!--[\s\S]*?-->/g, (c) => c.replace(/[^\n]/g, ''));
 
 /**
- * Parses the `## House rules` section (up to the next `## ` heading). Only `- ` lines are rules:
+ * Parses the `## House rules` section (up to the next `## ` heading). Only bullet lines (`-`, `*`, `+`) are rules:
  * `- disable: <ids>`, `- forbid: <METHOD|*> <path>`, `- note <path>: <text>`. A bad line is a
  * warning and is skipped; parsing never throws.
  */
@@ -36,22 +40,22 @@ export function parseHouseRules(markdown: string, path: string): HouseRulesResul
   const warnings: string[] = [];
   const notes = new Map<string, string>();
   const lines = stripComments(markdown).split(/\r?\n/);
-  const start = lines.findIndex((l) => HEADING.test(l.trim()));
+  const start = lines.findIndex((l) => HOUSE_RULES_HEADING.test(l));
   if (start === -1) return { rules, warnings };
 
   for (let i = start + 1; i < lines.length; i++) {
     const line = (lines[i] as string).trim();
     if (/^##?\s/.test(line)) break;
-    if (!line.startsWith('- ')) continue;
+    if (!BULLET.test(line)) continue;
     const warn = (message: string) => warnings.push(`house rules line ${i + 1}: ${message}`);
-    const m = RULE.exec(line);
+    const m = RULE.exec(unquote(line.replace(BULLET, '')));
     if (!m) {
       warn(`cannot read "${line}"; expected "- key: value"`);
       continue;
     }
     const [, rawKey, arg, rawValue] = m as unknown as [string, string, string | undefined, string];
     const key = rawKey.toLowerCase();
-    const value = rawValue.trim();
+    const value = unquote(rawValue.trim());
     if (key === 'note') {
       if (arg === undefined || !arg.startsWith('/')) warn('note needs a path starting with "/": "- note /path: text"');
       else if (value.length === 0 || value.length > MAX_NOTE_LENGTH) warn(`note text must be 1–${MAX_NOTE_LENGTH} characters`);

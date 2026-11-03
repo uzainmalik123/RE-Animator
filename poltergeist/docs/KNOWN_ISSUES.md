@@ -72,6 +72,7 @@
 | KI-61 | F16 review minors: `logout` misses `Domain=`-attribute cookies (`.host`), the report says "Expected: usable", the plan-timeout test doesn't exercise the probe guard, slow-3g `goto` under 4× CPU often times out unprobed, a Lich step shows `timeout` live while its rep is a `completed` failure, an app that never goes network-idle never gets a `usable` failure | Minor | F16, R4 | Open |
 | KI-62 | A redirect hop to a forbidden path on an allowed host is reported (the rep is voided), not prevented: the request still reaches the app once | Minor | F17 | Open |
 | KI-63 | F17 Done-when on real Candy Swap not yet run: a steering `disable: banshee` removes every Banshee plan from a live run | Minor | F17 sign-off | Open |
+| KI-64 | F17 review minors: a note on an unknown path is silently unused, joined notes can pass 500 chars, unclosed comments and code fences differ from rendered markdown, pre-F17 steering keeps its old "documentation only" comment after `init --force`, `changes` shows a retired persona as fixed, `run.json` `config` lacks steering rules | Minor | F17, R5 | Open |
 
 ---
 
@@ -638,4 +639,14 @@
 - **Problem:** F17 was checked against the claims fixture with a fake LLM (`summon: house rules` tests). The PRD Done-when on the real app with a live key is still to do.
 - **Blocks:** F17 sign-off.
 - **Next action:** in the batched Kiro/Candy Swap session, run `poltergeist init` in Candy Swap, add `- disable: banshee` under `## House rules`, run `npm run summon`, and check there are no `__banshee` files in `plans/` and no Banshee pairs in the report.
+
+### KI-64: F17 review minors · Minor · Open
+- **Context:** the final review of F17 (2026-11-03). Its two Important findings were fixed before merge (D-45 review fixes).
+- **Items:**
+  - A `note` whose path matches no configured route does nothing, and there's no warning (`/checkout/` vs `/checkout`). Warn in `summon()` when a note's path isn't in `config.routes`.
+  - Two notes on one path are joined with no length check, so they can pass 500 characters. Check the joined length.
+  - An unclosed `<!--` isn't stripped, so the rules after it apply although Kiro renders them as a comment. Rules inside fenced code blocks also apply. Both only tighten.
+  - Projects set up before F17 keep the old "documentation only" House rules comment through `init --force`, because the whole section is kept. Replace that exact old comment once in `withSection`.
+  - `changes` compares against the unfiltered previous row, so disabling a haunted persona shows `haunted → clean`. Reanimator's heal loop would draw that as a healed wound. Filter `previous` by `retired` before diffing if R5 needs it.
+  - `run.json` `config` is the snapshot taken before the rules are applied. Steering `forbid` rules appear only under `houseRules`.
 

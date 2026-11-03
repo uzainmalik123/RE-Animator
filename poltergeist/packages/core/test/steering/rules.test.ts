@@ -64,6 +64,13 @@ describe('parseHouseRules', () => {
     expect(parseHouseRules(md, 'p').rules.disabled).toEqual(['banshee']);
   });
 
+  it('reads * and + bullets, tabs after the bullet and backticked values (F17 review I2)', () => {
+    const { rules, warnings } = parse('* forbid: DELETE /api/admin*', '-\tdisable: lich', '+ forbid: `POST /api/x`', '- `disable: wraith`');
+    expect(rules.forbidden).toEqual([{ method: 'DELETE', path: '/api/admin*' }, { method: 'POST', path: '/api/x' }]);
+    expect(rules.disabled).toEqual(['lich', 'wraith']);
+    expect(warnings).toEqual([]);
+  });
+
   it('returns empty rules and no warnings without a section', () => {
     expect(parseHouseRules('# Hi\n\n- disable: banshee\n', 'p')).toEqual({
       rules: { path: 'p', disabled: [], forbidden: [], notes: [] },

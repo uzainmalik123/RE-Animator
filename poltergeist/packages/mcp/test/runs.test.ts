@@ -43,6 +43,15 @@ describe('RunManager', () => {
     expect(await runs.wait(id, 0)).toMatchObject({ status: 'finished' });
   });
 
+  it('puts summon warnings in the summary, so the agent sees a skipped house rule (F17 review I2)', async () => {
+    const f = fakeSummon();
+    const runs = new RunManager({ summon: f.summon, root: '/w', log: () => {} });
+    const id = runs.start({ specDir: 's' });
+    f.calls[0]!.onWarning!('house rules line 9: forbid needs "<METHOD|*> /path", got "x"');
+    f.settle.resolve!(f.result(id));
+    expect(await runs.wait(id, 1000)).toMatchObject({ status: 'finished', warnings: ['house rules line 9: forbid needs "<METHOD|*> /path", got "x"'] });
+  });
+
   it('allows one active run at a time', async () => {
     const f = fakeSummon();
     const runs = new RunManager({ summon: f.summon, root: '/w' });

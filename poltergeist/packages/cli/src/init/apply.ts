@@ -36,8 +36,8 @@ async function existing(dir: string, rel: string): Promise<string | undefined> {
 }
 
 /** `fresh` up to its `heading`, then `current`'s copy of that section when it has one. */
-function withSection(fresh: string, current: string, heading: string): string {
-  const at = (s: string) => s.search(new RegExp(`^${heading}\\s*$`, 'm'));
+function withSection(fresh: string, current: string, heading: RegExp): string {
+  const at = (s: string) => s.search(heading);
   const mine = at(current);
   const ours = at(fresh);
   return mine < 0 || ours < 0 ? fresh : fresh.slice(0, ours) + current.slice(mine);
