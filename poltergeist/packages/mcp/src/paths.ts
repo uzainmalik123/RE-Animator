@@ -53,8 +53,8 @@ const SPEC_SHAPE = 'specDir must be an absolute path to <project>/.kiro/specs/<n
 
 /**
  * `--root-from-spec` (D-46): the project that holds an absolute `<project>/.kiro/specs/<name>`,
- * used as that call's root. The filesystem root and the home folder (Kiro's user settings) are
- * never a project.
+ * used as that call's root. The filesystem root, the home folder (Kiro's user settings) and any
+ * folder holding home are never a project, also through a symlink.
  */
 export function projectRootOf(specDir: string, home: string = homedir()): string {
   if (!isAbsolute(specDir)) throw new PathError(`${SPEC_SHAPE}; got the relative path ${specDir}`);
@@ -64,6 +64,10 @@ export function projectRootOf(specDir: string, home: string = homedir()): string
   const kiro = dirname(specs);
   if (basename(specs) !== 'specs' || basename(kiro) !== '.kiro' || basename(p) === '') throw new PathError(`${SPEC_SHAPE}; got ${specDir}`);
   const project = dirname(kiro);
-  if (project === parse(project).root || project === resolve(home)) throw new PathError(`${specDir} is not inside a project folder (${project}); ${SPEC_SHAPE}`);
+  // Compared after following links, so an alias of / or of home is refused too; a folder that
+  // holds home (such as /home) would hold every user's projects.
+  const real = realish(project);
+  const realHome = realish(resolve(home));
+  if (real === parse(real).root || inside(real, realHome)) throw new PathError(`${specDir} is not inside a project folder (${project}); ${SPEC_SHAPE}`);
   return project;
 }

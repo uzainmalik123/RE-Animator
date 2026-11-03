@@ -11,6 +11,7 @@ const templates = (): PowerFiles => Object.fromEntries(PATHS.map((p) => [p, read
 const good = (): PowerFiles => {
   const files = templates();
   files['mcp.json'] = files['mcp.json']!.replace(PLACEHOLDER, '/abs/poltergeist-mcp.js');
+  files['skills/poltergeist/SKILL.md'] = files['skills/poltergeist/SKILL.md']!.replaceAll('{{CHECKOUT}}', '/abs');
   return files;
 };
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -28,10 +29,11 @@ describe('validatePower', () => {
     expect(validatePower(good(), { tools: TOOLS })).toEqual([]);
   });
 
-  it('reports only the placeholder bin in the committed templates', () => {
+  it('reports only the placeholders in the committed templates', () => {
     const problems = validatePower(templates(), { tools: TOOLS });
-    expect(problems).toHaveLength(1);
+    expect(problems).toHaveLength(2);
     expect(problems[0]).toMatch(/mcp\.json.*placeholder/);
+    expect(problems[1]).toMatch(/SKILL\.md.*\{\{CHECKOUT\}\}/);
   });
 
   it('reports a missing file', () => {
@@ -88,6 +90,6 @@ describe('validatePower', () => {
   it('teaches the loop in the skill', () => {
     const skill = good()['skills/poltergeist/SKILL.md']!;
     for (const tool of TOOLS) expect(skill).toContain(tool);
-    for (const word of ['absolute', 'poltergeist init', 'requirements.md']) expect(skill).toContain(word);
+    for (const word of ['absolute', '/abs/packages/cli/bin/poltergeist.js init', 'requirements.md']) expect(skill).toContain(word);
   });
 });

@@ -74,6 +74,7 @@
 | KI-63 | F17 Done-when on real Candy Swap not yet run: a steering `disable: banshee` removes every Banshee plan from a live run | Minor | F17 sign-off | Open |
 | KI-64 | F17 review minors: a note on an unknown path is silently unused, joined notes can pass 500 chars, unclosed comments and code fences differ from rendered markdown, pre-F17 steering keeps its old "documentation only" comment after `init --force`, `changes` shows a retired persona as fixed, `run.json` `config` lacks steering rules | Minor | F17, R5 | Open |
 | KI-65 | F18 Power not yet installed in Kiro: the format, `${ANTHROPIC_API_KEY}` expansion, `node` on Kiro's PATH, namespaced tool names and the F11 loop through it are unverified | Minor | F18 sign-off | Open |
+| KI-66 | F18 review minors: a write failure part-way through `poltergeist power` leaves a partial bundle that the next run refuses as non-empty; `RunBusyError` doesn't name the other run's spec | Minor | F18 | Open |
 
 ---
 
@@ -662,4 +663,10 @@
   - the keywords activate the Power on "summon the ghosts on this spec".
 - **Blocks:** F18 sign-off.
 - **Next action:** in the batched Kiro session, run `npx poltergeist power --out ~/poltergeist-power`, import that folder in Kiro's Powers panel, approve the key, and run the F11 loop (KI-46) through the Power instead of the `mcp.json` entry. If the IDE rejects the bundle, add a legacy `POWER.md` + `steering/` variant. If both the Power and `init`'s entry are installed, check the duplicate tools don't confuse the agent.
+
+### KI-66: F18 review minors · Minor · Open
+- **Context:** the final review of F18 (2026-11-03). Its root/home and checkout-path findings were fixed before merge (D-46 review fixes).
+- **Items:**
+  - `buildPower` writes the three files one by one. If a write fails part-way through (disk full, say), the folder is left partly written, and the next run refuses it as "not empty" without saying why. Write into a temp sibling folder and rename it into place, or remove what was written on error.
+  - With the Power, one server serves every project but still runs one haunting at a time. A run in project A makes `summon_ghosts` in project B return `RunBusyError` with A's `runId`. The skill says so; the message could also name A's spec.
 

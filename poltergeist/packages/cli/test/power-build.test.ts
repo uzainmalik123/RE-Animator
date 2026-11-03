@@ -24,6 +24,13 @@ describe('planPower', () => {
     expect(files['plugin.json']).toBe(await readFile(join(TEMPLATES, 'plugin.json'), 'utf8'));
   });
 
+  it('names the checkout in the skill so the agent can run init (D-46 review)', async () => {
+    const files = await planPower({ mcpBin: '/x/packages/mcp/bin/poltergeist-mcp.js' });
+    const skill = files['skills/poltergeist/SKILL.md']!;
+    expect(skill).not.toContain('{{CHECKOUT}}');
+    expect(skill).toContain('/x/packages/cli/bin/poltergeist.js init');
+  });
+
   it("defaults to this checkout's server bin", async () => {
     const files = await planPower({});
     const bin = JSON.parse(files['mcp.json']!).mcpServers.poltergeist.args[0] as string;

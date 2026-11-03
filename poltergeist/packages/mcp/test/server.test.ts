@@ -210,6 +210,17 @@ describe('MCP server --root-from-spec (D-46)', () => {
     expect(JSON.parse(r.text).reportPath).toBe('.kiro/specs/small/haunting-report.md');
   });
 
+  it('rejects a .kiro linked outside the project', async () => {
+    await mkdir(join(outside, 'kiro', 'specs', 'x'), { recursive: true });
+    await writeFile(join(outside, 'kiro', 'specs', 'x', 'requirements.md'), spec(1));
+    await mkdir(join(root, 'linkedkiro'), { recursive: true });
+    await symlink(join(outside, 'kiro'), join(root, 'linkedkiro', '.kiro'));
+    const { call } = await connect(undefined, true);
+    const r = await call('list_criteria', { specDir: join(root, 'linkedkiro', '.kiro', 'specs', 'x') });
+    expect(r.isError).toBe(true);
+    expect(r.text).toMatch(/^PathError:/);
+  });
+
   it('describes specDir as an absolute path', async () => {
     const { client } = await connect(undefined, true);
     const { tools } = await client.listTools();

@@ -19,7 +19,7 @@ Every tool takes `specDir`: the **absolute** path of the spec folder, for exampl
 
 ## How to use it
 
-1. The project needs a `poltergeist.config.json` whose `target` is the app's local address (loopback only). If it has none, run `poltergeist init --dir <project> --target <origin>` from the Poltergeist checkout, or ask the user.
+1. The project needs a `poltergeist.config.json` whose `target` is the app's local address (loopback only). If it has none, run `node {{CHECKOUT}}/packages/cli/bin/poltergeist.js init --dir <project> --target <origin>` (ask the user for the target if you don't know it).
 2. Start the app on that target first. Tests only ever run against that local app.
 3. Call `summon_ghosts`, read the board with `get_haunting_report`, then fix the code for one failing criterion at a time and confirm it with `rehaunt` for that id.
 4. A criterion marked inconclusive or flaky is not a confirmed bug: say so instead of changing code for it.
@@ -27,5 +27,6 @@ Every tool takes `specDir`: the **absolute** path of the spec folder, for exampl
 
 ## More
 
-- `poltergeist init` also adds an agent hook (run the tests after each spec task) and a steering file with project house rules (`disable`, `forbid`, `note`). This Power doesn't install either.
+- `poltergeist init` (the command above) also adds an agent hook (run the tests after each spec task) and a steering file with project house rules (`disable`, `forbid`, `note`). This Power doesn't install either.
 - Each browser run asks for approval first.
+- One run at a time: this server is shared by every project, so while a run is going, starting another (in any project) returns its `runId` to wait on.

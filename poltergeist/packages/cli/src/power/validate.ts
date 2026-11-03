@@ -9,6 +9,8 @@ export const MCP_SCHEMA = 'https://agent-plugins.org/schemas/1.0.0/mcp.schema.js
 export const POWER_KEYWORDS = ['poltergeist', 'summon ghosts', 'haunting report', 'rehaunt', 'adversarial acceptance tests', 'haunt spec'] as const;
 export const SKILL_PATH = 'skills/poltergeist/SKILL.md';
 export const PLACEHOLDER_BIN = '/ABSOLUTE/PATH/TO/poltergeist/packages/mcp/bin/poltergeist-mcp.js';
+/** Where `planPower` writes the checkout's absolute path into the skill. */
+export const CHECKOUT_PLACEHOLDER = '{{CHECKOUT}}';
 const BROAD_KEYWORDS = new Set(['test', 'tests', 'testing', 'api', 'data']);
 const SERVER = 'poltergeist';
 const MAX_TOOL_NAME = 64;
@@ -88,6 +90,7 @@ function checkSkill(text: string | undefined, problems: string[]): void {
   if (fm.name !== folder) problems.push(`${SKILL_PATH}: name must be "${folder}", its folder's name`);
   const description = fm.description ?? '';
   if (description.trim() === '' || description.length > MAX_SKILL_DESCRIPTION) problems.push(`${SKILL_PATH}: description must be 1-${MAX_SKILL_DESCRIPTION} chars`);
+  if (text.includes(CHECKOUT_PLACEHOLDER)) problems.push(`${SKILL_PATH}: ${CHECKOUT_PLACEHOLDER} is still a placeholder; run poltergeist power --out <dir>`);
 }
 
 /**

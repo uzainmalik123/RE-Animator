@@ -711,6 +711,11 @@
   - **No hook in the Power.** The plugin format has no hooks part. `init` stays the way to get one (D-41).
   - **Validator:** `validatePower()` checks the documented rules (schemas, name regex, required fields, broad keywords, one-token command, absolute bin, no reserved env keys, the skill name matching its folder, a description of 1–1024 chars, and `power-poltergeist-poltergeist_<tool>` ≤ 64 chars). It is run on every build.
   - **Done-when (fixture):** `packages/cli/test/power-done-when.test.ts`. The real bin writes the Power, the bundle validates, and the server, spawned exactly as `mcp.json` says from the plugin folder, lists the five tools, answers `list_criteria` on an absolute fixture spec, and rejects a relative one. The in-Kiro install and the F11 loop through it are KI-65.
+- **Review fixes (2026-11-03):**
+  - **Root and home are checked after following links.** A symlinked alias of `/` or of home is refused, and so is any folder that holds the home folder (such as `/home`, which would hold every user's projects). A test now covers a `.kiro` linked outside its project.
+  - **The skill names the checkout.** `planPower` fills `{{CHECKOUT}}` in `SKILL.md`, so the agent can run `node <checkout>/packages/cli/bin/poltergeist.js init`. The validator rejects the placeholder left unfilled.
+  - **The skill says there's one run at a time** across every project the shared server serves.
+  - Deferred minors are in KI-66.
 - **Consequences:**
   - Requirement 10.4 is reworded (a skill instead of steering, per-call project root).
   - The Power and `init` can be used together: `init` adds the hook and house rules, the Power adds the on-demand tools. Using both gives two servers (`poltergeist` and `power-poltergeist-poltergeist`). That's harmless, but the agent sees duplicate tools (KI-65 notes it).

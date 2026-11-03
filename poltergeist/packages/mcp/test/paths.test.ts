@@ -87,3 +87,28 @@ describe('projectRootOf (--root-from-spec)', () => {
     expect(() => projectRootOf('/h/.kiro/specs/c', '/h/')).toThrow(PathError);
   });
 });
+
+describe('projectRootOf follows links (D-46 review)', () => {
+  let tmp: string;
+  beforeAll(async () => {
+    tmp = await realpath(await mkdtemp(join(tmpdir(), 'mcp-proot-')));
+    await mkdir(join(tmp, 'home', 'me'), { recursive: true });
+    await symlink('/', join(tmp, 'rootlink'));
+    await symlink(join(tmp, 'home', 'me'), join(tmp, 'homelink'));
+  });
+  afterAll(() => rm(tmp, { recursive: true, force: true }));
+  const home = () => join(tmp, 'home', 'me');
+
+  it('refuses a link to the filesystem root', () => {
+    expect(() => projectRootOf(join(tmp, 'rootlink', '.kiro', 'specs', 'x'), home())).toThrow(PathError);
+  });
+  it('refuses a link to the home folder', () => {
+    expect(() => projectRootOf(join(tmp, 'homelink', '.kiro', 'specs', 'x'), home())).toThrow(PathError);
+  });
+  it('refuses a folder that holds the home folder', () => {
+    expect(() => projectRootOf(join(tmp, 'home', '.kiro', 'specs', 'x'), home())).toThrow(PathError);
+  });
+  it('still takes a project inside home', () => {
+    expect(projectRootOf(join(home(), 'app', '.kiro', 'specs', 'x'), home())).toBe(join(home(), 'app'));
+  });
+});
