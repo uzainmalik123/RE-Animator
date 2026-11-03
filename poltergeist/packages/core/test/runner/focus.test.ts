@@ -77,7 +77,32 @@ describe('focusWalk (F20, D-48)', () => {
   });
 });
 
+describe('focusWalk review fixes (F20)', () => {
+  it('passes through an iframe instead of calling it a full round', async () => {
+    const { page } = await open('<button>A</button><iframe srcdoc="<button>1</button><button>2</button><button>3</button>"></iframe><button>Save</button>');
+    await page.frameLocator('iframe').getByRole('button', { name: '3' }).waitFor();
+    expect(await focusWalk(page, button('Save'))).toMatchObject({ reached: true });
+  });
+
+  it('passes through a closed shadow root', async () => {
+    const { page } = await open(`<button>A</button><x-box></x-box><button>Save</button>
+<script>customElements.define('x-box', class extends HTMLElement { constructor() { super(); this.attachShadow({ mode: 'closed' }).innerHTML = '<input><input><input>'; } });</script>`);
+    expect(await focusWalk(page, button('Save'))).toMatchObject({ reached: true });
+  });
+
+  it('a focused container does not count as reaching a control inside it', async () => {
+    const { page } = await open('<main tabindex="-1"><button>Save</button></main>');
+    await page.focus('main');
+    expect(await focusWalk(page, button('Save'))).toMatchObject({ reached: true, tabs: 1 });
+  });
+});
+
 describe('probeReachable', () => {
+  it('static text is not a control', async () => {
+    const { page } = await open('<button>A</button><p>Total</p>');
+    expect(await probeReachable(page, { text: 'Total' })).toBe('missing');
+  });
+
   it('visible for a shown, enabled target', async () => {
     const { page } = await open();
     expect(await probeReachable(page, button('Pay'))).toBe('visible');
@@ -118,6 +143,20 @@ describe('startActor with keyboard (F20)', () => {
     expect(run.end).toBe('failed');
     expect(run.steps[0]?.unreachable).toBeUndefined();
     expect(run.error).toMatch(/not visible or disabled/);
+  });
+
+  it('waits for a control that renders late instead of blaming the app', async () => {
+    const e = await env();
+    await e.page.setContent('<button>A</button><script>setTimeout(() => document.body.insertAdjacentHTML("beforeend", "<button>Late</button>"), 300);</script>');
+    const run = await runActor([{ focus: button('Late') }], e);
+    expect(run.end).toBe('done');
+  });
+
+  it('a keyboard fill that lands on something that is not a field fails as the plan\'s fault', async () => {
+    const run = await runActor([{ fill: { target: button('Save'), input: { generator: 'plain' } } }], await env());
+    expect(run.end).toBe('failed');
+    expect(run.steps[0]?.unreachable).toBeUndefined();
+    expect(run.error).toMatch(/not a text field/);
   });
 
   it('fills by typing and activates with Enter', async () => {

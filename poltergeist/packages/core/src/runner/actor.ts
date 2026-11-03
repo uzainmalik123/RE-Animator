@@ -104,13 +104,17 @@ export function startActor(steps: readonly Step[], env: ActorEnv): { run: ActorR
     return { loc, xy };
   };
 
-  /** Tabs to the target (D-48). A visible, enabled control the walk never reached is the app's failure. */
-  const reach = async (t: PlanTarget, result: StepResult): Promise<{ x: number; y: number } | undefined> => {
+  /**
+   * Tabs to the target (D-48), once a match is visible: like a click, it waits for a late render. A
+   * visible, enabled control the walk never reached is the app's failure.
+   */
+  const reach = async (t: PlanTarget, result: StepResult): Promise<{ xy?: { x: number; y: number }; editable: boolean }> => {
+    await locateTarget(page, t).filter({ visible: true }).first().waitFor({ state: 'visible' });
     const walk = await focusWalk(page, t);
     if (walk.reached) {
       result.note = `reached after ${walk.tabs} Tab${walk.tabs === 1 ? '' : 's'}`;
       if (walk.xy) await moveCursor(page, walk.xy.x, walk.xy.y);
-      return walk.xy;
+      return { ...(walk.xy ? { xy: walk.xy } : {}), editable: walk.editable };
     }
     if (walk.why === 'cap') throw new StepFailure(`gave up after ${MAX_TABS} Tabs`);
     if ((await probeReachable(page, t)) === 'visible') {
@@ -131,9 +135,10 @@ export function startActor(steps: readonly Step[], env: ActorEnv): { run: ActorR
       const { loc, xy } = await resolveTarget(step.dblclick, result);
       await loc.dblclick();
       return xy;
-    } else if ('focus' in step) return reach(step.focus, result);
+    } else if ('focus' in step) return (await reach(step.focus, result)).xy;
     else if ('fill' in step && env.keyboard) {
-      const xy = await reach(step.fill.target, result);
+      const { xy, editable } = await reach(step.fill.target, result);
+      if (!editable) throw new StepFailure(`${describeTarget(step.fill.target)} is not a text field`);
       await page.keyboard.press('ControlOrMeta+A');
       await page.keyboard.type(generate(step.fill.input.generator, env.seed, fills++));
       return xy;

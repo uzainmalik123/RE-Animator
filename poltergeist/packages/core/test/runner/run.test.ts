@@ -176,9 +176,10 @@ describe('runPlans', () => {
       expect(run.results[0]).toMatchObject({ outcome: 'completed', assertions: [{ ok: true }] });
     });
 
-    it('a hidden or missing target stays a plan error', async () => {
-      const run = await runPlans(browser, loadFor(fixture.origin), [press('changeling', 'Refund', 'Refunded', '20.4')], { sessions, reps: 1, frameFps: 0 });
-      expect(run.results[0]).toMatchObject({ outcome: 'planError', assertions: [] });
+    it('a missing target is a step timeout, like a click on it, never an app bug', async () => {
+      const run = await runPlans(browser, loadFor(fixture.origin), [press('changeling', 'Refund', 'Refunded', '20.4')], { sessions, reps: 1, frameFps: 0, stepTimeoutMs: 800 });
+      expect(run.results[0]).toMatchObject({ outcome: 'timeout', assertions: [] });
+      expect(decidePair('20.4', 'changeling', 1, run.results)).toMatchObject({ verdict: 'inconclusive' });
     });
   });
 

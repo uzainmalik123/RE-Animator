@@ -686,9 +686,11 @@
 ### KI-68: F20 Changeling not yet run on Candy Swap · Minor · Open
 - **Context:** F20 (2026-11-03, D-48) was built against the claims fixture and a fake LLM. No Candy Swap, no live compile.
 - **Unverified:** that the model writes `focus` + `press Enter` plans (not `notApplicable`) for Candy Swap's flow criteria; that Candy Swap's controls are reached in a sensible number of Tabs; that a keyboard-only claim or trade completes, or else fails as `reachable` for a real reason.
+- **Review minors (deferred, 2026-11-03):** after a step's race times out, a walk still running keeps pressing Tab until the context closes. That's harmless, but an abort check in the loop would be tidier. Each walk is up to 100 sequential page round trips.
 - **Next action:** in the batched Candy Swap session, run `npm run summon` with the Changeling on and read its lines in `haunting-report.md`. A `reachable` failure on a real control is a true finding for Kiro to fix (D-10: no planted bugs).
 
 ### KI-69: Changeling has no Escape or arrow keys · Minor · Accepted
 - **Context:** the PRD and design define the Changeling as "Tab, Enter and Space only" (D-48).
 - **Effect:** a flow that needs arrows (radio groups, native selects, menus) or Escape (closing a dialog) can't be completed. The compiler should answer `notApplicable`; if it doesn't, the plan fails as a plan error, never as an app bug.
+- **Also:** an open modal that traps focus while the target sits behind it goes round as a `cycle`, so it counts as `reachable` (the app's fault) even when the plan only forgot to close the dialog, which it can't do without Escape.
 - **Next action:** if Candy Swap or Reanimator's targets need it, add `Escape` and the arrows to the Changeling's `keys` (a one-line change plus a prompt version bump).
