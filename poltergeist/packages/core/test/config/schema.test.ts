@@ -22,7 +22,18 @@ describe('ConfigSchema', () => {
       reps: 3,
       forbidden: [],
       model: 'claude-sonnet-5-5',
+      provider: 'anthropic',
     });
+  });
+
+  it('accepts bedrock with a region (F19)', () => {
+    const c = ConfigSchema.parse({ ...base, provider: 'bedrock', awsRegion: 'us-east-1' });
+    expect(c.provider).toBe('bedrock');
+    expect(c.awsRegion).toBe('us-east-1');
+  });
+
+  it('accepts bedrock without a region (the AWS env supplies it)', () => {
+    expect(ConfigSchema.parse({ ...base, provider: 'bedrock' }).awsRegion).toBeUndefined();
   });
 
   it.each<[string, Record<string, unknown>, string]>([
@@ -54,6 +65,9 @@ describe('ConfigSchema', () => {
     ['auth true with no accounts', { routes: [{ path: '/m', auth: true }] }, 'routes.0.auth'],
     ['auth naming a missing account', { routes: [{ path: '/m', auth: 'admin' }], accounts: { default: account } }, 'routes.0.auth'],
     ['method with a space', { forbidden: [{ method: 'DE LETE', path: '/x' }] }, 'forbidden.0.method'],
+    ['awsRegion without bedrock', { awsRegion: 'us-east-1' }, 'awsRegion'],
+    ['unknown provider', { provider: 'openai' }, 'provider'],
+    ['malformed awsRegion', { provider: 'bedrock', awsRegion: 'US East' }, 'awsRegion'],
     ['route path without a slash', { routes: [{ path: 'market', auth: false }] }, 'routes.0.path'],
   ])('rejects %s', (_name, patch, path) => {
     expect(issuePaths({ ...base, ...patch })).toContain(path);
