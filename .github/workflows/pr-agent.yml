@@ -19,11 +19,14 @@ jobs:
         id: pragent
         uses: the-pr-agent/pr-agent@main
         env:
-          # The OPENAI_KEY secret holds a Google AI Studio (Gemini) API key.
-          GOOGLE_AI_STUDIO.GEMINI_API_KEY: ${{ secrets.OPENAI_KEY }}
+          # NVIDIA API catalog (build.nvidia.com), OpenAI-compatible endpoint.
+          # The OPENAI_KEY secret holds the NVIDIA (nvapi-...) key.
+          OPENAI.KEY: ${{ secrets.OPENAI_KEY }}
+          OPENAI.API_BASE: "https://integrate.api.nvidia.com/v1"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          config.model: "gemini/gemini-3.8-flash"
-          config.fallback_models: '["gemini/gemini-3.8-flash"]'
+          config.model: "openai/moonshotai/kimi-k2.6"
+          config.fallback_models: '["openai/deepseek-ai/deepseek-v4.1-flash", "openai/z-ai/glm-5.3-flash"]'
+          config.custom_model_max_tokens: "64000"
           github_action_config.auto_review: "true"
           github_action_config.auto_describe: "true"
           github_action_config.auto_improve: "true"
