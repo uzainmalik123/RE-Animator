@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { describe, expect, it, vi } from 'vitest';
 import { CompilerError } from '../../src/compiler/errors.js';
-import { createAnthropicClient, type LlmRequest } from '../../src/compiler/llm.js';
+import { bedrockModelId, createAnthropicClient, createBedrockClient, createLlmClient, type LlmRequest } from '../../src/compiler/llm.js';
 
 const req: LlmRequest = {
   model: 'claude-sonnet-5-5',
@@ -103,5 +103,59 @@ describe('createAnthropicClient', () => {
       throw boom;
     });
     await expect(client.complete(req)).rejects.toBe(boom);
+  });
+});
+
+describe('bedrockModelId (F19)', () => {
+  it.each([
+    ['claude-sonnet-5-5', 'anthropic.claude-sonnet-5-5'],
+    ['anthropic.claude-opus-5-5', 'anthropic.claude-opus-5-5'],
+    ['us.anthropic.claude-sonnet-5-5', 'us.anthropic.claude-sonnet-5-5'],
+    ['arn:aws:bedrock:us-east-1:123456789012:inference-profile/x', 'arn:aws:bedrock:us-east-1:123456789012:inference-profile/x'],
+  ])('%s → %s', (model, id) => {
+    expect(bedrockModelId(model)).toBe(id);
+  });
+});
+
+describe('createBedrockClient (F19)', () => {
+  const bedrockStub = (impl: (...args: unknown[]) => unknown) => {
+    const create = vi.fn(impl);
+    return { create, client: createBedrockClient({ mantle: { messages: { create } } as unknown as Pick<Anthropic, 'messages'> }) };
+  };
+
+  it('sends the Bedrock model id with the same body as Anthropic', async () => {
+    const { create, client } = bedrockStub(async () => message({}));
+    const m = message({});
+    expect(await client.complete(req)).toEqual({ kind: 'output', text: '{"result":1}', stopReason: 'end_turn', raw: m.content });
+    const body = create.mock.calls[0]![0] as Record<string, unknown> & { output_config: { format: Record<string, unknown> } };
+    expect(body.model).toBe('anthropic.claude-sonnet-5-5');
+    expect(body.output_config.format.type).toBe('json_schema');
+    expect(body.messages).toHaveLength(3);
+  });
+
+  it('turns a missing region into a setup CompilerError, before any request', async () => {
+    vi.stubEnv('AWS_REGION', '');
+    vi.stubEnv('AWS_DEFAULT_REGION', '');
+    vi.stubEnv('ANTHROPIC_BEDROCK_MANTLE_BASE_URL', '');
+    try {
+      const err = await createBedrockClient().complete(req).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(CompilerError);
+      expect((err as Error).message).toMatch(/could not be set up: No AWS region/);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it('maps a rejected credential to the credentials CompilerError', async () => {
+    const { client } = bedrockStub(async () => {
+      throw new Anthropic.AuthenticationError(403, { type: 'error', error: { type: 'authentication_error', message: 'no' } }, 'no', new Headers());
+    });
+    await expect(client.complete(req)).rejects.toThrow(/rejected the credentials \(HTTP 403\)/);
+  });
+});
+
+describe('createLlmClient (F19)', () => {
+  it.each(['anthropic', 'bedrock'] as const)('builds a %s client without touching the network', (provider) => {
+    expect(createLlmClient({ provider, ...(provider === 'bedrock' ? { awsRegion: 'us-east-1' } : {}) }).complete).toBeTypeOf('function');
   });
 });
