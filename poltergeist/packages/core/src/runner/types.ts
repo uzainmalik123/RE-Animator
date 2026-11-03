@@ -20,6 +20,8 @@ export type StepResult = {
   error?: string;
   /** Set when a device persona's action timed out on a target it couldn't use (D-44). */
   unusable?: string;
+  /** Set when a keyboard persona's `focus` went round the page without reaching a visible control (D-48). */
+  unreachable?: string;
 };
 
 /** `failure` says whose fault a failed assertion is: the app's, the plan's, or the guard stopped it. */
