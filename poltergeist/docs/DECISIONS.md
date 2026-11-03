@@ -54,6 +54,7 @@
 | D-43 | F15 re-scoped to headless **Recordings** (extends D-39, D-40): `frames.ndjson` frame index, `poltergeist export` (a static bundle ≤ 50 MB with `recording.json`, thinned frames, no config or artifacts), `poltergeist replay` on the live-feed WebSocket with `live.hello.recorded`, pure `buildTimeline`/`stateAt` for scrubbing; hosting moves to Reanimator R11 | Accepted |
 | D-46 | F18 Kiro Power (extends D-38, D-41): Agent Plugins format (`plugin.json` + `mcp.json` + `skills/poltergeist/SKILL.md`), template in `integrations/kiro/power/`, `poltergeist power --out <dir>` fills this checkout's absolute bin and validates the bundle; `poltergeist-mcp --root-from-spec` takes each call's root from an absolute `<project>/.kiro/specs/<name>`; no hook or `autoApprove` in the Power | Accepted |
 | D-47 | F19 Bedrock provider (refines D-12, D-32): flat `provider` + optional `awsRegion` config keys (not `llm.provider`), `@anthropic-ai/bedrock-sdk` `AnthropicBedrockMantle` behind the same `LlmClient`, `claude-*` → `anthropic.claude-*`, provider in the cache key only for Bedrock, Bedrock named in `run.json` / report only when used; fixture Done-when, live check KI-67 | Accepted |
+| D-48 | F20 Changeling (extends D-13, D-32, D-44): keyboard-only persona with a Changeling-only `focus` step (the runner Tabs to the target; the LLM never counts Tabs), `fill` that Tabs and types, `press` limited to Tab/Enter/Space; a visible, enabled control the walk goes round the page without reaching is a failed `reachable` app assertion; hidden/disabled/missing or 100 Tabs is a plan error; `PROMPT_VERSION` `f20-1`; all six personas run by default | Accepted |
 
 ---
 
@@ -738,3 +739,19 @@
   - Requirements 2.1 and 5.5 are reworded; design §3 and the compiler line mention the provider.
   - `@anthropic-ai/bedrock-sdk` pulls in the AWS credential providers for every install, even Anthropic-only ones.
   - D-12's "AWS only as an optional Bedrock provider" is now built.
+
+### D-48: F20 Changeling, the keyboard-only persona (extends D-13, D-32, D-44)
+- **Context:** grilling F20 (2026-11-03) in Claude Code; the user asked to accept the recommended options. A keyboard user's plan can't name "press Tab 7 times": the LLM can't count focus order from a snapshot, and the order changes with the page.
+- **Decision:**
+  - **`focus: <target>`** is a new DSL step, allowed only for the Changeling. The runner presses Tab from the current focus until a match of the target holds focus. The target can be the focused element, contain it, or sit inside it; body and html don't count as containing. The step's note says `reached after N Tabs`, and the ghost cursor moves to the focused element.
+  - **The walk stops** when focus comes back to an element it already passed (one round of the page) or after `MAX_TABS = 100`. It walks the deepest focused element through shadow roots, and keeps ids in a page-side `WeakMap` under `Symbol.for('poltergeist.focus')`.
+  - **Whose fault:** if the walk went round and some match is visible and enabled, the rep is `completed` with one failed **`reachable`** assertion (`failure: 'app'`, `button "Pay" can't be reached with Tab`). This is the same route as the Lich's `usable` (one `appFailure` path in `runPair`). A missing, hidden or disabled target, or the 100-Tab cap, is a plain step failure, so the rep is a plan error and the pair is inconclusive (D-06).
+  - **Persona:** id `changeling`; steps `goto, focus, fill, press, back, reload, wait` (no `click`/`dblclick`, so mouse steps are rejected by the validator); generator `plain`; one actor; no device. `keyboard: true` makes `fill` Tab to its field, press ControlOrMeta+A and type with `keyboard.type`. The new `keys: ['Tab', 'Enter', 'Space']` limits `press`; the validator enforces it and the prompt lists only those keys.
+  - **`PRESS_KEYS`** moved to `personas/steps.ts` (re-exported from `compiler/dsl.ts`). **`PROMPT_VERSION`** is `f20-1`, because the structured-output schema gained `focus` for every persona.
+  - **Defaults:** all six personas run by default (one more LLM call per criterion).
+  - **Done-when (fixture):** the compile Done-when has the Changeling compile ≥ 3 criteria. The validator rejects `click`/`dblclick` for it. The claims fixture's `/keys` page (a real button and a `div role="button"`) gives `haunted` for the div and `clean` for the button. The live Candy Swap run is KI-68.
+- **Consequences:**
+  - Requirement 4.5 is new; design §6 lists `focus`.
+  - Every cached plan misses once, because of the prompt version.
+  - Escape and the arrow keys aren't allowed, so radio groups, selects, menus and dialogs can't be operated (KI-69).
+  - Reanimator's R4 sees `reachable` as one more failing assertion type next to `usable`.

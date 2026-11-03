@@ -31,7 +31,7 @@ only make testing stricter, never looser. Lines inside this comment are examples
 - forbid: DELETE /api/admin*
 - note /checkout: The pay button stays disabled until the cart has items.
 
-disable: turn test users off (wraith, banshee, doppelganger, lich, revenant).
+disable: turn test users off (wraith, banshee, doppelganger, lich, revenant, changeling).
 forbid: a request the tests must never send (METHOD or *, then a path where * matches anything).
 note: a hint about one page, shown to the test planner (up to 500 characters).
 -->

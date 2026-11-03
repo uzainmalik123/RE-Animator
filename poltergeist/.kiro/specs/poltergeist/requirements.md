@@ -80,6 +80,7 @@ Criterion IDs follow Kiro's convention (`N.M`, D-16), so Poltergeist's own Spec 
 2. THE Input_Generators SHALL produce values deterministically from a generator id, a seed and an index, and the LLM SHALL only choose generator ids, never write values.
 3. WHERE the target project has a Poltergeist steering file, THE Persona_Library SHALL apply its persona disable flags, extra forbidden rules and route notes, and steering SHALL only ever tighten rules [F17].
 4. THE Persona_Library SHALL include the Lich, which runs on a fixed small, slow device preset (360×640, mobile, touch, 4× slower CPU) and may throttle the network, and the Revenant, which ends the session in one tab and continues on a stale page in another [F16].
+5. THE Persona_Library SHALL include the Changeling, which uses only the keyboard (Tab, Enter and Space, a focus step that tabs to a control, and typing into fields), and SHALL report a visible, enabled control it cannot reach with Tab as a failed `reachable` assertion [F20].
 
 ### Requirement 5: Compiling plans [F05]
 
