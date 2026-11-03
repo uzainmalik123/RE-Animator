@@ -148,7 +148,7 @@ describe('createBedrockClient (F19)', () => {
 
   it('maps a rejected credential to the credentials CompilerError', async () => {
     const { client } = bedrockStub(async () => {
-      throw new Anthropic.AuthenticationError(403, { type: 'error', error: { type: 'authentication_error', message: 'no' } }, 'no', new Headers());
+      throw new Anthropic.PermissionDeniedError(403, { type: 'permission_error' }, 'no', new Headers());
     });
     await expect(client.complete(req)).rejects.toThrow(/rejected the credentials \(HTTP 403\)/);
   });

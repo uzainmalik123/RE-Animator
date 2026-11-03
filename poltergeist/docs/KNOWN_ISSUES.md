@@ -75,6 +75,7 @@
 | KI-64 | F17 review minors: a note on an unknown path is silently unused, joined notes can pass 500 chars, unclosed comments and code fences differ from rendered markdown, pre-F17 steering keeps its old "documentation only" comment after `init --force`, `changes` shows a retired persona as fixed, `run.json` `config` lacks steering rules | Minor | F17, R5 | Open |
 | KI-65 | F18 Power not yet installed in Kiro: the format, `${ANTHROPIC_API_KEY}` expansion, `node` on Kiro's PATH, namespaced tool names and the F11 loop through it are unverified | Minor | F18 sign-off | Open |
 | KI-66 | F18 review minors: a write failure part-way through `poltergeist power` leaves a partial bundle that the next run refuses as non-empty; `RunBusyError` doesn't name the other run's spec | Minor | F18 | Open |
+| KI-67 | F19 Bedrock not yet run live: a real compile through `AnthropicBedrockMantle` in an AWS account (model access for `anthropic.claude-sonnet-5-5`, structured outputs, the error mapping) is unverified | Minor | F19 sign-off | Open |
 
 ---
 
@@ -670,3 +671,7 @@
   - `buildPower` writes the three files one by one. If a write fails part-way through (disk full, say), the folder is left partly written, and the next run refuses it as "not empty" without saying why. Write into a temp sibling folder and rename it into place, or remove what was written on error.
   - With the Power, one server serves every project but still runs one haunting at a time. A run in project A makes `summon_ghosts` in project B return `RunBusyError` with A's `runId`. The skill says so; the message could also name A's spec.
 
+### KI-67: F19 Bedrock not yet run live · Minor · Open
+- **Context:** F19 (2026-11-03, D-47) was built and tested against stubbed clients; no AWS account was used.
+- **Unverified:** that `anthropic.claude-sonnet-5-5` is enabled and accepts `output_config.format` on the Mantle endpoint in the chosen region; that a denied model or missing access maps to the credentials `CompilerError` (HTTP 403) rather than a raw error; that the SDK's default chain finds SSO/profile credentials from the CLI and from a Kiro-spawned MCP server.
+- **Next action:** with AWS credentials, set `"provider": "bedrock"` on Candy Swap's config (or the fixture's) and run one `npm run summon`, together with the batched Candy Swap checks. If the model id or structured outputs differ, record it here and in D-47.

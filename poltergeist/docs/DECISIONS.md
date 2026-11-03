@@ -53,6 +53,7 @@
 | D-45 | F17 house rules: `## House rules` in `<configDir>/.kiro/steering/poltergeist.md`, `- disable:` / `- forbid:` / `- note <path>:` lines, only tightening, bad lines warn; disabled personas dropped (not carried) in the report; notes in the prompt and cache key; forbidden redirect hops reported (KI-17) | Accepted |
 | D-43 | F15 re-scoped to headless **Recordings** (extends D-39, D-40): `frames.ndjson` frame index, `poltergeist export` (a static bundle ≤ 50 MB with `recording.json`, thinned frames, no config or artifacts), `poltergeist replay` on the live-feed WebSocket with `live.hello.recorded`, pure `buildTimeline`/`stateAt` for scrubbing; hosting moves to Reanimator R11 | Accepted |
 | D-46 | F18 Kiro Power (extends D-38, D-41): Agent Plugins format (`plugin.json` + `mcp.json` + `skills/poltergeist/SKILL.md`), template in `integrations/kiro/power/`, `poltergeist power --out <dir>` fills this checkout's absolute bin and validates the bundle; `poltergeist-mcp --root-from-spec` takes each call's root from an absolute `<project>/.kiro/specs/<name>`; no hook or `autoApprove` in the Power | Accepted |
+| D-47 | F19 Bedrock provider (refines D-12, D-32): flat `provider` + optional `awsRegion` config keys (not `llm.provider`), `@anthropic-ai/bedrock-sdk` `AnthropicBedrockMantle` behind the same `LlmClient`, `claude-*` → `anthropic.claude-*`, provider in the cache key only for Bedrock, Bedrock named in `run.json` / report only when used; fixture Done-when, live check KI-67 | Accepted |
 
 ---
 
@@ -721,3 +722,19 @@
   - The Power and `init` can be used together: `init` adds the hook and house rules, the Power adds the on-demand tools. Using both gives two servers (`poltergeist` and `power-poltergeist-poltergeist`). That's harmless, but the agent sees duplicate tools (KI-65 notes it).
   - Publishing to npm (KI-33) would let the Power use `npx` and be installed from GitHub with no generator step.
 
+### D-47: F19 Amazon Bedrock provider (refines D-12, D-32)
+- **Context:** grilling F19 (2026-11-03) in Claude Code. The user asked to accept the recommended options. The PRD named `llm.provider`, but the strict config already has a top-level `model`. Bedrock now serves the Claude Messages API itself (the Mantle endpoint), so the official `@anthropic-ai/bedrock-sdk` client speaks the same request shape, structured outputs included.
+- **Decision:**
+  - **Config:** flat `provider: "anthropic" | "bedrock"` (default `anthropic`) and an optional `awsRegion` (`^[a-z]{2}(-[a-z]+)+-\d+$`), which is an error unless the provider is Bedrock. Every existing config stays valid. No secrets in the config.
+  - **Client:** `AnthropicBedrockMantle` from `@anthropic-ai/bedrock-sdk` 1.1.1, behind the same `LlmClient` and the same request builder as Anthropic. The Converse API was rejected: a different shape, and the retry's append-only raw replay would need translating. `createLlmClient(config)` picks the client; `summon` uses it unless a client is injected.
+  - **Credentials and region:** the SDK's chain (`AWS_BEARER_TOKEN_BEDROCK`, the AWS key variables, `AWS_PROFILE`/SSO, the default chain). Region: `awsRegion`, else `AWS_REGION` / `AWS_DEFAULT_REGION`. The client is built on the first call, and a constructor failure (no region) is the usual "could not be set up" `CompilerError`.
+  - **Model ids:** `claude-*` is sent as `anthropic.claude-*`; anything else (`anthropic.…`, inference profiles such as `us.anthropic.…`, ARNs) is sent as is. The config, cache and report keep the id as written.
+  - **Cache key:** gains the provider only when it isn't Anthropic, so existing caches stay warm and Bedrock never reuses an Anthropic plan.
+  - **Artifacts:** `run.json` and `haunting-report.json` get `provider: "bedrock"`, and the report's run line says `<model> via Bedrock`, only for Bedrock. An Anthropic run's files are unchanged.
+  - **Reset env:** `AWS_BEARER_TOKEN_BEDROCK` joins the provider keys stripped from the reset command.
+  - **No CLI flag**, and the Kiro templates stay Anthropic-only; `integrations/kiro/README.md` says how to swap the env for Bedrock.
+  - **Done-when (fixture):** the fake-LLM compile of the Candy fixture with a warm Anthropic cache makes fresh calls for Bedrock, and a second Bedrock run makes none. The Bedrock request (prefixed model, `output_config`) is checked against a stubbed client. The live compile is KI-67.
+- **Consequences:**
+  - Requirements 2.1 and 5.5 are reworded; design §3 and the compiler line mention the provider.
+  - `@anthropic-ai/bedrock-sdk` pulls in the AWS credential providers for every install, even Anthropic-only ones.
+  - D-12's "AWS only as an optional Bedrock provider" is now built.
