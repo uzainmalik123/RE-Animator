@@ -47,7 +47,7 @@ Criterion IDs follow Kiro's convention (`N.M`, D-16), so Poltergeist's own Spec 
 
 #### Acceptance Criteria
 
-1. THE Config_Loader SHALL read a strict `poltergeist.config.json` (unknown keys are errors) with target origin, allowed hosts, routes, accounts, reset command, concurrency, reps, forbidden rules and model.
+1. THE Config_Loader SHALL read a strict `poltergeist.config.json` (unknown keys are errors) with target origin, allowed hosts, routes, accounts, reset command, concurrency, reps, forbidden rules, model, LLM provider (`anthropic` or `bedrock`) and an AWS region that only Bedrock may use.
 2. IF `target` has a path, query or hash, THEN THE Config_Loader SHALL reject it with a field-path error.
 3. IF the target host is not `localhost`, `127.0.0.1`, `::1` or listed in `allowedHosts`, THEN THE Config_Loader SHALL refuse to start and explain why.
 4. WHILE a run is in progress, THE Network_Guard SHALL block every request, redirect hop, WebSocket and WebRTC connection to a host outside the allowlist, and report each block with a reason.
@@ -91,7 +91,7 @@ Criterion IDs follow Kiro's convention (`N.M`, D-16), so Poltergeist's own Spec 
 2. IF a plan fails schema validation, THEN THE Compiler SHALL retry once with the errors, and after that mark the pair `uncompilable`.
 3. IF the LLM decides a persona doesn't apply to a criterion, THEN THE Compiler SHALL accept `notApplicable` with a reason.
 4. THE Compiler SHALL only accept targets that appear in the Scout output.
-5. THE Compiler SHALL cache plans keyed by criterion hash, persona, the used routes' hashes, model and prompt version, and SHALL make no LLM call on a cache hit.
+5. THE Compiler SHALL cache plans keyed by criterion hash, persona, the used routes' hashes, model, provider and prompt version, and SHALL make no LLM call on a cache hit.
 6. THE Compiler SHALL describe the task as edge-case end-to-end test generation for an app the user owns, and SHALL keep theme words out of prompts (D-09).
 
 ### Requirement 6: Running [F06, F16]

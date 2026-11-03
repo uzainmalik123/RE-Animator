@@ -34,6 +34,8 @@ export const ReportJsonSchema = z.strictObject({
   runId: z.string(),
   target: z.string(),
   model: z.string(),
+  /** Written only for Bedrock (F19, D-47); absent means Anthropic. */
+  provider: z.literal('bedrock').optional(),
   reps: z.int(),
   /** ISO 8601, from the run's start. */
   startedAt: z.string(),

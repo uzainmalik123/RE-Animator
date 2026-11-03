@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import type { LlmProvider } from '../config/schema.js';
 import { getPersona, PERSONA_IDS, type Persona, type PersonaId } from '../personas/registry.js';
 import { createLimiter } from '../safety/limiter.js';
 import type { RouteScout } from '../scout/types.js';
@@ -20,6 +21,8 @@ const MAX_REASON = 300;
 export type CompileOptions = {
   client: LlmClient;
   model: string;
+  /** Part of the cache key when not `anthropic` (F19). Default `anthropic`. */
+  provider?: LlmProvider;
   cacheDir: string;
   /** When set, every pair is written to `<outDir>/plans/<criterion>__<persona>.json`. */
   outDir?: string;
@@ -132,6 +135,7 @@ export async function compile(
       personaHash: hashes.get(persona.id)!,
       routes: routes.map(({ path, identity, routeHash }) => ({ path, identity, routeHash })),
       model: opts.model,
+      ...(opts.provider ? { provider: opts.provider } : {}),
       promptVersion: PROMPT_VERSION,
       notes: Object.fromEntries(notes),
     });

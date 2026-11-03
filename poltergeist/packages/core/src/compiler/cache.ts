@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { z } from 'zod';
+import type { LlmProvider } from '../config/schema.js';
 import { listGenerators } from '../personas/generators/index.js';
 import type { Persona, PersonaId } from '../personas/registry.js';
 import { HauntingPlanSchema, PlanRouteSchema } from './dsl.js';
@@ -24,6 +25,8 @@ export type CacheKeyInput = {
   personaHash: string;
   routes: { path: string; identity: string; routeHash: string }[];
   model: string;
+  /** F19. `anthropic` or absent keeps the pre-F19 key. */
+  provider?: LlmProvider;
   promptVersion: string;
   /** House-rule route notes for these routes (F17), by path. Empty or absent keeps the pre-F17 key. */
   notes?: Record<string, string>;
@@ -35,6 +38,7 @@ export function cacheKey(k: CacheKeyInput): string {
   const parts: unknown[] = [k.criterionHash, k.personaId, k.personaHash, routes, k.model, k.promptVersion];
   const notes = Object.entries(k.notes ?? {}).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
   if (notes.length > 0) parts.push(notes);
+  if (k.provider && k.provider !== 'anthropic') parts.push({ provider: k.provider });
   return sha(JSON.stringify(parts)).slice(0, 32);
 }
 

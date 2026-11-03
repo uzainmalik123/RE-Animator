@@ -49,6 +49,10 @@ export const ForbiddenSchema = z.strictObject({
   path: routePath,
 });
 
+/** Where the compiler's Claude calls go (F19, D-47). */
+export const LLM_PROVIDERS = ['anthropic', 'bedrock'] as const;
+export type LlmProvider = (typeof LLM_PROVIDERS)[number];
+
 /** `poltergeist.config.json` (D-17, design §3). Unknown keys are errors at every level. */
 export const ConfigSchema = z
   .strictObject({
@@ -64,8 +68,14 @@ export const ConfigSchema = z
     reps: z.int().min(1).max(10).default(3),
     forbidden: z.array(ForbiddenSchema).default([]),
     model: z.string().min(1).default('claude-sonnet-5-5'),
+    provider: z.enum(LLM_PROVIDERS).default('anthropic'),
+    /** Bedrock only; else `AWS_REGION` / `AWS_DEFAULT_REGION`. */
+    awsRegion: z.string().regex(/^[a-z]{2,4}(-[a-z]+)+-\d+$/, 'must be an AWS region such as "us-east-1"').optional(),
   })
   .superRefine((config, ctx) => {
+    if (config.awsRegion !== undefined && config.provider !== 'bedrock') {
+      ctx.addIssue({ code: 'custom', path: ['awsRegion'], message: 'only used with provider "bedrock"' });
+    }
     config.routes.forEach((route, i) => {
       if (route.auth === false) return;
       const name = route.auth === true ? 'default' : route.auth;

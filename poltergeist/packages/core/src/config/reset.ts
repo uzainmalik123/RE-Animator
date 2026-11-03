@@ -16,6 +16,7 @@ export const PROVIDER_ENV_KEYS = Object.freeze([
   'AWS_ACCESS_KEY_ID',
   'AWS_SECRET_ACCESS_KEY',
   'AWS_SESSION_TOKEN',
+  'AWS_BEARER_TOKEN_BEDROCK',
 ]);
 
 function resetEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {

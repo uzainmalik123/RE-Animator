@@ -17,6 +17,15 @@ describe('renderReport: markdown', () => {
     expect(markdown).toContain('**1 haunted** [!!] · 1 flaky [~~] · 1 inconclusive [??] · 0 clean [ok] · 1 n/a [--] · 1 not run [  ]');
   });
 
+  it('names Bedrock in the run line and the JSON, and only for Bedrock (F19)', () => {
+    const bedrock = renderReport(input({ run: { ...RUN, provider: 'bedrock' } }));
+    expect(bedrock.markdown).toContain('· 3 reps · claude-sonnet-5-5 via Bedrock · 2026-11-01');
+    expect(bedrock.json.provider).toBe('bedrock');
+    const anthropic = renderReport(input({ run: { ...RUN, provider: 'anthropic' } }));
+    expect(anthropic.json).not.toHaveProperty('provider');
+    expect(anthropic.markdown).toBe(markdown);
+  });
+
   it('lists every criterion on the board in spec order', () => {
     const board = markdown.split('## Board\n\n')[1]!.split('\n\n')[0]!.split('\n');
     expect(board).toEqual([

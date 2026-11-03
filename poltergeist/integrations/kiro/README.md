@@ -20,6 +20,7 @@ It writes four files, never overwriting one that differs unless you pass `--forc
 - **Replace both placeholders in `mcp.json` with absolute paths.** One is the bin in your Poltergeist checkout. The other is `--root`, the project Kiro has open. Kiro doesn't document the working directory it spawns servers in, so `--root .` could widen the root to wherever that happens to be (D-38).
 - **Don't use `npx poltergeist-mcp`.** The package isn't on npm yet (KI-33). Outside this repo's workspace, `npx` would fetch whatever package holds that name from the public registry, and run it without asking (Kiro's spawn isn't a TTY) with your API key in its env.
 - **Replace `{{SPEC}}` in the hook prompt** with "the spec whose tasks just ran" or a spec folder.
+- **Bedrock instead of Anthropic (F19):** set `"provider": "bedrock"` in `poltergeist.config.json`, then in `mcp.json` swap the `ANTHROPIC_API_KEY` entry for your AWS ones (`"AWS_BEARER_TOKEN_BEDROCK": "${AWS_BEARER_TOKEN_BEDROCK}"` or `AWS_PROFILE`, plus `AWS_REGION` unless the config has `awsRegion`).
 - Kiro only expands `${ANTHROPIC_API_KEY}` once you've approved that variable. Facts and open questions: [`docs/kiro-notes.md`](../../docs/kiro-notes.md).
 
 ## Kiro Power (F18, D-46)
