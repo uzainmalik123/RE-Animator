@@ -46,5 +46,7 @@ Work happens one PRD feature at a time, through the grill → plan → implement
 - [x] 15g. F19 Amazon Bedrock Provider (D-47; live check KI-67)
   - _Requirements: 2.1, 5.5_
 - [x] 15h. F20 Changeling Persona (D-48; Candy Swap check KI-68)
+- [x] 15i. F21 Headless Sandbox (D-49; container + public deploy KI-70)
+  - _Requirements: 11.5_
 
 - [ ] 15. Remaining Med features in PRD order (F15–F18), then Low (F19–F22)

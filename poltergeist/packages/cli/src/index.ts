@@ -7,3 +7,5 @@ export { DEFAULT_TARGET, init, InitError, planInit } from './init/index.js';
 export type { InitOptions, InitOutcome, InitResult, McpEntry, PlannedFile } from './init/index.js';
 export { buildPower, MCP_TOOLS, planPower, PowerError, POWER_KEYWORDS, validatePower } from './power/index.js';
 export type { PowerFiles, PowerOptions } from './power/index.js';
+export { SANDBOX_PORT, SandboxBusyError, SandboxClosedError, SandboxRuns, startSandbox } from './sandbox/index.js';
+export type { Sandbox, SandboxOptions, SandboxRunsOptions, SandboxStatus, SandboxSummary } from './sandbox/index.js';

@@ -112,3 +112,11 @@ export function createBedrockClient(opts: { awsRegion?: string; mantle?: Message
 export function createLlmClient(opts: { provider: LlmProvider; awsRegion?: string | undefined }): LlmClient {
   return opts.provider === 'bedrock' ? createBedrockClient(opts.awsRegion ? { awsRegion: opts.awsRegion } : {}) : createAnthropicClient();
 }
+
+/** Why a cache-only compile (the F21 sandbox, D-49) couldn't plan a pair. */
+export const CACHE_ONLY_MESSAGE = 'not in the plan cache (cache-only run)';
+
+/** Never calls a provider: a cache miss becomes an `uncompilable` pair, and no API key is needed (F21, D-49). */
+export function cacheOnlyLlm(): LlmClient {
+  return { complete: () => Promise.reject(new Error(CACHE_ONLY_MESSAGE)) };
+}

@@ -6,6 +6,7 @@ import { exitCodeFor } from './exit.js';
 import { init } from './init/index.js';
 import { buildPower } from './power/index.js';
 import { runExport, runReplay } from './recording.js';
+import { runSandbox } from './sandbox/command.js';
 import { SEANCE_EVENT_PORT, startEventServer, type EventServer } from './seance-server.js';
 import { renderBoard, renderHeader } from './term/board.js';
 import { colorEnabled, paint, termSafe } from './term/color.js';
@@ -23,6 +24,8 @@ export type MainDeps = {
   signal?: AbortSignal;
   /** Tests only. */
   seancePort?: number;
+  /** Tests only: overrides `sandbox --port`. */
+  sandboxPort?: number;
 };
 
 const message = (err: unknown) => (err instanceof Error ? err.message : String(err));
@@ -96,6 +99,17 @@ export async function main(argv: readonly string[], deps: MainDeps = {}): Promis
     };
     process.once('SIGINT', onSigint);
     signal = ac.signal;
+  }
+
+  if (args.command === 'sandbox') {
+    try {
+      return await runSandbox(args, { stdout, stderr, cwd, env, color, signal, port: deps.sandboxPort, summonOverrides: deps.summonOverrides });
+    } catch (err) {
+      fail(termSafe(message(err), 2000));
+      return 2;
+    } finally {
+      if (onSigint) process.removeListener('SIGINT', onSigint);
+    }
   }
 
   if (args.command === 'replay') {

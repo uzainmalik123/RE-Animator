@@ -78,6 +78,7 @@
 | KI-67 | F19 Bedrock not yet run live: a real compile through `AnthropicBedrockMantle` in an AWS account (model access for `anthropic.claude-sonnet-5-5`, structured outputs, the error mapping) is unverified | Minor | F19 sign-off | Open |
 | KI-68 | F20 Changeling not yet run on Candy Swap: real focus order, a keyboard-only claim/trade flow and the live compile of `focus` plans are unverified | Minor | F20 sign-off | Open |
 | KI-69 | F20 Changeling keys are Tab/Enter/Space only: no Escape or arrow keys, so radio groups, selects, menus and dialogs can't be operated from the keyboard | Minor | F20 | Accepted |
+| KI-70 | F21 sandbox not yet hosted: no container (Candy Swap + Chromium + `poltergeist sandbox` behind a proxy), no public URL, and the PRD's "survives 10 back-to-back public runs" is only proven on the fixture | Minor | F21 sign-off, R11 | Open |
 
 ---
 
@@ -157,7 +158,7 @@
 - **Plan:**
   - F15 static replay as the URL (clearly labelled as a recording).
   - A one-command local setup in the README.
-  - F21 hosted sandbox only if time allows.
+  - F21 hosted sandbox only if time allows. **2026-11-03:** the engine side is built (`poltergeist sandbox`, D-49); hosting it is KI-70.
 - **Next action:** confirm what "working app" means in the 2026 rules (KI-05).
 
 ### KI-10: Test-account and login handling · Major · Open
@@ -694,3 +695,11 @@
 - **Effect:** a flow that needs arrows (radio groups, native selects, menus) or Escape (closing a dialog) can't be completed. The compiler should answer `notApplicable`; if it doesn't, the plan fails as a plan error, never as an app bug.
 - **Also:** an open modal that traps focus while the target sits behind it goes round as a `cycle`, so it counts as `reachable` (the app's fault) even when the plan only forgot to close the dialog, which it can't do without Escape.
 - **Next action:** if Candy Swap or Reanimator's targets need it, add `Escape` and the arrows to the Changeling's `keys` (a one-line change plus a prompt version bump).
+
+### KI-70: F21 sandbox not yet hosted · Minor · Open
+- **Context:** F21 (2026-11-03, D-49) built `poltergeist sandbox` and proved ten back-to-back runs on the claims fixture. The PRD's Done-when is a *public* sandbox surviving ten runs, which needs Candy Swap (KI-44), a container and a host.
+- **Unverified:** a container image with Node 22, Chromium (`npx playwright-core install --with-deps chromium`), Candy Swap and the sandbox; Chromium's memory and CPU on a small VM (12 ghosts); `--trust-proxy` behind the host's proxy (Fly.io sets `Fly-Client-IP` and `X-Forwarded-For`); that the reset command keeps Candy Swap clean between strangers' runs; a warmed plan cache baked into the image.
+- **Review minors (deferred, 2026-11-03):**
+  - Every sandbox run rewrites the spec's `haunting-report.md`/`.json` (F14 merge), and carried lines can link evidence in run folders the sandbox later evicts. Treat the sandbox's spec folder as disposable (a copy in the image), never the operator's working spec.
+  - `args.ts` imports `SANDBOX_PORT` from the server module, so parsing arguments loads `ws`/`http` (cosmetic).
+- **Next action:** after the batched Candy Swap session, decide with R11 whether judges get a live sandbox or only the recorded replay. If live: build the image, run `poltergeist summon` once to warm the cache, start `poltergeist sandbox --host 0.0.0.0 --trust-proxy`, and fire ten runs at the public URL.
