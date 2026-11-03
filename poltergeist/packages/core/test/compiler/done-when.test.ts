@@ -64,6 +64,10 @@ function scripted(req: LlmRequest): LlmResponse {
           assert,
         },
       });
+    case 'changeling':
+      return output({
+        result: { kind: 'plan', intent: 'Act with the keyboard only.', actors: { a: [{ goto: path }, { focus: click.click }, { press: 'Enter' }] }, assert },
+      });
   }
 }
 
@@ -104,12 +108,12 @@ describe('compile (Done when, on the Candy fixture, D-32)', () => {
     expect(criteria).toHaveLength(5);
     const cacheDir = join(outDir, 'cache');
     const first = await compile(criteria, scouted, { client: fakeLlm(scripted).client, model: 'claude-sonnet-5-5', cacheDir, outDir });
-    expect(first.pairs).toHaveLength(25);
+    expect(first.pairs).toHaveLength(30);
     const good = first.pairs.filter((p) => p.status === 'compiled' || p.status === 'notApplicable');
     const bad = first.pairs.filter((p) => p.status === 'uncompilable');
     expect(good.length / first.pairs.length, JSON.stringify(bad, null, 2)).toBeGreaterThanOrEqual(0.8);
-    // F16 Done-when (fixture): each extended persona compiles plans for at least 3 criteria.
-    for (const persona of ['lich', 'revenant']) {
+    // F16 and F20 Done-when (fixture): each extended persona compiles plans for at least 3 criteria.
+    for (const persona of ['lich', 'revenant', 'changeling']) {
       expect(first.pairs.filter((p) => p.persona === persona && p.status === 'compiled').length).toBeGreaterThanOrEqual(3);
     }
 

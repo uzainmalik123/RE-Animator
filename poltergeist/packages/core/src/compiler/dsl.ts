@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { GENERATOR_IDS } from '../personas/generators/index.js';
 import { PERSONA_IDS } from '../personas/registry.js';
-import type { StepType } from '../personas/steps.js';
+import { PRESS_KEYS, type PressKey, type StepType } from '../personas/steps.js';
 
 /**
  * The Haunting Plan DSL (design §6, D-32): the single definition of the LLM's output contract.
@@ -18,10 +18,7 @@ export const PlanTargetSchema = z.union([
 ]);
 export type PlanTarget = z.infer<typeof PlanTargetSchema>;
 
-export const PRESS_KEYS = Object.freeze([
-  'Enter', 'Tab', 'Escape', 'Space', 'Backspace', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
-] as const);
-export type PressKey = (typeof PRESS_KEYS)[number];
+export { PRESS_KEYS, type PressKey };
 
 export const THROTTLE_PROFILES = Object.freeze(['slow-3g', 'fast-3g'] as const);
 
@@ -46,6 +43,7 @@ export const StepSchema = z.union([
   z.strictObject({ releaseRequests: z.string() }),
   z.strictObject({ login: z.strictObject({ account: z.string() }) }),
   z.strictObject({ logout: z.literal(true) }),
+  z.strictObject({ focus: PlanTargetSchema }),
 ]);
 export type Step = z.infer<typeof StepSchema>;
 

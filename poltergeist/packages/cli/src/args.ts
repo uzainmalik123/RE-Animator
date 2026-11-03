@@ -31,7 +31,7 @@ Summon options:
   --spec <dir>        spec folder holding requirements.md (required)
   --config <path>     config file (default ./poltergeist.config.json)
   --only <ids>        only these criteria, comma-separated (e.g. 3.2,4.1)
-  --personas <ids>    only these personas, comma-separated (wraith,banshee,doppelganger,lich,revenant)
+  --personas <ids>    only these personas, comma-separated (wraith,banshee,doppelganger,lich,revenant,changeling)
   --reps <n>          repetitions per plan, 1-10 (default from config)
   --recompile         ignore cached plans and compile again
   --seance            stream run events on ws://127.0.0.1:6660/runs/<id>

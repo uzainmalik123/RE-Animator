@@ -70,6 +70,14 @@ export const VALID: Record<PersonaId, unknown> = {
       assert: [{ textNotVisible: '2 candies left' }],
     },
   },
+  changeling: {
+    result: {
+      kind: 'plan',
+      intent: 'Claim with the keyboard only; the claim works once.',
+      actors: { a: [{ goto: '/market' }, { focus: { testId: 'claim-sour-skulls' } }, { press: 'Enter' }] },
+      assert: [{ api: { method: 'GET', path: '/api/claims', jsonPath: '$.length', equals: 1 } }],
+    },
+  },
 };
 
 export const INVALID = {
