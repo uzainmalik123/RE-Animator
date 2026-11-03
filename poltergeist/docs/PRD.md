@@ -40,7 +40,7 @@
 | 21 | F22 | Séance Atmosphere Polish (sound, trails, idle motion) | Low | TBD | F12 |
 | 22 | F19 | Amazon Bedrock Provider | Low | Done (fixture, D-47; live check KI-67) | F05 |
 | 23 | F20 | Changeling Persona (keyboard-only) | Low | Done (fixture, D-48; Candy Swap check KI-68) | F04 |
-| 24 | F21 | Hosted Live Sandbox | Low | TBD | F15 |
+| 24 | F21 | Hosted Live Sandbox (headless, D-49) | Low | Done (fixture, D-49; hosting KI-70) | F15 |
 | n/a | F23 | LLM writes free-form Playwright code | n/a | Scrapped | n/a |
 | n/a | F24 | Live LLM browser agent (computer-use) | n/a | Scrapped | n/a |
 | n/a | F25 | Security exploit payload generation | n/a | Scrapped | n/a |
@@ -444,7 +444,10 @@ Implements Requirement 12.
 - **User story:** As a developer, I want to know whether keyboard-only users can complete each flow in my spec.
 - **Done when:** it runs on all Candy Swap flow criteria, and mouse steps are rejected by the schema.
 
-### F21: Hosted Live Sandbox · Low · TBD
+### F21: Hosted Live Sandbox · Low · Done (fixture, D-49; hosting KI-70)
+
+> 2026-11-03: re-scoped by D-49 under D-39 and built in Claude Code without Kiro. Plan `docs/plans/2026-11-03-F21-sandbox.md`. `poltergeist sandbox --spec <dir>` serves `POST /runs`, `GET /runs[/<id>]`, `GET /health` and the live feed on `ws /runs/<id>/live` (`:6662`): cached plans only (`cacheOnlyLlm()`, no API key), one run at a time, a per-client hourly limit, a run timeout, the newest `--keep` runs kept, no local paths or error text to visitors. Done-when (fixture): `packages/cli/test/sandbox-done-when.test.ts` (ten back-to-back runs). **Still to do:** the container with Candy Swap and a public URL (R11, KI-70). The original scope below is kept for history.
+
 
 **Owns:** a container with Candy Swap + runner + Séance live mode, so judges can press Summon on a locked sandbox (cached plans only, one run at a time, rate-limited).
 **Not this feature:** static replay (F15).
@@ -497,3 +500,4 @@ Implements Requirement 12.
 - 2026-11-03: **F18 Done against a fixture** (D-46). Kiro Power in the Agent Plugins format: `poltergeist power --out <dir>` writes a validated bundle for this checkout, and `poltergeist-mcp --root-from-spec` serves any project by absolute spec path. Requirement 10.4 reworded. Power facts in `docs/kiro-notes.md` (KI-06). The Kiro install check is KI-65.
 - 2026-11-03: **F19 Done against a fixture** (D-47). `provider: "bedrock"` (+ optional `awsRegion`) runs the compiler through Claude in Amazon Bedrock (`AnthropicBedrockMantle`); the provider joins the cache key for Bedrock only; `run.json`, `haunting-report.json` and the report's run line name Bedrock. Requirements 2.1 and 5.5 reworded. The live AWS check is KI-67.
 - 2026-11-03: **F20 Done against a fixture** (D-48). The Changeling (keyboard-only): a `focus` step the runner Tabs to, keyboard `fill`, `press` limited to Tab/Enter/Space, and a failed `reachable` app assertion for a visible control Tab never reaches. All six personas run by default; `PROMPT_VERSION` `f20-1`. Requirement 4.5 added. Candy Swap check KI-68; no Escape/arrows KI-69.
+- 2026-11-03: **F21 Done against a fixture, re-scoped to a headless Sandbox** (D-49, under D-39). `poltergeist sandbox`: HTTP + live WebSocket around `summon`, cached plans only (`cacheOnlyLlm()`), single flight, per-client hourly limit, run timeout, retention with run-folder cleanup, public-safe events (`publicEvent`, shared with export). The live-feed backlog moved to `createLiveBroadcast`. Requirement 11.5 added. Container and public URL are KI-70 (R11).

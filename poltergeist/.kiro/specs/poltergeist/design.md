@@ -156,6 +156,15 @@ The runner (F06) emits the `rep.*`, `reset.*`, `ghost.*`, `guard.*` and `assert.
 
 **Live Feed (F12, D-40).** Each `--seance` client first gets `live.hello {protocol: 1, runId}`, then (late joiners) the events so far with each ghost's latest frame kept in place; a finished rep's frames are dropped unless that ghost failed an assertion (its evidence). A client with more than 1 MiB buffered gets no frames until it drains; other events always go through. Renderers fold the stream with the pure `reduceLive`/`foldLive` from `@poltergeist/core/live` into a `LiveState`: run info and phase, board lines (`waiting` → `running` → verdict, with failed assertions and, when haunted, `evidence {ghostId, frame?}` relative to `runDir`), ghost tiles (step, cursor, latest frame, `done`), guard blocks and the final counts. `foldLive` over `events.ndjson` gives the same board.
 
+## 8a. Sandbox (F21, D-49)
+
+`poltergeist sandbox --spec <dir>` (`packages/cli/src/sandbox/`, exported as `startSandbox`) lets strangers start a real haunting of one fixed spec on a host the operator runs (container and deploy: Reanimator R11, KI-70). Default `http://127.0.0.1:6662`; `--host` beyond loopback warns. The target stays loopback-only (D-05).
+
+- `GET /health` → `{ok, busy, activeRunId, runs}` · `POST /runs` `{only?, personas?}` (each 1–64 ids of ≤ 32 chars, body ≤ 4 KB) → 202 `{runId, status, live}`; 400 bad body or `UsageError`, 409 `{error:'busy', runId}`, 429 `{error:'rate limited', retryAfterSec}` + `Retry-After`, 413 too big · `GET /runs` (newest first) · `GET /runs/<id>` → `{runId, status: running|finished|failed|aborted, criteria, haunted, counts, changes, cacheMisses, durationMs, error?}` · WS `/runs/<id>/live` → the Live Feed (hello + backlog, `createLiveBroadcast`, shared with `--seance`). CORS `*`, no credentials; WS from any origin.
+- **Cached plans only:** summon gets `cacheOnlyLlm()`, so a miss is an `uncompilable` pair (`llm error: not in the plan cache (cache-only run)`) counted as `cacheMisses`; no API key is needed. Warm the cache with one ordinary `summon` first.
+- One run at a time; per-client sliding-hour limit (`--per-client-hour`, default 6; client = socket address, or the first `X-Forwarded-For` hop with `--trust-proxy`); `--run-timeout` (default 300 s) aborts through the signal; `--keep` (default 5) newest runs kept, older run folders the sandbox started are deleted.
+- Visitors never see local paths (`publicEvent`: `run.started` gets `runDir: '.'` and the spec folder's name) or real error text (`run failed`); the operator's stderr gets both.
+
 ## 9. Run folder
 
 `.poltergeist/` sits next to the config file. `runId` is `YYYYMMDD-HHMMSS-xxxx` (UTC).

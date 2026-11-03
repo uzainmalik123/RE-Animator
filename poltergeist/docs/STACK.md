@@ -36,7 +36,7 @@
 | **Vercel** | Static replay site (F15) | Med | Static only, free tier. D-12 is still `Proposed` |
 | **YouTube** | Demo video (< 3 min, public) | **Yes** | Upload at 1440p or 4K for glyph sharpness (KI-26) |
 | **Devpost** | Submission | **Yes** | n/a |
-| **Fly.io** | Hosted live sandbox (F21) | Low / optional | Only if F21 is built |
+| **Fly.io** | Hosting the F21 sandbox container (Reanimator R11, KI-70) | Low / optional | The engine side is built (D-49); hosting is R11's call |
 
 No database SaaS: Candy Swap uses local SQLite, and Poltergeist stores everything in its run folder.
 
@@ -53,6 +53,7 @@ No database SaaS: Candy Swap uses local SQLite, and Poltergeist stores everythin
 | 4000 | Candy Swap (demo target) |
 | 6660 | Runner event WebSocket |
 | 6661 | Séance Room dev server |
+| 6662 | `poltergeist sandbox` HTTP + live WebSocket (F21, D-49) |
 
 ## Packages
 

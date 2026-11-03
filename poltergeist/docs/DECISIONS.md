@@ -55,6 +55,7 @@
 | D-46 | F18 Kiro Power (extends D-38, D-41): Agent Plugins format (`plugin.json` + `mcp.json` + `skills/poltergeist/SKILL.md`), template in `integrations/kiro/power/`, `poltergeist power --out <dir>` fills this checkout's absolute bin and validates the bundle; `poltergeist-mcp --root-from-spec` takes each call's root from an absolute `<project>/.kiro/specs/<name>`; no hook or `autoApprove` in the Power | Accepted |
 | D-47 | F19 Bedrock provider (refines D-12, D-32): flat `provider` + optional `awsRegion` config keys (not `llm.provider`), `@anthropic-ai/bedrock-sdk` `AnthropicBedrockMantle` behind the same `LlmClient`, `claude-*` → `anthropic.claude-*`, provider in the cache key only for Bedrock, Bedrock named in `run.json` / report only when used; fixture Done-when, live check KI-67 | Accepted |
 | D-48 | F20 Changeling (extends D-13, D-32, D-44): keyboard-only persona with a Changeling-only `focus` step (the runner Tabs to the target; the LLM never counts Tabs), `fill` that Tabs and types, `press` limited to Tab/Enter/Space; a visible, enabled control the walk goes round the page without reaching is a failed `reachable` app assertion; hidden/disabled/missing or 100 Tabs is a plan error; `PROMPT_VERSION` `f20-1`; all six personas run by default | Accepted |
+| D-49 | F21 becomes a headless Sandbox (extends D-39, D-40, D-43): `poltergeist sandbox` serves `POST /runs`, `GET /runs[/<id>]`, `GET /health` and the live feed on `ws /runs/<id>/live` (`:6662`, loopback by default); cached plans only through `cacheOnlyLlm()` (no API key; a miss is `uncompilable`); one run at a time (409), per-client hourly limit (429), run timeout, newest `keep` runs kept and older sandbox run folders deleted; no local paths or error text to visitors; container and public deploy are R11's (KI-70) | Accepted |
 
 ---
 
@@ -761,3 +762,22 @@
   - Every cached plan misses once, because of the prompt version.
   - Escape and the arrow keys aren't allowed, so radio groups, selects, menus and dialogs can't be operated (KI-69).
   - Reanimator's R4 sees `reachable` as one more failing assertion type next to `usable`.
+
+### D-49: F21 becomes a headless Sandbox (extends D-39, D-40, D-43)
+- **Context:** grilling F21 (2026-11-03) in Claude Code; the user asked to accept the recommended options. The PRD's F21 was "a container with Candy Swap + runner + Séance live mode, so judges can press Summon". Under D-39 the engine draws no UI and Reanimator R11 owns what a judge opens; Candy Swap isn't built yet (KI-44) and Kiro is on hold until the demo. A container and a public deploy can't be built or verified now, and deploying is an outward-facing step.
+- **Decision:**
+  - **The engine ships the server, not the container.** `poltergeist sandbox --spec <dir>` (`packages/cli/src/sandbox/`, `startSandbox` exported) haunts the operator's one spec on request. The container, Candy Swap inside it and the public URL are R11's, tracked as KI-70.
+  - **API** (design §8a): `GET /health`; `POST /runs` with an optional `{only, personas}` (each 1–64 ids of ≤ 32 chars; body ≤ 4 KB; anything else 400/413) → 202 `{runId, status, live}`; `GET /runs` (newest first); `GET /runs/<id>` (status `running|finished|failed|aborted`, merged criteria, haunted, counts, changes, `cacheMisses`, duration); WS `/runs/<id>/live` is the Live Feed. Spec, config, reps and concurrency are the operator's.
+  - **Cached plans only.** Summon gets `cacheOnlyLlm()` (core), which rejects every call, so a cache miss is an `uncompilable` pair with `llm error: not in the plan cache (cache-only run)`, counted in `cacheMisses` and logged. No API key is needed in the sandbox. The operator warms the cache with one ordinary `summon`.
+  - **Abuse limits:** one run at a time (409 `busy` with the active id, not counted against the client); per-client sliding hour (`--per-client-hour`, default 6, 0 = unlimited; client = socket address, or the first `X-Forwarded-For` hop only with `--trust-proxy`), 429 with `Retry-After`; `--run-timeout` (default 300 s, 10–3600) aborts through summon's signal (`aborted`).
+  - **Retention:** the newest `--keep` runs (default 5, 1–50) keep their summary and live backlog, so late viewers still see a finished run. Starting a run evicts the oldest beyond that and deletes its run folder; the sandbox only deletes run folders it started.
+  - **Public-safe:** events go out through `publicEvent` (core; D-43's export now uses it too): `run.started` gets `runDir: '.'` and `specDir` as its folder name. A failed run says `run failed`; the real error goes to the operator's stderr. CORS `*` and WS from any origin, since there are no credentials or settings to steal.
+  - **Binding:** `127.0.0.1:6662` by default; `--host` other than loopback prints a warning. The target is still loopback-only (D-05).
+  - **Shared feed:** the backlog/frame/backpressure logic moved from `seance-server.ts` into `createLiveBroadcast` (`packages/cli/src/live-broadcast.ts`), used by `--seance`, `replay` and the sandbox. Behaviour unchanged.
+  - Ctrl-C aborts the active run and exits 0. A bad config or spec fails before listening (exit 2).
+  - Requirement 11.5 is new.
+  - **Done-when (fixture):** on the claims fixture with a warmed cache, ten back-to-back `POST /runs` all finish with 3.2 `haunted` and 0 cache misses, a POST during the first run gets 409, a live client folds 3.2 `haunted`, and only `keep` sandbox run folders remain (`packages/cli/test/sandbox-done-when.test.ts`).
+- **Consequences:**
+  - KI-09's live option exists in the engine; whether judges get it depends on R11 hosting it (KI-70).
+  - A criterion whose text or routes changed since the warm-up runs as `uncompilable` until the operator re-warms the cache.
+  - Fly.io in STACK moves to R11.

@@ -155,7 +155,7 @@ Criterion IDs follow Kiro's convention (`N.M`, D-16), so Poltergeist's own Spec 
 3. THE Installer SHALL write the MCP entry, a steering file and an agent hook into a target's `.kiro/`, and SHALL NOT overwrite existing files without `--force` [F13].
 4. THE Power SHALL bundle the MCP server and a skill as an installable Kiro Power (Agent Plugins format), and its MCP_Server SHALL take the project that holds each absolute spec path as the root for that call [F18].
 
-### Requirement 11: Live Feed and Replay [F12, F15]
+### Requirement 11: Live Feed, Replay and Sandbox [F12, F15, F21]
 
 **User Story:** As a renderer (Reanimator's attack scene), I want a live, render-agnostic view of a run, so that I can show the ghosts attacking the app and the spec lines changing as it happens.
 
@@ -165,6 +165,7 @@ Criterion IDs follow Kiro's convention (`N.M`, D-16), so Poltergeist's own Spec 
 2. THE Live_Feed SHALL provide the requirement board: each criterion line with its live status (`waiting`, `running`, then its verdict).
 3. WHEN a criterion becomes `haunted`, THE Live_Feed SHALL link its line to the failing ghost and that ghost's evidence frame in the run folder.
 4. THE Recording SHALL replay a finished run from its run folder or an exported bundle with no live target, LLM or browser, and SHALL label it as a recording [F15].
+5. WHEN the Sandbox is started, THE Sandbox SHALL run hauntings of its one configured spec from cached plans only, at most one at a time, rate-limited per client, without exposing local paths, and SHALL stream each run on the Live_Feed [F21].
 
 ### Requirement 12: Costume [F26, F22]
 
