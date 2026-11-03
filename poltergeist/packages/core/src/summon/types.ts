@@ -37,7 +37,7 @@ export type SummonOptions = {
   recompile?: boolean;
   /** Default `newRunId()`. */
   runId?: string;
-  /** Default `createAnthropicClient()`. */
+  /** Default `createLlmClient(config)`: Anthropic, or Bedrock when `provider` is `bedrock` (F19). */
   llm?: LlmClient;
   /** Default `chromium.launch(summonLaunchOptions())`: guarded, with Playwright's SIGINT handler off. */
   launch?: () => Promise<Browser>;

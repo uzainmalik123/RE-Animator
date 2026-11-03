@@ -219,11 +219,25 @@ describe('summon: house rules (F17)', () => {
     });
   }, 120_000);
 
+  it('provider bedrock is recorded in run.json and the report; anthropic leaves no trace (F19)', async () => {
+    const own = await makeClaimsProject({ provider: 'bedrock', awsRegion: 'eu-west-1' });
+    try {
+      const r = await summon({ ...base(own), personas: ['wraith'], only: ['3.1'], reps: 1 });
+      expect((await readJson(join(r.runDir, 'run.json'))).provider).toBe('bedrock');
+      expect((await readJson(join(own.specDir, 'haunting-report.json'))).provider).toBe('bedrock');
+      expect(await readFile(join(own.specDir, 'haunting-report.md'), 'utf8')).toContain('via Bedrock');
+    } finally {
+      await own.close();
+    }
+  }, 120_000);
+
   it('no steering file: no houseRules in run.json', async () => {
     const own = await makeClaimsProject();
     try {
       const r = await summon({ ...base(own), personas: ['wraith'], only: ['3.1'], reps: 1 });
-      expect((await readJson(join(r.runDir, 'run.json'))).houseRules).toBeUndefined();
+      const run = await readJson(join(r.runDir, 'run.json'));
+      expect(run.houseRules).toBeUndefined();
+      expect(run).not.toHaveProperty('provider');
     } finally {
       await own.close();
     }

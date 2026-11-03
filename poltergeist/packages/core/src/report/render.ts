@@ -1,5 +1,6 @@
 import { join, relative, sep } from 'node:path';
 import type { PairResult } from '../compiler/compile.js';
+import type { LlmProvider } from '../config/schema.js';
 import type { HauntingPlan } from '../compiler/dsl.js';
 import type { PersonaId } from '../personas/registry.js';
 import type { Criterion } from '../spec/types.js';
@@ -24,6 +25,8 @@ export type RunMeta = {
   target: string;
   reps: number;
   model: string;
+  /** F19. Only `bedrock` changes the output. */
+  provider?: LlmProvider;
   /** Epoch ms. */
   startedAt: number;
 };
@@ -67,6 +70,7 @@ type JsonPair = ReportJson['criteria'][number]['pairs'][number];
 /** Pure: the report's markdown and JSON for one run (Req 8, D-35). */
 export function renderReport(input: ReportInput): RenderedReport {
   const { specDir, run } = input;
+  const bedrock = run.provider === 'bedrock';
   const plans = new Map<string, HauntingPlan>();
   for (const p of input.compiled) if (p.status === 'compiled') plans.set(pairKey(p.criterion, p.persona), p.plan);
   const verdictOf = new Map(input.verdicts.criteria.map((c) => [c.criterion, c.verdict]));
@@ -102,7 +106,7 @@ export function renderReport(input: ReportInput): RenderedReport {
     input.wordmark ?? DRAFT_WORDMARK,
     '```',
     '',
-    `Run ${codeSpan(run.runId)} against ${codeSpan(run.target)} · ${run.reps} reps · ${mdText(run.model, 80)} · ${new Date(run.startedAt).toISOString()}`,
+    `Run ${codeSpan(run.runId)} against ${codeSpan(run.target)} · ${run.reps} reps · ${mdText(run.model, 80)}${bedrock ? ' via Bedrock' : ''} · ${new Date(run.startedAt).toISOString()}`,
     `**${counts.haunted} haunted** [!!] · ${counts.flaky} flaky [~~] · ${counts.inconclusive} inconclusive [??] · ${counts.clean} clean [ok] · ${counts.notApplicable} n/a [--] · ${counts.notRun} not run [  ]`,
     ...(carriedRows ? [`_Merged: ${carriedRows} criteria kept from earlier runs; re-run them to refresh._`] : []),
   ].join('\n').split('\n');
@@ -141,6 +145,7 @@ export function renderReport(input: ReportInput): RenderedReport {
     runId: run.runId,
     target: run.target,
     model: run.model,
+    ...(bedrock ? { provider: 'bedrock' as const } : {}),
     reps: run.reps,
     startedAt: new Date(run.startedAt).toISOString(),
     specFile: 'requirements.md',

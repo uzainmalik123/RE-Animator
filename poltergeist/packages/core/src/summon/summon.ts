@@ -4,7 +4,7 @@ import { join, resolve } from 'node:path';
 import { chromium, type LaunchOptions } from 'playwright-core';
 import { compile } from '../compiler/compile.js';
 import type { HauntingPlan } from '../compiler/dsl.js';
-import { createAnthropicClient } from '../compiler/llm.js';
+import { createLlmClient } from '../compiler/llm.js';
 import { loadConfig } from '../config/load.js';
 import { isPersonaId, PERSONA_IDS, type PersonaId } from '../personas/registry.js';
 import { diffVerdicts, readReportJson } from '../report/merge.js';
@@ -75,14 +75,15 @@ export async function summon(opts: SummonOptions): Promise<SummonResult> {
   const home = join(loaded.configDir, '.poltergeist');
   const runDir = join(home, 'runs', runId);
   const cacheDir = join(home, 'cache', 'plans');
-  const { target, model } = loaded.config;
+  const { target, model, provider } = loaded.config;
+  const bedrock = provider === 'bedrock' ? { provider } : {};
   const startedAt = Date.now();
   const sink = createEventSink<SummonEvent>({ outDir: runDir, redactor: loaded.redactor, onEvent: opts.onEvent });
 
   sink.emit({ type: 'run.started', runId, runDir, specDir, target, criteria: criteria.map((c) => c.id), personas, reps });
   const specHash = createHash('sha256').update(await readFile(join(specDir, 'requirements.md'))).digest('hex');
   const runJson: Record<string, unknown> = {
-    runId, specDir, specHash, config: loaded.snapshot, model,
+    runId, specDir, specHash, config: loaded.snapshot, model, ...bedrock,
     options: { only: opts.only ?? null, personas, reps, recompile: opts.recompile ?? false },
     startedAt,
     ...(house.rules.path !== null ? { houseRules: house.rules } : {}),
@@ -104,8 +105,9 @@ export async function summon(opts: SummonOptions): Promise<SummonResult> {
     });
     signal?.throwIfAborted();
     compiled = await compile(criteria, scouted, {
-      client: opts.llm ?? createAnthropicClient(),
+      client: opts.llm ?? createLlmClient(loaded.config),
       model,
+      provider,
       cacheDir,
       outDir: runDir,
       personas,
@@ -144,7 +146,7 @@ export async function summon(opts: SummonOptions): Promise<SummonResult> {
 
   // Merge into the spec's previous report, so a subset run keeps the full picture (F14, D-42).
   const previous = await readReportJson(specDir);
-  const rendered = renderReport({ specDir, criteria: all, compiled: compiled.pairs, verdicts, run: { runId, runDir, target, reps: run.reps, model, startedAt }, previous, retired: house.rules.disabled });
+  const rendered = renderReport({ specDir, criteria: all, compiled: compiled.pairs, verdicts, run: { runId, runDir, target, reps: run.reps, model, ...bedrock, startedAt }, previous, retired: house.rules.disabled });
   const reportPaths = await writeReport(specDir, rendered);
   const changes = diffVerdicts(previous, rendered.json);
 

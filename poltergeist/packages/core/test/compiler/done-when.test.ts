@@ -120,3 +120,17 @@ describe('compile (Done when, on the Candy fixture, D-32)', () => {
     expect(second.cacheHits).toBe(good.length);
   });
 });
+
+describe('compile through Bedrock (F19 Done when, fixture)', () => {
+  it('a warm Anthropic cache is not reused for bedrock, and a second bedrock run makes zero calls', async () => {
+    const cacheDir = join(outDir, 'cache-f19');
+    const opts = { model: 'claude-sonnet-5-5', cacheDir };
+    const anthropic = await compile(criteria, scouted, { ...opts, client: fakeLlm(scripted).client, provider: 'anthropic' });
+    expect(anthropic.llmCalls).toBeGreaterThan(0);
+    const bedrock = await compile(criteria, scouted, { ...opts, client: fakeLlm(scripted).client, provider: 'bedrock' });
+    expect(bedrock.cacheHits).toBe(0);
+    expect(bedrock.llmCalls).toBe(anthropic.llmCalls);
+    const again = await compile(criteria, scouted, { ...opts, client: fakeLlm(scripted).client, provider: 'bedrock' });
+    expect(again.llmCalls).toBe(0);
+  });
+});

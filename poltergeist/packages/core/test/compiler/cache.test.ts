@@ -109,3 +109,14 @@ describe('personaHash', () => {
     expect(cacheKey({ ...base, notes: { '/market': 'y' } })).not.toBe(a);
   });
 });
+
+describe('cacheKey provider (F19)', () => {
+  const k = { ...base, personaHash: 'p', routes: [{ path: '/market', identity: 'default', routeHash: 'h1' }] };
+  it('keeps the pre-F19 key for anthropic, with or without the field', () => {
+    expect(cacheKey(k)).toBe('244161dad3792a28b4fbe9ec8a41e4b9');
+    expect(cacheKey({ ...k, provider: 'anthropic' })).toBe('244161dad3792a28b4fbe9ec8a41e4b9');
+  });
+  it('gives bedrock its own key', () => {
+    expect(cacheKey({ ...k, provider: 'bedrock' })).not.toBe(cacheKey(k));
+  });
+});
