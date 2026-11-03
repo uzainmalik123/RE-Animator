@@ -44,7 +44,7 @@ const AccountSchema = z.strictObject({
 
 const RouteSchema = z.strictObject({ path: routePath, auth: z.union([z.boolean(), z.string().min(1)]) });
 
-const ForbiddenSchema = z.strictObject({
+export const ForbiddenSchema = z.strictObject({
   method: z.string().regex(/^(\*|[A-Za-z]+)$/, 'must be an HTTP method or "*"'),
   path: routePath,
 });

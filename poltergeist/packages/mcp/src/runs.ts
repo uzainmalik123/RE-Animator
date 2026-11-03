@@ -1,5 +1,5 @@
 import { newRunId, summon as coreSummon, type SummonEvent, type SummonOptions, type SummonResult } from '@poltergeist/core';
-import { summarize, type RunProgress, type RunSummary } from './format.js';
+import { capIds, summarize, type RunProgress, type RunSummary } from './format.js';
 
 export type SummonFn = (opts: SummonOptions) => Promise<SummonResult>;
 export type StartOptions = Omit<SummonOptions, 'runId' | 'signal' | 'onEvent' | 'onWarning'>;
@@ -63,9 +63,15 @@ export class RunManager {
       progress.phase = phaseOf(e.type) ?? progress.phase;
     };
     const run: Run = { id, ac, progress, settled: Promise.resolve() };
-    run.settled = this.summon({ ...opts, runId: id, signal: ac.signal, onEvent, onWarning: this.log }).then(
+    const warnings: string[] = [];
+    const onWarning = (message: string) => {
+      warnings.push(message);
+      this.log(message);
+    };
+    run.settled = this.summon({ ...opts, runId: id, signal: ac.signal, onEvent, onWarning }).then(
       (result) => {
         run.summary = summarize(result, this.root);
+        if (warnings.length > 0) run.summary.warnings = capIds(warnings);
       },
       (err: unknown) => {
         const message = err instanceof Error ? `${err.name}: ${err.message}` : String(err);

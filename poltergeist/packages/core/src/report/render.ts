@@ -1,6 +1,7 @@
 import { join, relative, sep } from 'node:path';
 import type { PairResult } from '../compiler/compile.js';
 import type { HauntingPlan } from '../compiler/dsl.js';
+import type { PersonaId } from '../personas/registry.js';
 import type { Criterion } from '../spec/types.js';
 import type { Verdicts } from '../verdicts/compute.js';
 import { rollUp } from '../verdicts/compute.js';
@@ -41,7 +42,22 @@ export type ReportInput = {
    * persona inside a re-run criterion, is carried over from it while it still applies.
    */
   previous?: ReportJson;
+  /**
+   * Personas the house rules disable (F17, D-45). A standing rule, unlike a `--personas` subset:
+   * their pairs are dropped from the previous report instead of carried.
+   */
+  retired?: readonly PersonaId[];
 };
+
+type ReportRow = ReportJson['criteria'][number];
+
+/** A previous row without the retired personas' pairs, rolled up again if any were dropped. */
+function withoutRetired(row: ReportRow | undefined, retired: ReadonlySet<PersonaId>): ReportRow | undefined {
+  if (!row) return row;
+  const pairs = row.pairs.filter((p) => !retired.has(p.persona));
+  if (pairs.length === row.pairs.length) return row;
+  return { ...row, pairs, verdict: pairs.length ? rollUp(pairs.map((p) => p.verdict)) : 'notRun' };
+}
 
 export type RenderedReport = { markdown: string; json: ReportJson };
 
@@ -59,9 +75,10 @@ export function renderReport(input: ReportInput): RenderedReport {
   const rel = (artifact: string) => relative(specDir, join(run.runDir, artifact)).split(sep).join('/');
 
   const previous = input.previous;
+  const retired = new Set(input.retired ?? []);
   const carry = (from: { carriedFrom?: string }) => from.carriedFrom ?? previous!.runId;
   const rows = input.criteria.map((c): { c: Criterion; verdict: Verdict; pairs: JsonPair[]; carriedFrom?: string } => {
-    const before = usableRow(previous, run.target, c);
+    const before = withoutRetired(usableRow(previous, run.target, c), retired);
     const ran = verdictOf.get(c.id);
     if (ran === undefined) {
       if (!before || before.verdict === 'notRun') return { c, verdict: 'notRun', pairs: [] };

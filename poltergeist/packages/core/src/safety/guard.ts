@@ -134,6 +134,14 @@ function installNetworkGuard(context: BrowserContext, opts: GuardOptions): Promi
     if (b) report(b);
   });
 
+  // Redirect hops never reach the route handler. An off-allowlist hop dies at the dead proxy; a hop
+  // to a forbidden path on an allowed host goes through, so it is reported here, not prevented (KI-62).
+  context.on('request', (request) => {
+    if (request.redirectedFrom() === null) return;
+    const v = verdict(request.url(), request.method());
+    if (v?.reason === 'forbidden') report({ url: request.url(), method: request.method(), resourceType: request.resourceType(), ...v });
+  });
+
   context.on('requestfinished', (request) => {
     const url = parse(request.url());
     if (!url || !NETWORK_SCHEMES.has(url.protocol)) return;

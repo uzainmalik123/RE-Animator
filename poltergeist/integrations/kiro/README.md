@@ -11,7 +11,7 @@ It writes four files, never overwriting one that differs unless you pass `--forc
 | Template | Written to | What it does |
 |---|---|---|
 | `mcp.json` | `.kiro/settings/mcp.json` (merged; other servers are kept) | Kiro launches `poltergeist-mcp` over stdio. The agent gets `list_criteria`, `summon_ghosts`, `get_run_status`, `get_haunting_report` and `rehaunt`. The three read-only tools are auto-approved; the two that drive a browser ask first |
-| `steering/poltergeist.md` | `.kiro/steering/poltergeist.md` | Tells the agent how to run the tests and fix what fails. Its `## House rules` section is for F17 |
+| `steering/poltergeist.md` | `.kiro/steering/poltergeist.md` | Tells the agent how to run the tests and fix what fails. Its `## House rules` section (`disable`, `forbid`, `note`) is read on every run (F17) |
 | `hooks/poltergeist-summon.json` | `.kiro/hooks/poltergeist-summon.json` | After a spec task finishes (`PostTaskExecution`), asks the agent to run the tests. `--no-hook` skips it, `--spec <dir>` names one spec |
 | n/a | `poltergeist.config.json` | A minimal config aimed at `--target` (loopback only, D-05). Add your routes and accounts |
 

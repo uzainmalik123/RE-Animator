@@ -35,7 +35,7 @@
 | 16 | F15 | Recordings: export & replay (headless, D-43) | Med | Done (fixture, D-43; hero run + R11 hosting KI-55) | F12 |
 | 17 | F13 | Kiro Installer (`init`) + Agent Hook | Med | Done (fixture, D-41; Kiro check KI-51) | F11 |
 | 18 | F16 | Extended Personas: Lich & Revenant | Med | Done (fixture, D-44; Candy Swap check KI-59) | F04 |
-| 19 | F17 | Steering-driven House Rules | Med | TBD | F13 |
+| 19 | F17 | Steering-driven House Rules | Med | Done | F13 |
 | 20 | F18 | Kiro Power Packaging | Med | TBD | F11, F17 |
 | 21 | F22 | Séance Atmosphere Polish (sound, trails, idle motion) | Low | TBD | F12 |
 | 22 | F19 | Amazon Bedrock Provider | Low | TBD | F05 |
@@ -386,7 +386,7 @@ Implements Requirement 12.
   - KI-20 must be fixed first: resolve `env:` passwords for accounts named in `login` steps.
 - **Done when:** each persona produces sensible plans for at least 3 Candy Swap criteria.
 
-### F17: Steering-driven House Rules · Med · TBD
+### F17: Steering-driven House Rules · Med · Done
 
 **Owns:** reading `.kiro/steering/poltergeist.md` in a target (persona flags, extra `forbidden` rules, route notes) and merging it over the config. Implements Requirement 4.3.
 **Not this feature:** writing the file (F13) · config rules (F02).
@@ -487,3 +487,4 @@ Implements Requirement 12.
 - 2026-11-02: **F14 Done against a fixture** (D-42). Every run merges into the spec's previous `haunting-report.json` (carried lines marked `carriedFrom`, resolves KI-47) and diffs the re-run criteria: CLI `changes since <run>:` with `3.2 [!!] → [ok]`, MCP `changes: [{id, from, to}]`. The real Candy Swap exorcism check is KI-53.
 - 2026-11-02: **F15 Done against a fixture, re-scoped to headless Recordings** (D-43, under D-39). `frames.ndjson`, `poltergeist export` (static bundle, 50 MB cap with evidence-preserving thinning), `poltergeist replay` (live-feed WebSocket, `recorded` hello, 1–16× speed), pure `buildTimeline`/`stateAt`. Requirement 11.4 reworded. Hosting and the hero run are KI-55 (Reanimator R11).
 - 2026-11-02: **F16 Done against a fixture** (D-44). Lich (`small-slow` device: 360×640 mobile, 4× CPU; `throttle` step) and Revenant (two tabs, one session; origin-scoped `logout`). A device persona's timeout on a present-but-hidden target becomes a failed `usable` app assertion, so it can be `haunted` (KI-39 resolved). All five personas run by default. Requirement 4.4, 6.9, 6.10 and 7.5 added. Candy Swap check KI-59; desktop-only Scout risk KI-60.
+- 2026-11-03: **F17 Done against a fixture** (D-45). `## House rules` in the target's steering file: `disable` (personas), `forbid` (extra forbidden rules), `note` (page hints in the prompt and cache key). Only tightens; bad lines warn. Retired personas aren't carried in the report. Forbidden redirect hops are now reported (KI-17 resolved; not prevented, KI-62). Requirement 4.3 reworded. Candy Swap check KI-63.

@@ -71,6 +71,39 @@ describe('renderReport with a previous report', () => {
   });
 });
 
+describe('renderReport with retired personas (F17)', () => {
+  const twoPersonas = (doppel: typeof T) => {
+    const pairs = [compiled(RACE), compiled(simple('3.2', 'banshee'))];
+    const results = [...reps('3.2', 'doppelganger', [{ asserts: [doppel] }, { asserts: [doppel] }, { asserts: [doppel] }]), ...reps('3.2', 'banshee', [{ asserts: [F] }, { asserts: [F] }, { asserts: [F] }])];
+    return renderReport({ ...input(), compiled: pairs, verdicts: verdictsFor(pairs, results, 3) }).json;
+  };
+
+  it('a re-run criterion drops the retired persona instead of carrying it', () => {
+    const { json } = rerun(twoPersonas(F), 'r2', { retired: ['banshee'] });
+    const r = row(json, '3.2');
+    expect(r.pairs.map((p) => p.persona)).toEqual(['doppelganger']);
+    expect(r.verdict).toBe('clean');
+  });
+
+  it('a carried criterion keeps only live personas and rolls up again', () => {
+    const first = twoPersonas(T);
+    expect(row(first, '3.2').verdict).toBe('haunted');
+    const pairs = [compiled(simple('4.1', 'wraith'))];
+    const verdicts = verdictsFor(pairs, reps('4.1', 'wraith', [{ asserts: [T] }, { asserts: [T] }, { asserts: [T] }]), 3);
+    const { json } = renderReport({ ...input(), compiled: pairs, verdicts, run: run('r2'), previous: first, retired: ['banshee'] });
+    ReportJsonSchema.parse(json);
+    expect(row(json, '3.2')).toMatchObject({ verdict: 'clean', carriedFrom: 'r1' });
+    expect(row(json, '3.2').pairs.map((p) => p.persona)).toEqual(['doppelganger']);
+  });
+
+  it('a carried criterion with only retired personas becomes notRun', () => {
+    const first = renderReport(input()).json;
+    const { json } = rerun(first, 'r2', { retired: ['banshee'] });
+    expect(row(json, '2.1')).toEqual(expect.objectContaining({ verdict: 'notRun', pairs: [] }));
+    expect(row(json, '2.1').carriedFrom).toBeUndefined();
+  });
+});
+
 describe('diffVerdicts', () => {
   it('reports criterion and persona changes for what ran this time', () => {
     const first = renderReport(input()).json;

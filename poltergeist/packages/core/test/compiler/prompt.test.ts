@@ -59,4 +59,13 @@ describe('prompt', () => {
     expect(SYSTEM_PROMPT).toMatch(/own/);
     expect(SYSTEM_PROMPT).toMatch(/notApplicable/);
   });
+
+  it('puts a project note under its page only', () => {
+    const notes = new Map([['/market', 'Claim stays disabled until you sign in.']]);
+    const text = buildUserPrompt(C, listPersonas()[0]!, [MARKET], notes);
+    const lines = text.split('\n');
+    const page = lines.findIndex((l) => l.startsWith('Page /market'));
+    expect(lines[page + 1]).toBe('Project note: Claim stays disabled until you sign in.');
+    expect(buildUserPrompt(C, listPersonas()[0]!, [MARKET], new Map([['/other', 'x']]))).not.toContain('Project note');
+  });
 });

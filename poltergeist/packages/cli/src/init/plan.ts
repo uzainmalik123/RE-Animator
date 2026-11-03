@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseConfig } from '@poltergeist/core';
+import { HOUSE_RULES_HEADING, parseConfig } from '@poltergeist/core';
 
 export type InitOptions = {
   /** The project to wire up; resolved against cwd. */
@@ -32,7 +32,7 @@ export type PlannedFile =
       /** The user's file once it exists: created, never replaced, not even by `--force`. */
       scaffold?: boolean;
       /** A trailing section the user owns; `--force` keeps the existing file's copy of it. */
-      keepSection?: string;
+      keepSection?: RegExp;
     }
   | { path: typeof MCP_PATH; kind: 'mcp-entry'; entry: McpEntry };
 
@@ -40,7 +40,8 @@ export const DEFAULT_TARGET = 'http://localhost:3000';
 
 const DEFAULT_MCP_BIN = fileURLToPath(new URL('../../../mcp/bin/poltergeist-mcp.js', import.meta.url));
 const DEFAULT_TEMPLATES = fileURLToPath(new URL('../../../../integrations/kiro/', import.meta.url));
-export const HOUSE_RULES = '## House rules';
+/** Summon's own heading pattern, so `--force` keeps exactly the section summon reads (F17). */
+export const HOUSE_RULES = HOUSE_RULES_HEADING;
 const GENERIC_SPEC = 'the spec whose tasks just ran';
 
 const json = (value: unknown) => `${JSON.stringify(value, null, 2)}\n`;

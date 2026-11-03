@@ -295,4 +295,17 @@ describe('compile: abort (F09 review)', () => {
     await expect(run(fake, [CLAIM], { personas: ['wraith'], signal: AbortSignal.abort(new Error('early')) })).rejects.toThrow('early');
     expect(fake.calls).toHaveLength(0);
   });
+
+  it('sends a route note in the prompt and recompiles when it changes', async () => {
+    const cacheDir = await mkdtemp(join(tmpdir(), 'compile-cache-'));
+    const fake = valid();
+    await run(fake, [CLAIM], { cacheDir, personas: ['wraith'], notes: [{ path: '/market', text: 'Note one.' }] });
+    expect(JSON.stringify(fake.calls[0]!.turns)).toContain('Project note: Note one.');
+    const same = valid();
+    await run(same, [CLAIM], { cacheDir, personas: ['wraith'], notes: [{ path: '/market', text: 'Note one.' }] });
+    expect(same.calls).toHaveLength(0);
+    const changed = valid();
+    await run(changed, [CLAIM], { cacheDir, personas: ['wraith'], notes: [{ path: '/market', text: 'Note two.' }] });
+    expect(changed.calls).toHaveLength(1);
+  });
 });

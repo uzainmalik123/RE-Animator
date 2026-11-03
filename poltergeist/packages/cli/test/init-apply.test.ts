@@ -57,6 +57,15 @@ describe('init', () => {
     }
   });
 
+  it('carries House rules over whatever the heading case, as summon reads them (F17 review I1)', async () => {
+    await init({ dir });
+    const original = await readFile(join(dir, STEERING), 'utf8');
+    const rules = '## House Rules  \n\n- forbid: DELETE /api/admin*\n';
+    await writeFile(join(dir, STEERING), `stale intro\n\n${rules}`);
+    await init({ dir, force: true });
+    expect(await readFile(join(dir, STEERING), 'utf8')).toBe(original.slice(0, original.indexOf('## House rules')) + rules);
+  });
+
   it('carries the House rules over when force replaces the steering file', async () => {
     await init({ dir });
     const original = await readFile(join(dir, STEERING), 'utf8');
