@@ -23,4 +23,15 @@ This project uses Poltergeist to check the running app against the acceptance cr
 
 ## House rules
 
-<!-- Project-specific test rules go here. Poltergeist reads this section in a later release (F17); for now it is documentation only. -->
+<!--
+Project-specific test rules. Poltergeist reads the "- " lines in this section on every run. They can
+only make testing stricter, never looser. Lines inside this comment are examples and are ignored.
+
+- disable: banshee, lich
+- forbid: DELETE /api/admin*
+- note /checkout: The pay button stays disabled until the cart has items.
+
+disable: turn test users off (wraith, banshee, doppelganger, lich, revenant).
+forbid: a request the tests must never send (METHOD or *, then a path where * matches anything).
+note: a hint about one page, shown to the test planner (up to 500 characters).
+-->

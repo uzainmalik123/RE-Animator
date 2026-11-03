@@ -50,6 +50,7 @@
 | D-41 | F13 `poltergeist init` (extends D-38, D-01): writes `poltergeist.config.json` and merges the MCP entry, steering and a `PostTaskExecution` agent hook into a project's `.kiro/` from `integrations/kiro/` templates; per-file created/unchanged/skipped/overwritten, exit 1 on skips, never through symlinks, never rewrites an unparseable `mcp.json`; exported for Reanimator's heal loop | Accepted |
 | D-42 | F14 re-haunt rulings (refines D-34, D-35, D-38): the baseline is the spec's previous `haunting-report.json`; every run merges into it (unrun criteria and personas are carried with `carriedFrom`, only for the same target and criterion text) and diffs re-run criteria (`changes`); CLI change block, MCP `changes` on run results; fixture Done-when (KI-53) | Accepted |
 | D-44 | F16 Lich & Revenant: fixed `small-slow` device preset (360×640 mobile, touch, 4× CPU) applied by the runner; Revenant = two tabs on one session; `logout` scoped to the target origin; a device persona's timeout on a present-but-hidden target is a failed `usable` app assertion (resolves KI-39); all five personas run by default | Accepted |
+| D-45 | F17 house rules: `## House rules` in `<configDir>/.kiro/steering/poltergeist.md`, `- disable:` / `- forbid:` / `- note <path>:` lines, only tightening, bad lines warn; disabled personas dropped (not carried) in the report; notes in the prompt and cache key; forbidden redirect hops reported (KI-17) | Accepted |
 | D-43 | F15 re-scoped to headless **Recordings** (extends D-39, D-40): `frames.ndjson` frame index, `poltergeist export` (a static bundle ≤ 50 MB with `recording.json`, thinned frames, no config or artifacts), `poltergeist replay` on the live-feed WebSocket with `live.hello.recorded`, pure `buildTimeline`/`stateAt` for scrubbing; hosting moves to Reanimator R11 | Accepted |
 
 ---
@@ -668,3 +669,24 @@
   - The real check, sensible plans for ≥ 3 Candy Swap criteria from the live LLM, is KI-59.
   - Scout still captures at the desktop viewport, so a Lich can't target a mobile-only control (a hamburger menu), and a control that a responsive menu hides fails as `usable` (KI-60).
   - The Changeling (F20) can reuse `device` for its own preset if it needs one.
+
+### D-45: F17 house rules from steering (extends D-05, D-41)
+- **Context:** grilling F17 (2026-11-03). `init` writes an empty `## House rules` section and keeps it on `--force` (D-41). Req 4.3 said steering only tightens. KI-17's redirect-hop half was waiting for F17. The user asked to accept the recommended answers.
+- **Decision:**
+  - **Where:** `<configDir>/.kiro/steering/poltergeist.md`, section `## House rules` (any case) up to the next `#`/`##` heading. A missing file or section means no rules, with no warning. Parsed by `core/steering/` (`parseHouseRules`, `readHouseRules`) and applied in `summon()`. `loadConfig` stays steering-free.
+  - **Grammar:** only `- ` lines, HTML comments stripped first (so the template's examples never apply):
+    - `- disable: <ids>`: case-insensitive persona ids;
+    - `- forbid: <METHOD|*> <path>`: validated like config `forbidden`, appended after the config's rules, exact duplicates dropped;
+    - `- note <path>: <text>`: 1–500 characters, notes on one path joined.
+  - **Bad lines** (an unknown key or persona, a malformed rule, a long note) are a `house rules line N:` warning and are skipped, never an error.
+  - **Only tightens (D-05):** steering can't touch `target`, `allowedHosts`, `accounts`, `concurrency` or `reps`, and can't remove config rules. There is no `enable`.
+  - **Personas:** `--personas` minus the disabled ones. If none are left, it's a `UsageError` naming the house rules. A `house rules: <ids> disabled` warning is emitted.
+  - **Report:** disabled personas are a standing rule, so their pairs are dropped from the previous report (`RenderInput.retired`) instead of carried, and the row is rolled up again (`notRun` when nothing is left). A `--personas` subset still carries (D-42). `changes` still compares against the unfiltered previous row.
+  - **Notes:** a `Project note: <text>` line under the page's `Page …` line in the user prompt (exact path match). The pair's notes are added to the cache key only when there are some, so pre-F17 cache entries stay valid. Note text is the user's own wording; D-09 governs only our prompts.
+  - **`run.json`** records `houseRules` when a steering file exists.
+  - **KI-17 redirect hops:** the guard listens to `request` events with `redirectedFrom()` and reports a hop that matches a forbidden rule as `forbidden` (which voids the rep, so the pair is `inconclusive`). Route handlers never see hops, so it is reported, not prevented (KI-62). Off-allowlist hops were already stopped by the dead proxy.
+- **Consequences:**
+  - The template's `## House rules` comment now documents the syntax.
+  - Req 4.3 is reworded to cover forbidden rules and notes.
+  - The Candy Swap Done-when with a live LLM is KI-63.
+

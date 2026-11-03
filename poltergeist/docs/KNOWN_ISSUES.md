@@ -25,7 +25,7 @@
 | KI-14 | LLM cost and rate limits during development | Minor | F05 | Open |
 | KI-15 | Code written in this playtest repo may not count for the main submission | Major | everything | Resolved (2026-10-31, D-25) |
 | KI-16 | Current Kiro-generated `requirements.md` layout is only verified against one hand-edited sample | Minor | F01 | Open |
-| KI-17 | Forbidden rules only check the first request of a redirect chain; matching uses the raw (percent-encoded, case-sensitive) pathname | Minor | F02, F17 | Open (path decoding fixed in F02; redirect hops open for F17) |
+| KI-17 | Forbidden rules only check the first request of a redirect chain; matching uses the raw (percent-encoded, case-sensitive) pathname | Minor | F02, F17 | Resolved 2026-11-03 (F02 decodes paths; F17 reports forbidden redirect hops, D-45; prevention is KI-62) |
 | KI-18 | Guard reporting gaps that stay on the machine or are still blocked | Minor | F06 | Open |
 | KI-19 | A `resetCommand` that backgrounds a long-lived child keeps the pipes open, so reset times out and kills it | Minor | F06 | Resolved (2026-10-31, D-29) |
 | KI-20 | An unused account with an unset `env:NAME` password keeps the literal `env:NAME` string as its password | Minor | F03, F06 | Resolved (2026-10-31, D-29) |
@@ -70,6 +70,8 @@
 | KI-59 | F16 Done-when on real Candy Swap (the live LLM writes sensible Lich and Revenant plans for ≥ 3 criteria) not yet run: built against fixtures (D-44) | Major | F16 sign-off | Open |
 | KI-60 | Scout captures at the desktop viewport only: a Lich can't target mobile-only controls (a hamburger menu), and a control hidden behind one fails as `usable` | Minor | F16 | Open |
 | KI-61 | F16 review minors: `logout` misses `Domain=`-attribute cookies (`.host`), the report says "Expected: usable", the plan-timeout test doesn't exercise the probe guard, slow-3g `goto` under 4× CPU often times out unprobed, a Lich step shows `timeout` live while its rep is a `completed` failure, an app that never goes network-idle never gets a `usable` failure | Minor | F16, R4 | Open |
+| KI-62 | A redirect hop to a forbidden path on an allowed host is reported (the rep is voided), not prevented: the request still reaches the app once | Minor | F17 | Open |
+| KI-63 | F17 Done-when on real Candy Swap not yet run: a steering `disable: banshee` removes every Banshee plan from a live run | Minor | F17 sign-off | Open |
 
 ---
 
@@ -220,11 +222,12 @@
 - **Notes (2026-10-31, F01 rebuild grill):** all the deferred minors above are ruled on in D-27. The issue stays open until a real Kiro-generated spec (Candy Swap, F10) is added as a fixture.
 
 
-### KI-17: Forbidden rules only check the first request of a redirect chain · Minor · Open
+### KI-17: Forbidden rules only check the first request of a redirect chain · Minor · Resolved
 - **Problem:** a 307/308 to a forbidden path on an allowed host isn't blocked, because only the first request of a chain is matched. Matching also uses the raw (percent-encoded, case-sensitive) pathname, so `/api/%61dmin` slips past a rule for `/api/admin*`.
 - **Blocks:** F02's completeness and F17 (steering rules).
 - **Next action:** decode the path once before matching, and consider the proxy/`requestfailed` path for redirect hops. Revisit when F17 lands.
 - **2026-10-31 (F02 rebuild, D-29):** the pathname is now percent-decoded once before matching (bad encodings fall back to the raw path), so `/api/%61dmin` matches `/api/admin*`. The final review confirmed a 307 from an allowlisted path to a forbidden one still goes through unreported. That half stays open for F17.
+- **2026-11-03 (F17, D-45): Resolved.** The guard now reports a redirect hop that matches a forbidden rule (`request` event with `redirectedFrom()`), so the rep is voided and the pair is `inconclusive` instead of passing silently. Playwright's route handler never sees redirect hops, so the hop is reported, not prevented: KI-62.
 
 ### KI-18: Guard reporting gaps that stay on the machine or are still blocked · Minor · Open
 - **Problem:**
@@ -625,3 +628,14 @@
   - With `slow-3g` and 4× CPU, `goto` (`waitUntil: 'load'`) often exceeds the 5 s step timeout. That stays `timeout`, so many Lich pairs may end `inconclusive`. Consider a larger step budget for device personas (check during KI-59).
   - The live feed shows the Lich's step as `timeout` while its rep is a `completed` app failure. Reanimator's R4 may want to draw it as a failure.
   - An app that never goes network-idle (polling, long-poll) never gets a `usable` failure, because the probe needs the page to settle.
+
+### KI-62: Forbidden redirect hops are reported, not prevented · Minor · Open
+- **Problem:** Playwright's `context.route` never sees redirect hops. A 307/308 from an allowed path to a forbidden one on an allowlisted host still reaches the app once. Since F17 the guard reports it as `forbidden`, the rep is voided, and the pair can't come back as a false `clean` or `haunted`.
+- **Blocks:** nothing now. It matters only if an app redirects into a destructive endpoint.
+- **Next action:** if it matters, fetch in the route handler with `route.fetch({ maxRedirects: 0 })` and check `Location` before fulfilling. That buffers every response (it breaks SSE and streaming), so only do it when `forbidden` is non-empty, and spike it first.
+
+### KI-63: F17 Done-when on real Candy Swap not yet run · Minor · Open
+- **Problem:** F17 was checked against the claims fixture with a fake LLM (`summon: house rules` tests). The PRD Done-when on the real app with a live key is still to do.
+- **Blocks:** F17 sign-off.
+- **Next action:** in the batched Kiro/Candy Swap session, run `poltergeist init` in Candy Swap, add `- disable: banshee` under `## House rules`, run `npm run summon`, and check there are no `__banshee` files in `plans/` and no Banshee pairs in the report.
+

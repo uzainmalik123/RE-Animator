@@ -195,6 +195,16 @@ F14 (D-42): before writing, `summon` reads the spec's previous `haunting-report.
 - **Results:** at most 6 000 chars, with ids capped at 20.
 - **Paths:** confined to `--root`. An omitted `configPath` is the nearest `poltergeist.config.json` above `specDir`.
 
+## 10a. House rules (F17, D-45)
+
+`summon()` reads `## House rules` in `<configDir>/.kiro/steering/poltergeist.md` (`core/steering/`). Only `- ` lines count, and HTML comments are ignored:
+
+- `- disable: banshee, lich`: dropped from the run (intersected with `--personas`; empty → usage error), and dropped instead of carried in the merged report.
+- `- forbid: DELETE /api/admin*`: appended to `forbidden` (Scout and runner).
+- `- note /checkout: text`: shown as `Project note:` under that page in the compiler prompt, and part of the plan cache key.
+
+A bad line is a warning, never an error. Steering can't touch target, hosts, accounts, concurrency or reps (D-05). `run.json` records `houseRules`.
+
 ## 11. Kiro loop (target project)
 
 1. `npx poltergeist init` writes the MCP entry, steering and hook into the project's `.kiro/` (F13).
