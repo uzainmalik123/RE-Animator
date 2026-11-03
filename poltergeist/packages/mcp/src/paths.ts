@@ -1,5 +1,6 @@
 import { existsSync, realpathSync } from 'node:fs';
-import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { homedir } from 'node:os';
+import { basename, dirname, isAbsolute, join, normalize, parse, relative, resolve, sep } from 'node:path';
 
 /** A path the agent passed resolves outside the server's root (D-38). */
 export class PathError extends Error {
@@ -46,4 +47,27 @@ export function findConfig(specDir: string, root: string): string | undefined {
     dir = dirname(dir);
   }
   return undefined;
+}
+
+const SPEC_SHAPE = 'specDir must be an absolute path to <project>/.kiro/specs/<name>';
+
+/**
+ * `--root-from-spec` (D-46): the project that holds an absolute `<project>/.kiro/specs/<name>`,
+ * used as that call's root. The filesystem root, the home folder (Kiro's user settings) and any
+ * folder holding home are never a project, also through a symlink.
+ */
+export function projectRootOf(specDir: string, home: string = homedir()): string {
+  if (!isAbsolute(specDir)) throw new PathError(`${SPEC_SHAPE}; got the relative path ${specDir}`);
+  let p = normalize(specDir);
+  if (p.length > parse(p).root.length && p.endsWith(sep)) p = p.slice(0, -1);
+  const specs = dirname(p);
+  const kiro = dirname(specs);
+  if (basename(specs) !== 'specs' || basename(kiro) !== '.kiro' || basename(p) === '') throw new PathError(`${SPEC_SHAPE}; got ${specDir}`);
+  const project = dirname(kiro);
+  // Compared after following links, so an alias of / or of home is refused too; a folder that
+  // holds home (such as /home) would hold every user's projects.
+  const real = realish(project);
+  const realHome = realish(resolve(home));
+  if (real === parse(real).root || inside(real, realHome)) throw new PathError(`${specDir} is not inside a project folder (${project}); ${SPEC_SHAPE}`);
+  return project;
 }

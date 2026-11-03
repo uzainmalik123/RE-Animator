@@ -3,12 +3,15 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { parseSpec, PERSONA_IDS, UsageError, type SummonOptions } from '@poltergeist/core';
 import { z } from 'zod';
 import { capText, MAX_TEXT, type RunSummary } from './format.js';
-import { findConfig, resolveInside } from './paths.js';
+import { findConfig, projectRootOf, resolveInside } from './paths.js';
 import { readReport } from './report.js';
 import { RunManager, type SummonFn } from './runs.js';
 
-export type ServerDeps = {
-  root: string;
+export type ServerDeps = (
+  | { root: string }
+  /** `--root-from-spec` (D-46): each call's root is the project above its absolute `specDir`. */
+  | { rootFromSpec: true }
+) & {
   summonOverrides?: Pick<SummonOptions, 'llm' | 'launch' | 'runOptions'>;
   env?: NodeJS.ProcessEnv;
   /** Defaults to stderr: stdout is the protocol. */
@@ -37,22 +40,27 @@ async function guarded(log: (msg: string) => void, fn: () => Promise<ToolResult>
 }
 
 const waitMs = z.number().int().min(0).max(MAX_WAIT_MS).optional().describe(`How long to wait for the run to finish, in ms (default ${DEFAULT_WAIT_MS}).`);
-const specDir = z.string().min(1).describe('The Kiro spec folder holding requirements.md, relative to the workspace root, e.g. .kiro/specs/checkout.');
-const runShape = {
+const RELATIVE_SPEC = 'The Kiro spec folder holding requirements.md, relative to the workspace root, e.g. .kiro/specs/checkout.';
+const ABSOLUTE_SPEC = 'The absolute path of the Kiro spec folder holding requirements.md, e.g. /home/me/app/.kiro/specs/checkout.';
+const runShapeFor = (specDir: z.ZodString) => ({
   specDir,
   configPath: z.string().min(1).optional().describe('poltergeist.config.json; default: the nearest one above specDir.'),
   personas: z.array(z.string()).min(1).optional().describe(`Persona ids to run (default all): ${PERSONA_IDS.join(', ')}.`),
   reps: z.number().int().min(1).max(10).optional().describe('Repetitions per test (default from the config).'),
-};
+});
 
 /** The stdio MCP server Kiro's agent talks to (Req 10.1–10.2, D-38). */
 export function createServer(deps: ServerDeps): { server: McpServer; runs: RunManager } {
   const log = deps.log ?? ((msg: string) => void process.stderr.write(`poltergeist-mcp: ${msg}\n`));
-  const { root } = deps;
-  const runs = new RunManager({ summon: deps.summon, root, log });
+  const fixedRoot = 'root' in deps ? deps.root : undefined;
+  const rootFor = (dir: string) => fixedRoot ?? projectRootOf(dir);
+  const specDir = z.string().min(1).describe(fixedRoot === undefined ? ABSOLUTE_SPEC : RELATIVE_SPEC);
+  const runShape = runShapeFor(specDir);
+  const runs = new RunManager({ summon: deps.summon, root: fixedRoot, log });
   const server = new McpServer({ name: 'poltergeist', version: '0.0.0' });
 
   const resolveRun = (input: { specDir: string; configPath?: string; personas?: string[] }) => {
+    const root = rootFor(input.specDir);
     const dir = resolveInside(root, input.specDir);
     const found = input.configPath ?? findConfig(dir, root);
     // A found config can be a symlink too: its folder holds the run folder (`.poltergeist/`).
@@ -72,7 +80,7 @@ export function createServer(deps: ServerDeps): { server: McpServer; runs: RunMa
     },
     (input) =>
       guarded(log, async () => {
-        const { criteria } = await parseSpec(resolveInside(root, input.specDir));
+        const { criteria } = await parseSpec(resolveInside(rootFor(input.specDir), input.specDir));
         const rows = criteria.map((c) => ({ id: c.id, text: c.text.length > MAX_CRITERION_TEXT ? `${c.text.slice(0, MAX_CRITERION_TEXT - 1)}…` : c.text, kind: c.kind }));
         let body: { criteria: typeof rows; total: number; truncated?: number } = { criteria: rows, total: rows.length };
         while (JSON.stringify(body).length > MAX_TEXT) {
@@ -110,7 +118,7 @@ export function createServer(deps: ServerDeps): { server: McpServer; runs: RunMa
         'Reads the latest test report for a spec. Without criterion: the summary board. With criterion: the failing steps, expectations and reasons for that criterion, to guide a fix.',
       inputSchema: { specDir, criterion: z.string().min(1).optional().describe('A criterion id such as 3.2.') },
     },
-    (input) => guarded(log, async () => text(await readReport(resolveInside(root, input.specDir), input.criterion))),
+    (input) => guarded(log, async () => text(await readReport(resolveInside(rootFor(input.specDir), input.specDir), input.criterion))),
   );
 
   server.registerTool(

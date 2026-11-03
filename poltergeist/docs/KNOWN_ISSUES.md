@@ -14,7 +14,7 @@
 | KI-03 | Choosing which route a criterion belongs to | Major | F03, F05 | Investigating (deterministic picker, D-32; measure in the spike) |
 | KI-04 | Candy Swap might not contain any interesting real bugs | Major | F10, demo | Open |
 | KI-05 | 2026 rules, tracks, deadline and "new projects only" are unconfirmed | Blocker | submission, D-02 | Open |
-| KI-06 | Kiro hook schema, MCP config location and Power format are not verified | Major | F13, F18 | Investigating (MCP facts F11, hook format from the docs F13, in `docs/kiro-notes.md`; hook firing in the IDE (KI-51), Power, IDE `requestTimeout` and `cwd` open) |
+| KI-06 | Kiro hook schema, MCP config location and Power format are not verified | Major | F13, F18 | Investigating (MCP facts F11, hook format F13, Power format F18 from the docs, in `docs/kiro-notes.md`; hook firing (KI-51), Power install (KI-65), IDE `requestTimeout` and `cwd` open) |
 | KI-07 | Race windows may be too narrow to hit reliably | Major | F06 (Doppelgänger) | Investigating (found on the fixture, D-33; confirm on Candy Swap, KI-36) |
 | KI-08 | Frame streaming from 12 ghosts may be too heavy | Minor | F12 | Open |
 | KI-09 | Judges may not be able to run a live haunting themselves | Major | F15, F21 | Open |
@@ -73,6 +73,8 @@
 | KI-62 | A redirect hop to a forbidden path on an allowed host is reported (the rep is voided), not prevented: the request still reaches the app once | Minor | F17 | Open |
 | KI-63 | F17 Done-when on real Candy Swap not yet run: a steering `disable: banshee` removes every Banshee plan from a live run | Minor | F17 sign-off | Open |
 | KI-64 | F17 review minors: a note on an unknown path is silently unused, joined notes can pass 500 chars, unclosed comments and code fences differ from rendered markdown, pre-F17 steering keeps its old "documentation only" comment after `init --force`, `changes` shows a retired persona as fixed, `run.json` `config` lacks steering rules | Minor | F17, R5 | Open |
+| KI-65 | F18 Power not yet installed in Kiro: the format, `${ANTHROPIC_API_KEY}` expansion, `node` on Kiro's PATH, namespaced tool names and the F11 loop through it are unverified | Minor | F18 sign-off | Open |
+| KI-66 | F18 review minors: a write failure part-way through `poltergeist power` leaves a partial bundle that the next run refuses as non-empty; `RunBusyError` doesn't name the other run's spec | Minor | F18 | Open |
 
 ---
 
@@ -131,6 +133,7 @@
   2. Update SPEC §6.8.
 - **2026-11-01 (F11): Investigating.** `docs/kiro-notes.md` has the MCP facts from kiro.dev with sources: config paths and merge, fields, `${VAR}`, the tool-name regex and 64-char limit, transports. Still unverified: the hook format, the Power `plugin.json`, whether the IDE honours `requestTimeout` in `mcp.json`, and a `cwd` field. F13 and F18 must re-check these in a real Kiro session.
 - **2026-11-02 (F13):** the hook file format and trigger names were re-read from kiro.dev and written to `docs/kiro-notes.md`. `init` writes a v1 `PostTaskExecution` agent hook (D-41). Whether it fires in the IDE is KI-51.
+- **2026-11-03 (F18):** the Power format was researched on kiro.dev/docs/powers and in the kirodotdev/powers repo (power-builder's Agent Plugins reference), and written to `docs/kiro-notes.md` § Powers. `poltergeist power` writes an Agent Plugins bundle (D-46). Installing it in the IDE is KI-65.
 
 ### KI-07: Race windows may be too narrow to hit · Major · Investigating
 - **Mitigation already in the design:** `barrier` + `holdRequests`/`releaseRequests` (SPEC R6.3–R6.4).
@@ -649,4 +652,21 @@
   - Projects set up before F17 keep the old "documentation only" House rules comment through `init --force`, because the whole section is kept. Replace that exact old comment once in `withSection`.
   - `changes` compares against the unfiltered previous row, so disabling a haunted persona shows `haunted → clean`. Reanimator's heal loop would draw that as a healed wound. Filter `previous` by `retired` before diffing if R5 needs it.
   - `run.json` `config` is the snapshot taken before the rules are applied. Steering `forbid` rules appear only under `houseRules`.
+
+### KI-65: F18 Power not yet installed in Kiro · Minor · Open
+- **Problem:** F18 was checked against the documented format and a fixture spec (`power-done-when.test.ts`). It hasn't been installed in a real Kiro IDE (no Kiro until the demo session).
+- **Unverified:**
+  - Kiro accepts the Agent Plugins bundle from "Import power from a folder";
+  - `${ANTHROPIC_API_KEY}` in a plugin `mcp.json` expands (kiro.dev says yes; the Agent Plugins spec only defines `${PLUGIN_ROOT}`/`${PLUGIN_DATA}`);
+  - `node` is on the PATH Kiro spawns with;
+  - the namespaced tool names (`power-poltergeist-poltergeist…`) and that the agent passes absolute `specDir`s;
+  - the keywords activate the Power on "summon the ghosts on this spec".
+- **Blocks:** F18 sign-off.
+- **Next action:** in the batched Kiro session, run `npx poltergeist power --out ~/poltergeist-power`, import that folder in Kiro's Powers panel, approve the key, and run the F11 loop (KI-46) through the Power instead of the `mcp.json` entry. If the IDE rejects the bundle, add a legacy `POWER.md` + `steering/` variant. If both the Power and `init`'s entry are installed, check the duplicate tools don't confuse the agent.
+
+### KI-66: F18 review minors · Minor · Open
+- **Context:** the final review of F18 (2026-11-03). Its root/home and checkout-path findings were fixed before merge (D-46 review fixes).
+- **Items:**
+  - `buildPower` writes the three files one by one. If a write fails part-way through (disk full, say), the folder is left partly written, and the next run refuses it as "not empty" without saying why. Write into a temp sibling folder and rename it into place, or remove what was written on error.
+  - With the Power, one server serves every project but still runs one haunting at a time. A run in project A makes `summon_ghosts` in project B return `RunBusyError` with A's `runId`. The skill says so; the message could also name A's spec.
 

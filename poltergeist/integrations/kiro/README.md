@@ -21,3 +21,24 @@ It writes four files, never overwriting one that differs unless you pass `--forc
 - **Don't use `npx poltergeist-mcp`.** The package isn't on npm yet (KI-33). Outside this repo's workspace, `npx` would fetch whatever package holds that name from the public registry, and run it without asking (Kiro's spawn isn't a TTY) with your API key in its env.
 - **Replace `{{SPEC}}` in the hook prompt** with "the spec whose tasks just ran" or a spec folder.
 - Kiro only expands `${ANTHROPIC_API_KEY}` once you've approved that variable. Facts and open questions: [`docs/kiro-notes.md`](../../docs/kiro-notes.md).
+
+## Kiro Power (F18, D-46)
+
+`power/` is a [Kiro Power](https://kiro.dev/docs/powers/) in the Agent Plugins format. Kiro loads its tools only when a task mentions Poltergeist (its keywords are `poltergeist`, `summon ghosts`, `haunting report`, `rehaunt`, `adversarial acceptance tests` and `haunt spec`). Build it for your checkout, then import the folder:
+
+```sh
+npx poltergeist power --out ~/poltergeist-power
+```
+
+In Kiro, open the Powers panel, choose **Add Custom Power → Import power from a folder**, pick that folder, and approve `ANTHROPIC_API_KEY`.
+
+| File | What it does |
+|---|---|
+| `plugin.json` | Name, description and activation keywords |
+| `mcp.json` | Runs `node <this checkout>/packages/mcp/bin/poltergeist-mcp.js --root-from-spec`. `power` fills in the absolute path; the committed template has a placeholder |
+| `skills/poltergeist/SKILL.md` | Tells the agent how to run the tests and fix what fails |
+
+- **One server for every project.** With `--root-from-spec`, each tool call's `specDir` must be the absolute path of a `<project>/.kiro/specs/<name>` folder. That project is the root for the call, and `poltergeist.config.json` is found from the spec folder up to it. A relative path, or a config outside the project, is refused.
+- **No hook and no auto-approve.** Kiro asks before every tool call. For the after-task hook and the house rules, run `poltergeist init` in the project as well.
+- **Rebuild after moving the checkout:** `--out` must be a new or empty folder, so build into a fresh one and import it again.
+- It hasn't been installed in the Kiro IDE yet (KI-65). If Kiro rejects the format, the fallback is the legacy `POWER.md` layout (`docs/kiro-notes.md`).

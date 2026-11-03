@@ -41,4 +41,6 @@ Work happens one PRD feature at a time, through the grill → plan → implement
   - _Requirements: 11.4_
 - [x] 15e. F17 Steering-driven House Rules (D-45; KI-17 resolved; Candy Swap check KI-63)
   - _Requirements: 4.3_
+- [x] 15f. F18 Kiro Power Packaging (D-46; Kiro check KI-65)
+  - _Requirements: 10.4_
 - [ ] 15. Remaining Med features in PRD order (F15–F18), then Low (F19–F22)

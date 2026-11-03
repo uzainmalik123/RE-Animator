@@ -44,13 +44,33 @@ Source: <https://kiro.dev/docs/hooks/> and <https://kiro.dev/docs/hooks/types/>
 - **Re-read 2026-11-02 (F13):** fields are `version` (`"v1"`), `hooks[]` with `name`, optional `description`, `trigger` (PascalCase), optional `matcher` (regex for file and tool triggers), `action` (`{type:"command",command}` or `{type:"agent",prompt}`), optional `timeout` (seconds, default 60), `enabled` (default true) and `confirm`. Trigger ids on the types page: `PromptSubmit`, `AgentStop`, `SessionStart`, `PreToolUse`, `PostToolUse`, `FileCreate`, `FileSave`, `FileDelete`, `PreTaskExecution`, `PostTaskExecution` (`Manual` only in CLI V3). The overview page's example uses `PostFileSave` and `Stop`, so the spellings aren't fully consistent; KI-51 checks the one `init` uses.
 - **`poltergeist init` writes** `.kiro/hooks/poltergeist-summon.json`: one `PostTaskExecution` hook with an `agent` action (D-41).
 
-## Powers (F18): unverified
+## Powers (F18): from the docs, not yet installed (KI-65)
 
-Source: <https://kiro.dev/docs/powers/> and <https://kiro.dev/docs/powers/create/>
+Researched 2026-11-03. Sources: <https://kiro.dev/docs/powers/>, <https://kiro.dev/docs/powers/create/>, <https://kiro.dev/docs/powers/installation/>, <https://github.com/kirodotdev/powers> (`power-builder/skills/agent-plugins-reference/SKILL.md`, `kiro-support/`, `neon/`, `localstack/`).
 
-- **Format:** the Agent Plugins format, a directory with a required `plugin.json` (activation keywords), optional `skills/<name>/SKILL.md` and an optional `mcp.json`.
-- The older `POWER.md` format still works.
-- The exact `plugin.json` fields aren't verified.
+- **What it is:** a bundle of MCP tools and know-how that Kiro activates on demand. When a task mentions one of the Power's keywords, Kiro loads its context and tools. power-builder advises 5–7 specific keywords and warns against broad ones ("test", "api", "data").
+- **Two formats:**
+  - **Agent Plugins (recommended for new Powers):** `plugin.json` (required) + optional `mcp.json` at the root + `skills/<name>/SKILL.md` (one level deep only).
+  - **Legacy:** `POWER.md` (frontmatter `name`, `displayName`, `description`, `keywords`, `author` string) + `mcp.json` + `steering/*.md`. Most powers in kirodotdev/powers still use it, and it "continue[s] to work".
+- **`plugin.json`:**
+  - `$schema` = `https://agent-plugins.org/schemas/1.0.0/plugin.schema.json`.
+  - `name`: lowercase, 1–64, `a-z 0-9 - .`, no `--`/`..`, alphanumeric at both ends. Renaming may need a reinstall.
+  - `version`, `description`, `author {name}` and `keywords` are required on kiro.dev; the spec only requires `$schema` and `name`, and ignores unknown fields. `displayName`, `license`, `repository` and `homepage` are optional.
+- **`mcp.json` (plugin format):**
+  - `$schema` = `https://agent-plugins.org/schemas/1.0.0/mcp.schema.json`.
+  - Each server needs `type` (`stdio`, `streamable-http`).
+  - stdio takes `command`, `args`, `env` and `cwd`. `command` is one token: a bare name on PATH, or `./` relative to the plugin root. `cwd` defaults to the plugin root.
+  - The spec expands only `${PLUGIN_ROOT}` and `${PLUGIN_DATA}`, in `args`, `env` and `cwd`. `env` must not set those two keys.
+  - kiro.dev's create page also shows `"${API_KEY}"` user env vars (unverified at runtime).
+  - A bad `mcp.json` disables MCP for that Power only; a bad server entry is skipped.
+- **Server names are namespaced:** `power-<power>-<server>` (e.g. `power-supabase-supabase-local`). Kiro's 64-char tool-name limit counts the prefix.
+- **`SKILL.md`:** frontmatter `name` (equals the folder) and `description` (≤ 1024). Optional: `license`, `compatibility`, `metadata`, `allowed-tools`.
+- **Hooks:** the marketplace page says Powers can bundle hooks, but neither format documents how. Poltergeist's Power ships none; `init` writes the hook (D-41, D-46).
+- **Install:**
+  - from the marketplace;
+  - from the Powers panel: "Add Custom Power", then "Import power from GitHub" (repo URL) or "Import power from a folder" (a folder with `plugin.json` or `POWER.md` at its root).
+  - Importing a repo subfolder from GitHub isn't documented. Where installed Powers live on disk isn't documented either.
+- **Poltergeist's Power (D-46):** `poltergeist power --out <dir>` writes `plugin.json`, `mcp.json` (`node <abs bin> --root-from-spec`) and `skills/poltergeist/SKILL.md`. Install it from a folder.
 
 ## Manual F11 check in Kiro (KI-46)
 

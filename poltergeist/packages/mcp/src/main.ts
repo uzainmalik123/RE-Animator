@@ -4,18 +4,24 @@ import { parseArgs } from 'node:util';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { createServer } from './server.js';
 
-export const USAGE = `usage: poltergeist-mcp [--root <dir>]
+export const USAGE = `usage: poltergeist-mcp [--root <dir> | --root-from-spec]
 
 Stdio MCP server for Kiro (and other MCP clients). Tools: list_criteria, summon_ghosts,
 get_run_status, get_haunting_report, rehaunt. Paths the agent passes resolve against
 --root (default: the current directory) and must stay inside it.
+--root-from-spec: no fixed root; each specDir must be an absolute <project>/.kiro/specs/<name>
+and <project> is that call's root (used by the Kiro Power).
 `;
 
-export type McpArgs = { command: 'serve'; root: string } | { command: 'help' };
+export type McpArgs = { command: 'serve'; root: string } | { command: 'serve'; rootFromSpec: true } | { command: 'help' };
 
 export function parseMcpArgs(argv: readonly string[], cwd: string = process.cwd()): McpArgs {
-  const { values } = parseArgs({ args: [...argv], options: { root: { type: 'string' }, help: { type: 'boolean' } }, strict: true, allowPositionals: false });
+  const { values } = parseArgs({ args: [...argv], options: { root: { type: 'string' }, 'root-from-spec': { type: 'boolean' }, help: { type: 'boolean' } }, strict: true, allowPositionals: false });
   if (values.help) return { command: 'help' };
+  if (values['root-from-spec']) {
+    if (values.root !== undefined) throw new Error('--root and --root-from-spec cannot be used together');
+    return { command: 'serve', rootFromSpec: true };
+  }
   return { command: 'serve', root: resolve(cwd, values.root ?? '.') };
 }
 
@@ -33,7 +39,7 @@ export async function runStdio(argv: readonly string[]): Promise<number> {
     process.stdout.write(USAGE);
     return 0;
   }
-  const { server, runs } = createServer({ root: args.root });
+  const { server, runs } = createServer('root' in args ? { root: args.root } : { rootFromSpec: true });
   const transport = new StdioServerTransport();
   let closing: Promise<void> | undefined;
   const shutdown = () =>

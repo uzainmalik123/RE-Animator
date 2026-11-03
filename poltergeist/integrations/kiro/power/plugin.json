@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "poltergeist",
+  "displayName": "Poltergeist",
+  "version": "0.1.0",
+  "description": "Adversarial acceptance tests for Kiro specs: scripted test users (double submits, unusual input, two tabs, slow devices, stale sessions) run against your local app and report which acceptance criteria fail.",
+  "author": { "name": "Poltergeist contributors" },
+  "keywords": ["poltergeist", "summon ghosts", "haunting report", "rehaunt", "adversarial acceptance tests", "haunt spec"],
+  "license": "MIT"
+}

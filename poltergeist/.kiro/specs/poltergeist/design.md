@@ -34,7 +34,7 @@ packages/
   cli/        `poltergeist` binary: summon (F09), init, replay, export; thin over core's `summon()`
   mcp/        MCP stdio server over core
   seance/     Vite + React dashboard (live + replay)
-integrations/kiro/   templates installed INTO target projects: hook, steering, MCP snippet, Power
+integrations/kiro/   templates installed INTO target projects: hook, steering, MCP snippet; power/ is the Kiro Power template (F18)
 fixtures/candy-swap/ demo target app + its own .kiro/specs/candy-swap/ (built in Kiro, D-10)
 ```
 
@@ -213,4 +213,4 @@ A bad line is a warning, never an error. Steering can't touch target, hosts, acc
 4. The agent calls `summon_ghosts`, then reads `haunting-report.md`.
 5. The agent fixes the code and calls `rehaunt`. The lines go from possessed to clean.
 
-> The MCP settings path and format are confirmed in `docs/kiro-notes.md` (F11). The hook format is taken from the docs (F13, D-41): `init` writes `.kiro/hooks/poltergeist-summon.json`, a v1 `PostTaskExecution` agent hook, and merges only `mcpServers.poltergeist` into `.kiro/settings/mcp.json`. Seeing it fire in the IDE is KI-51; the Power format is still unverified (KI-06).
+> The MCP settings path and format are confirmed in `docs/kiro-notes.md` (F11). The hook format is taken from the docs (F13, D-41): `init` writes `.kiro/hooks/poltergeist-summon.json`, a v1 `PostTaskExecution` agent hook, and merges only `mcpServers.poltergeist` into `.kiro/settings/mcp.json`. Seeing it fire in the IDE is KI-51. The Power (F18, D-46) is an Agent Plugins bundle written by `poltergeist power --out <dir>`; its server runs `poltergeist-mcp --root-from-spec`, so each call's root is the project above its absolute `specDir`. Installing it in the IDE is KI-65.
