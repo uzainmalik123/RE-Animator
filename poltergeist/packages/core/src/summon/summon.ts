@@ -14,6 +14,8 @@ import { createEventSink } from '../runner/events.js';
 import { runPlans } from '../runner/run.js';
 import { guardLaunchOptions } from '../safety/guard.js';
 import { scout } from '../scout/scout.js';
+import { applyHouseRules } from '../steering/apply.js';
+import { readHouseRules } from '../steering/rules.js';
 import { parseSpec } from '../spec/read.js';
 import { computeVerdicts } from '../verdicts/compute.js';
 import { UsageError } from './errors.js';
@@ -30,11 +32,14 @@ export function summonLaunchOptions(): LaunchOptions {
 
 const json = (value: unknown) => JSON.stringify(value, null, 2) + '\n';
 
-function selectPersonas(ids: readonly string[] | undefined): PersonaId[] {
+/** The requested personas minus the ones the house rules disable (steering only tightens, F17). */
+function selectPersonas(ids: readonly string[] | undefined, disabled: readonly PersonaId[]): PersonaId[] {
   const unique = [...new Set(ids ?? PERSONA_IDS)];
   const bad = unique.find((id) => !isPersonaId(id));
   if (bad !== undefined) throw new UsageError(`unknown persona: ${bad} (known: ${PERSONA_IDS.join(', ')})`);
-  return unique as PersonaId[];
+  const left = (unique as PersonaId[]).filter((id) => !disabled.includes(id));
+  if (left.length === 0) throw new UsageError(`house rules disable every selected persona: ${unique.join(', ')}`);
+  return left;
 }
 
 /**
@@ -45,8 +50,11 @@ export async function summon(opts: SummonOptions): Promise<SummonResult> {
   const cwd = opts.cwd ?? process.cwd();
   const specDir = resolve(cwd, opts.specDir);
   const warn = (message: string) => opts.onWarning?.(message);
-  const loaded = await loadConfig({ path: opts.configPath, cwd, env: opts.env });
-  for (const w of loaded.warnings) warn(w.message);
+  const config = await loadConfig({ path: opts.configPath, cwd, env: opts.env });
+  for (const w of config.warnings) warn(w.message);
+  const house = await readHouseRules(config.configDir);
+  for (const w of house.warnings) warn(w);
+  const loaded = applyHouseRules(config, house.rules);
 
   const { criteria: all } = await parseSpec(specDir);
   let criteria = all;
@@ -58,7 +66,8 @@ export async function summon(opts: SummonOptions): Promise<SummonResult> {
     criteria = all.filter((c) => wanted.has(c.id));
   }
   if (criteria.length === 0) throw new UsageError(`no acceptance criteria to haunt in ${join(specDir, 'requirements.md')}`);
-  const personas = selectPersonas(opts.personas);
+  const personas = selectPersonas(opts.personas, house.rules.disabled);
+  if (house.rules.disabled.length > 0) warn(`house rules: ${house.rules.disabled.join(', ')} disabled`);
   const reps = opts.reps ?? loaded.config.reps;
   if (!Number.isInteger(reps) || reps < 1 || reps > 10) throw new UsageError(`reps must be an integer 1–10, got ${reps}`);
 
@@ -76,6 +85,7 @@ export async function summon(opts: SummonOptions): Promise<SummonResult> {
     runId, specDir, specHash, config: loaded.snapshot, model,
     options: { only: opts.only ?? null, personas, reps, recompile: opts.recompile ?? false },
     startedAt,
+    ...(house.rules.path !== null ? { houseRules: house.rules } : {}),
   };
   await sink.flush();
   await writeFile(join(runDir, 'run.json'), json(runJson));
@@ -99,6 +109,7 @@ export async function summon(opts: SummonOptions): Promise<SummonResult> {
       cacheDir,
       outDir: runDir,
       personas,
+      notes: house.rules.notes,
       recompile: opts.recompile,
       signal,
       onWarning: warn,

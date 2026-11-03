@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { chromium, type Browser } from 'playwright-core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -173,3 +173,60 @@ describe('summon', () => {
     }
   }, 120_000);
 });
+
+describe('summon: house rules (F17)', () => {
+  async function withSteering(rules: string[], fn: (own: ClaimsProject) => Promise<void>) {
+    const own = await makeClaimsProject();
+    try {
+      await mkdir(join(own.root, '.kiro', 'steering'), { recursive: true });
+      await writeFile(join(own.root, '.kiro', 'steering', 'poltergeist.md'), ['# Poltergeist', '', '## House rules', '', ...rules, ''].join('\n'));
+      await fn(own);
+    } finally {
+      await own.close();
+    }
+  }
+  const base = (own: ClaimsProject) => ({ specDir: own.specDir, configPath: own.configPath, env: own.env, runOptions: { frameFps: 0 }, llm: own.llm().client });
+
+  it('disabling the Banshee removes every Banshee plan from the run (Done-when)', async () => {
+    await withSteering(['- disable: banshee', '- colour: red'], async (own) => {
+      const events: SummonEvent[] = [];
+      const warnings: string[] = [];
+      const r = await summon({ ...base(own), personas: ['wraith', 'banshee', 'doppelganger'], reps: 1, onEvent: (e) => events.push(e), onWarning: (w) => warnings.push(w) });
+      expect(r.compiled.some((p) => p.persona === 'banshee')).toBe(false);
+      expect(events.some((e) => e.type === 'plan.compiled' && e.persona === 'banshee')).toBe(false);
+      expect(events.find((e) => e.type === 'run.started')).toMatchObject({ personas: ['wraith', 'doppelganger'] });
+      expect(warnings).toContain('house rules: banshee disabled');
+      expect(warnings.some((w) => w.includes('unknown house rule "colour"'))).toBe(true);
+      const run = await readJson(join(r.runDir, 'run.json'));
+      expect(run.houseRules).toMatchObject({ disabled: ['banshee'], forbidden: [], notes: [] });
+    });
+  }, 120_000);
+
+  it('rejects a run whose every selected persona is disabled', async () => {
+    await withSteering(['- disable: banshee'], async (own) => {
+      const err = await summon({ ...base(own), personas: ['banshee'] }).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(UsageError);
+      expect((err as Error).message).toContain('house rules');
+    });
+  });
+
+  it('a steering forbid rule blocks the request, so the pair is not a bug', async () => {
+    await withSteering(['- forbid: POST /api/claims'], async (own) => {
+      const r = await summon({ ...base(own), personas: ['doppelganger'], only: ['3.2'], reps: 1 });
+      expect(r.verdicts.criteria).toEqual([expect.objectContaining({ criterion: '3.2', verdict: 'inconclusive' })]);
+      const run = await readJson(join(r.runDir, 'run.json'));
+      expect(run.houseRules.forbidden).toEqual([{ method: 'POST', path: '/api/claims' }]);
+    });
+  }, 120_000);
+
+  it('no steering file: no houseRules in run.json', async () => {
+    const own = await makeClaimsProject();
+    try {
+      const r = await summon({ ...base(own), personas: ['wraith'], only: ['3.1'], reps: 1 });
+      expect((await readJson(join(r.runDir, 'run.json'))).houseRules).toBeUndefined();
+    } finally {
+      await own.close();
+    }
+  }, 120_000);
+});
+
