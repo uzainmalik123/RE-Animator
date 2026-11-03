@@ -12,6 +12,7 @@ export const RACE_TESTS = [
   'packages/core/test/summon/summon.test.ts',
   'packages/cli/test/done-when.test.ts',
   'packages/cli/test/recording-done-when.test.ts',
+  'packages/cli/test/sandbox-done-when.test.ts',
   'packages/mcp/test/done-when.test.ts',
 ];
 
