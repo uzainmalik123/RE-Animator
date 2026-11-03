@@ -12,20 +12,20 @@ import {
 import { THEME_WORDS } from '../helpers/theme-words.js';
 
 describe('STEP_TYPES', () => {
-  it('is the 14-step DSL vocabulary, frozen', () => {
+  it('is the 15-step DSL vocabulary, frozen', () => {
     expect(STEP_TYPES).toEqual([
       'goto', 'click', 'dblclick', 'fill', 'press', 'back', 'reload', 'wait', 'throttle',
-      'barrier', 'holdRequests', 'releaseRequests', 'login', 'logout',
+      'barrier', 'holdRequests', 'releaseRequests', 'login', 'logout', 'focus',
     ]);
     expect(Object.isFrozen(STEP_TYPES)).toBe(true);
   });
 });
 
 describe('listPersonas', () => {
-  it('lists the five built-in personas in order', () => {
-    expect(listPersonas().map((p) => p.id)).toEqual(['wraith', 'banshee', 'doppelganger', 'lich', 'revenant']);
-    expect(listPersonas().map((p) => p.name)).toEqual(['Wraith', 'Banshee', 'Doppelgänger', 'Lich', 'Revenant']);
-    expect(PERSONA_IDS).toEqual(['wraith', 'banshee', 'doppelganger', 'lich', 'revenant']);
+  it('lists the six built-in personas in order', () => {
+    expect(listPersonas().map((p) => p.id)).toEqual(['wraith', 'banshee', 'doppelganger', 'lich', 'revenant', 'changeling']);
+    expect(listPersonas().map((p) => p.name)).toEqual(['Wraith', 'Banshee', 'Doppelgänger', 'Lich', 'Revenant', 'Changeling']);
+    expect(PERSONA_IDS).toEqual(['wraith', 'banshee', 'doppelganger', 'lich', 'revenant', 'changeling']);
   });
 
   it('uses the persona id as the sprite reference', () => {
@@ -72,6 +72,25 @@ describe('allocations', () => {
     expect(p.actors).toBe(2);
     expect(p.device).toBeUndefined();
     expect(p.ownSession).toBe(true);
+  });
+
+  it('changeling', () => {
+    const p = getPersona('changeling');
+    expect(p.allowedSteps).toEqual(['goto', 'focus', 'fill', 'press', 'back', 'reload', 'wait']);
+    expect(p.generators).toEqual(['plain']);
+    expect(p.actors).toBe(1);
+    expect(p.keys).toEqual(['Tab', 'Enter', 'Space']);
+    expect(p.keyboard).toBe(true);
+    expect(p.device).toBeUndefined();
+    expect(p.ownSession).toBeUndefined();
+    expect(p.sprite).toBe('changeling');
+  });
+
+  it('only the changeling has focus, keys and keyboard (F20)', () => {
+    const ps = listPersonas();
+    expect(ps.filter((p) => (p.allowedSteps as readonly string[]).includes('focus')).map((p) => p.id)).toEqual(['changeling']);
+    expect(ps.filter((p) => p.keys).map((p) => p.id)).toEqual(['changeling']);
+    expect(ps.filter((p) => p.keyboard).map((p) => p.id)).toEqual(['changeling']);
   });
 
   it('only the revenant runs on its own session', () => {
@@ -142,7 +161,7 @@ describe('text fields', () => {
 });
 
 describe('getPersona', () => {
-  it.each(['Wraith', '__proto__', 'toString', 'changeling', 'Lich', ''])('unknown id %j throws UnknownPersonaError', (id) => {
+  it.each(['Wraith', '__proto__', 'toString', 'Changeling', 'Lich', ''])('unknown id %j throws UnknownPersonaError', (id) => {
     expect(() => getPersona(id)).toThrow(UnknownPersonaError);
     try {
       getPersona(id);

@@ -149,3 +149,31 @@ describe('validatePlan', () => {
     expect(validatePlan(plan, { persona: D, ...market }).join('\n')).toMatch(/barriers must be reached in the same order/);
   });
 });
+
+describe('changeling (F20, D-48)', () => {
+  const C = getPersona('changeling');
+  const focus = { focus: { testId: 'claim-sour-skulls' } };
+
+  it('accepts a keyboard-only plan', () => {
+    expect(validatePlan(single([{ goto: '/market' }, focus, { press: 'Enter' }]), { persona: C, ...market })).toEqual([]);
+  });
+
+  it.each(['click', 'dblclick'] as const)('rejects the mouse step %s', (type) => {
+    const errors = validatePlan(single([{ goto: '/market' }, { [type]: claim.click } as PlanBody['actors']['a'][number]]), { persona: C, ...market });
+    expect(errors).toEqual([`actors.a[1].${type}: step "${type}" is not allowed for this persona (allowed: goto, focus, fill, press, back, reload, wait)`]);
+  });
+
+  it('rejects a focus target Scout did not emit', () => {
+    const errors = validatePlan(single([{ goto: '/market' }, { focus: { text: 'Nowhere' } }]), { persona: C, ...market });
+    expect(errors).toEqual([expect.stringMatching(/^actors\.a\[1\]\.focus: .*was not found on the picked routes$/)]);
+  });
+
+  it('rejects a key outside its keys', () => {
+    const errors = validatePlan(single([{ goto: '/market' }, focus, { press: 'Escape' }]), { persona: C, ...market });
+    expect(errors).toEqual(['actors.a[2].press: key "Escape" is not allowed for this persona (allowed: Tab, Enter, Space)']);
+  });
+
+  it('other personas keep every key', () => {
+    expect(validatePlan(single([{ goto: '/market' }, { press: 'Escape' }]), { persona: W, ...market })).toEqual([]);
+  });
+});

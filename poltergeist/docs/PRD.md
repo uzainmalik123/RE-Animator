@@ -39,7 +39,7 @@
 | 20 | F18 | Kiro Power Packaging | Med | Done (fixture, D-46; Kiro check KI-65) | F11, F17 |
 | 21 | F22 | Séance Atmosphere Polish (sound, trails, idle motion) | Low | TBD | F12 |
 | 22 | F19 | Amazon Bedrock Provider | Low | Done (fixture, D-47; live check KI-67) | F05 |
-| 23 | F20 | Changeling Persona (keyboard-only) | Low | TBD | F04 |
+| 23 | F20 | Changeling Persona (keyboard-only) | Low | Done (fixture, D-48; Candy Swap check KI-68) | F04 |
 | 24 | F21 | Hosted Live Sandbox | Low | TBD | F15 |
 | n/a | F23 | LLM writes free-form Playwright code | n/a | Scrapped | n/a |
 | n/a | F24 | Live LLM browser agent (computer-use) | n/a | Scrapped | n/a |
@@ -434,7 +434,9 @@ Implements Requirement 12.
 - **User story:** As an AWS shop, I want to run the compiler through Bedrock in my own account.
 - **Done when:** a Candy Swap compile works via Bedrock, and the cache key includes the provider.
 
-### F20: Changeling Persona (keyboard-only) · Low · TBD
+### F20: Changeling Persona (keyboard-only) · Low · Done (fixture, D-48; Candy Swap check KI-68)
+
+> 2026-11-03: built in Claude Code without Kiro. Plan `docs/plans/2026-11-03-F20-changeling.md`. A Changeling-only `focus` step makes the runner Tab to the target (the LLM never counts Tabs), `fill` Tabs and types, and `press` is limited to Tab/Enter/Space. A visible, enabled control that Tab never reaches is a failed `reachable` app assertion; a hidden, disabled or missing one is a plan error. Done-when (fixture): `packages/core/test/runner/done-when.test.ts` (F20 block), the compile Done-when (Changeling ≥ 3 criteria) and `validate.test.ts` (mouse steps rejected). **Still to do:** the Candy Swap run (KI-68). Escape and arrows are KI-69.
 
 **Owns:** the Changeling (Tab, Enter and Space only), its focus-reachability assertion, and focus tracking in the runner.
 **Not this feature:** other personas.
@@ -494,3 +496,4 @@ Implements Requirement 12.
 - 2026-11-03: **F17 Done against a fixture** (D-45). `## House rules` in the target's steering file: `disable` (personas), `forbid` (extra forbidden rules), `note` (page hints in the prompt and cache key). Only tightens; bad lines warn. Retired personas aren't carried in the report. Forbidden redirect hops are now reported (KI-17 resolved; not prevented, KI-62). Requirement 4.3 reworded. Candy Swap check KI-63.
 - 2026-11-03: **F18 Done against a fixture** (D-46). Kiro Power in the Agent Plugins format: `poltergeist power --out <dir>` writes a validated bundle for this checkout, and `poltergeist-mcp --root-from-spec` serves any project by absolute spec path. Requirement 10.4 reworded. Power facts in `docs/kiro-notes.md` (KI-06). The Kiro install check is KI-65.
 - 2026-11-03: **F19 Done against a fixture** (D-47). `provider: "bedrock"` (+ optional `awsRegion`) runs the compiler through Claude in Amazon Bedrock (`AnthropicBedrockMantle`); the provider joins the cache key for Bedrock only; `run.json`, `haunting-report.json` and the report's run line name Bedrock. Requirements 2.1 and 5.5 reworded. The live AWS check is KI-67.
+- 2026-11-03: **F20 Done against a fixture** (D-48). The Changeling (keyboard-only): a `focus` step the runner Tabs to, keyboard `fill`, `press` limited to Tab/Enter/Space, and a failed `reachable` app assertion for a visible control Tab never reaches. All six personas run by default; `PROMPT_VERSION` `f20-1`. Requirement 4.5 added. Candy Swap check KI-68; no Escape/arrows KI-69.

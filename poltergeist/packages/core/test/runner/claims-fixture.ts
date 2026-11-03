@@ -61,6 +61,17 @@ const NARROW = `<!doctype html><html><head><meta charset="utf-8"><meta name="vie
 <script>document.getElementById('checkout').addEventListener('click', () => { document.getElementById('done').textContent = 'Ordered'; });</script>
 </body></html>`;
 
+/** A real button and a `div` dressed as one that Tab skips: what a Changeling should catch (F20). */
+const KEYS = page(
+  'Keys',
+  `<h1>Pay</h1><button id="save">Save</button><div role="button" id="pay">Pay</div><p id="done"></p>
+<script>
+  const done = document.getElementById('done');
+  document.getElementById('save').addEventListener('click', () => { done.textContent = 'Saved'; });
+  document.getElementById('pay').addEventListener('click', () => { done.textContent = 'Paid'; });
+</script>`,
+);
+
 /** The session cookie for the fixture, as scout would hand it over. */
 export function sessionState(origin: string): StorageState {
   const { hostname } = new URL(origin);
@@ -104,6 +115,7 @@ export async function startClaimsFixture(): Promise<ClaimsFixture> {
       const path = url.pathname;
       if (path === '/') return send(res, 200, page('Home', '<h1>Home</h1><a href="/claims">Claims</a>'));
       if (path === '/narrow') return send(res, 200, NARROW);
+      if (path === '/keys') return send(res, 200, KEYS);
       if (path === '/login') {
         if (req.method === 'POST') {
           const form = new URLSearchParams(await readBody(req));

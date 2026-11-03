@@ -150,6 +150,39 @@ describe('runPlans', () => {
     });
   });
 
+  describe('keyboard persona (F20, D-48)', () => {
+    const KEYS = [{ path: '/keys', identity: 'anonymous' }];
+    const press = (persona: 'changeling', name: string, text: string, criterion: string) =>
+      plan(criterion, persona, { a: [{ goto: '/keys' }, { focus: { role: 'button', name } }, { press: 'Enter' }] }, [{ textVisible: text }], KEYS);
+
+    it('a visible control Tab never reaches fails as an app bug in every rep, so the pair is haunted', async () => {
+      const run = await runPlans(browser, loadFor(fixture.origin), [press('changeling', 'Pay', 'Paid', '20.1')], { sessions, reps: 3, frameFps: 0 });
+      for (const r of run.results) {
+        expect(r.outcome).toBe('completed');
+        expect(r.error).toBeUndefined();
+        expect(r.assertions).toEqual([{ index: 1, type: 'reachable', ok: false, failure: 'app', detail: 'button "Pay" can\'t be reached with Tab' }]);
+      }
+      expect(decidePair('20.1', 'changeling', 3, run.results)).toMatchObject({ verdict: 'haunted', failingAssertion: { type: 'reachable' } });
+    });
+
+    it('a control Tab reaches, activated with Enter, is clean', async () => {
+      const run = await runPlans(browser, loadFor(fixture.origin), [press('changeling', 'Save', 'Saved', '20.2')], { sessions, reps: 2, frameFps: 0 });
+      expect(decidePair('20.2', 'changeling', 2, run.results)).toMatchObject({ verdict: 'clean' });
+    });
+
+    it('a mouse persona clicks the same div fine', async () => {
+      const p = plan('20.3', 'wraith', { a: [{ goto: '/keys' }, { click: { role: 'button', name: 'Pay' } }] }, [{ textVisible: 'Paid' }], KEYS);
+      const run = await runPlans(browser, loadFor(fixture.origin), [p], { sessions, reps: 1, frameFps: 0 });
+      expect(run.results[0]).toMatchObject({ outcome: 'completed', assertions: [{ ok: true }] });
+    });
+
+    it('a missing target is a step timeout, like a click on it, never an app bug', async () => {
+      const run = await runPlans(browser, loadFor(fixture.origin), [press('changeling', 'Refund', 'Refunded', '20.4')], { sessions, reps: 1, frameFps: 0, stepTimeoutMs: 800 });
+      expect(run.results[0]).toMatchObject({ outcome: 'timeout', assertions: [] });
+      expect(decidePair('20.4', 'changeling', 1, run.results)).toMatchObject({ verdict: 'inconclusive' });
+    });
+  });
+
   describe('revenant pairs (F16 review)', () => {
     it("a logout in tab b ends the session for tab a too: both tabs share one browser", async () => {
       const p = plan(

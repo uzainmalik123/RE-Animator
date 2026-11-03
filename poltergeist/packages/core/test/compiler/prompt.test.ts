@@ -9,7 +9,7 @@ const C = criterion('3.2', 'WHEN two sessions claim Sour Skulls at once, THE Mar
 
 describe('prompt', () => {
   it('has a version constant', () => {
-    expect(PROMPT_VERSION).toBe('f05-1');
+    expect(PROMPT_VERSION).toBe('f20-1');
   });
 
   it('prompt has no theme words, persona ids or names', () => {
@@ -27,6 +27,12 @@ describe('prompt', () => {
     expect(text).toContain('naughty');
     expect(text).not.toContain('dblclick');
     expect(text).not.toContain('holdRequests');
+  });
+
+  it("user prompt lists only the persona's keys (F20)", () => {
+    const changeling = listPersonas().find((p) => p.id === 'changeling')!;
+    expect(buildUserPrompt(C, changeling, [MARKET])).toContain('Keys for "press": Tab, Enter, Space\n');
+    expect(buildUserPrompt(C, listPersonas()[0]!, [MARKET])).toContain('Keys for "press": Enter, Tab, Escape, Space, Backspace, ArrowUp, ArrowDown, ArrowLeft, ArrowRight');
   });
 
   it('user prompt says how many actors to write', () => {

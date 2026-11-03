@@ -67,3 +67,22 @@ describe('F06 Done-when (fixture)', () => {
     expect(maxOverlap(r.results)).toBe(12);
   });
 });
+
+// PRD F20 Done-when on the fixture (D-48). The real Candy Swap check is KI-68.
+describe('F20 Done-when (fixture)', () => {
+  it('the Changeling haunts a control Tab skips and clears one it reaches', async () => {
+    const KEYS = [{ path: '/keys', identity: 'anonymous' }];
+    const keys = (criterion: string, name: string, text: string) =>
+      plan(criterion, 'changeling', { a: [{ goto: '/keys' }, { focus: { role: 'button', name } }, { press: 'Enter' }] }, [{ textVisible: text }], KEYS);
+    const plans = [keys('20.1', 'Pay', 'Paid'), keys('20.2', 'Save', 'Saved')];
+    const r = await runPlans(browser, loadFor(fixture.origin), plans, { sessions: new Map(), reps: 2, frameFps: 0 });
+    const v = computeVerdicts(
+      plans.map((p) => ({ status: 'compiled' as const, criterion: p.criterion, persona: p.persona, plan: p, cached: false, attempts: 1 })),
+      r,
+    );
+    expect(v.pairs.map((p) => [p.criterion, p.verdict])).toEqual([
+      ['20.1', 'haunted'],
+      ['20.2', 'clean'],
+    ]);
+  });
+});

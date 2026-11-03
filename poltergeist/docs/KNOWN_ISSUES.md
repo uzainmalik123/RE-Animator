@@ -76,6 +76,8 @@
 | KI-65 | F18 Power not yet installed in Kiro: the format, `${ANTHROPIC_API_KEY}` expansion, `node` on Kiro's PATH, namespaced tool names and the F11 loop through it are unverified | Minor | F18 sign-off | Open |
 | KI-66 | F18 review minors: a write failure part-way through `poltergeist power` leaves a partial bundle that the next run refuses as non-empty; `RunBusyError` doesn't name the other run's spec | Minor | F18 | Open |
 | KI-67 | F19 Bedrock not yet run live: a real compile through `AnthropicBedrockMantle` in an AWS account (model access for `anthropic.claude-sonnet-5-5`, structured outputs, the error mapping) is unverified | Minor | F19 sign-off | Open |
+| KI-68 | F20 Changeling not yet run on Candy Swap: real focus order, a keyboard-only claim/trade flow and the live compile of `focus` plans are unverified | Minor | F20 sign-off | Open |
+| KI-69 | F20 Changeling keys are Tab/Enter/Space only: no Escape or arrow keys, so radio groups, selects, menus and dialogs can't be operated from the keyboard | Minor | F20 | Accepted |
 
 ---
 
@@ -680,3 +682,15 @@
   - The reset env strips AWS key/token variables but not `AWS_CONTAINER_AUTHORIZATION_TOKEN`, and the reset command can still read `AWS_PROFILE` / `~/.aws` (it's the user's own command; low risk).
   - When a Bedrock run merges over an Anthropic report, carried criteria sit under a "via Bedrock" run line (the same as `model` today); `carriedFrom` doesn't say which provider produced a line.
 - **Next action:** with AWS credentials, set `"provider": "bedrock"` on Candy Swap's config (or the fixture's) and run one `npm run summon`, together with the batched Candy Swap checks. If the model id or structured outputs differ, record it here and in D-47.
+
+### KI-68: F20 Changeling not yet run on Candy Swap · Minor · Open
+- **Context:** F20 (2026-11-03, D-48) was built against the claims fixture and a fake LLM. No Candy Swap, no live compile.
+- **Unverified:** that the model writes `focus` + `press Enter` plans (not `notApplicable`) for Candy Swap's flow criteria; that Candy Swap's controls are reached in a sensible number of Tabs; that a keyboard-only claim or trade completes, or else fails as `reachable` for a real reason.
+- **Review minors (deferred, 2026-11-03):** after a step's race times out, a walk still running keeps pressing Tab until the context closes. That's harmless, but an abort check in the loop would be tidier. Each walk is up to 100 sequential page round trips.
+- **Next action:** in the batched Candy Swap session, run `npm run summon` with the Changeling on and read its lines in `haunting-report.md`. A `reachable` failure on a real control is a true finding for Kiro to fix (D-10: no planted bugs).
+
+### KI-69: Changeling has no Escape or arrow keys · Minor · Accepted
+- **Context:** the PRD and design define the Changeling as "Tab, Enter and Space only" (D-48).
+- **Effect:** a flow that needs arrows (radio groups, native selects, menus) or Escape (closing a dialog) can't be completed. The compiler should answer `notApplicable`; if it doesn't, the plan fails as a plan error, never as an app bug.
+- **Also:** an open modal that traps focus while the target sits behind it goes round as a `cycle`, so it counts as `reachable` (the app's fault) even when the plan only forgot to close the dialog, which it can't do without Escape.
+- **Next action:** if Candy Swap or Reanimator's targets need it, add `Escape` and the arrows to the Changeling's `keys` (a one-line change plus a prompt version bump).

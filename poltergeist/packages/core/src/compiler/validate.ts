@@ -82,6 +82,12 @@ export function validatePlan(body: PlanBody, ctx: ValidationContext): string[] {
         if (!l.paths.has(step.goto)) err(path, `"${step.goto}" is not a picked route (${[...l.paths].join(', ')})`);
       } else if ('click' in step) target(path, step.click);
       else if ('dblclick' in step) target(path, step.dblclick);
+      else if ('focus' in step) target(path, step.focus);
+      else if ('press' in step) {
+        if (persona.keys && !persona.keys.includes(step.press)) {
+          err(path, `key "${step.press}" is not allowed for this persona (allowed: ${persona.keys.join(', ')})`);
+        }
+      }
       else if ('fill' in step) {
         target(path, step.fill.target);
         const g = step.fill.input.generator;

@@ -267,6 +267,7 @@ async function runPair(plan: HauntingPlan, rep: number, s: Shared): Promise<Pair
         stepTimeoutMs: s.stepTimeoutMs,
         signal,
         ...(device ? { device } : {}),
+        ...(persona.keyboard ? { keyboard: true as const } : {}),
         onStep: (r, xy) => {
           if (!pairStop.signal.aborted) sink.emit({ type: 'ghost.step', ghostId: a.ghost, index: r.index, step: r.type, outcome: r.outcome, ...xy });
         },
@@ -308,12 +309,18 @@ async function runPair(plan: HauntingPlan, rep: number, s: Shared): Promise<Pair
 
     // A step timeout on a target the device can't use is the app's failure, not an unknown (D-44, KI-39).
     const unusable = outcome === 'timeout' && !timedOut ? result.steps.find((st) => st.outcome === 'timeout' && st.unusable) : undefined;
-    if (unusable && device) {
+    // So is a visible control a keyboard persona's Tab walk never reached (D-48).
+    const unreachable = outcome === 'planError' ? result.steps.find((st) => st.outcome === 'failed' && st.unreachable) : undefined;
+    const appFailure =
+      unusable && device
+        ? { type: 'usable', detail: `${unusable.unusable} (${device.label})` }
+        : unreachable
+          ? { type: 'reachable', detail: unreachable.unreachable! }
+          : undefined;
+    if (appFailure) {
       [outcome, error] = ['completed', undefined];
-      result.assertions = [
-        { index: plan.assert.length, type: 'usable', ok: false, failure: 'app', detail: `${unusable.unusable} (${device.label})` },
-      ];
-      sink.emit({ type: 'assert.result', criterion: plan.criterion, persona: plan.persona, rep, index: plan.assert.length, ok: false, detail: result.assertions[0]!.detail });
+      result.assertions = [{ index: plan.assert.length, ...appFailure, ok: false, failure: 'app' }];
+      sink.emit({ type: 'assert.result', criterion: plan.criterion, persona: plan.persona, rep, index: plan.assert.length, ok: false, detail: appFailure.detail });
     } else if (outcome === 'completed') {
       const first = actors[0]!;
       result.assertions = await runAssertions(plan.assert, {

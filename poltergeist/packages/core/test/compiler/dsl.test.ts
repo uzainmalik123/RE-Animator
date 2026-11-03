@@ -56,6 +56,7 @@ describe('LlmOutputSchema', () => {
       releaseRequests: { releaseRequests: 'POST /api/claims' },
       login: { login: { account: 'default' } },
       logout: { logout: true },
+      focus: { focus: { role: 'button', name: 'Save' } },
     };
     expect(Object.keys(examples).sort()).toEqual([...STEP_TYPES].sort());
     for (const type of STEP_TYPES) {
@@ -63,6 +64,10 @@ describe('LlmOutputSchema', () => {
       expect(parsed.success, type).toBe(true);
       if (parsed.success) expect(stepType(parsed.data)).toBe(type);
     }
+  });
+
+  it('rejects a focus step without a target object (F20)', () => {
+    expect(StepSchema.safeParse({ focus: 'x' }).success).toBe(false);
   });
 
   it('accepts notApplicable with a reason', () => {

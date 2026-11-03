@@ -5,7 +5,8 @@ import { generate } from '../personas/generators/index.js';
 import { locateTarget, login } from '../scout/login.js';
 import type { DevicePreset } from '../personas/devices.js';
 import type { BarrierSet } from './barrier.js';
-import { applyDevice, probeUsable } from './device.js';
+import { applyDevice, describeTarget, probeUsable } from './device.js';
+import { focusWalk, MAX_TABS, probeReachable } from './focus.js';
 import type { Holds } from './holds.js';
 import { moveCursor } from './overlay.js';
 import { applyThrottle } from './throttle.js';
@@ -27,6 +28,8 @@ export type ActorEnv = {
   signal?: AbortSignal;
   /** The persona's fixed device (D-44): CPU slowdown on the page, and timed-out targets get probed. */
   device?: DevicePreset;
+  /** A keyboard persona (D-48): `focus` and `fill` reach their target with Tab, and `fill` types. */
+  keyboard?: true;
 };
 
 export type ActorRun = {
@@ -53,7 +56,7 @@ const originOf = (url: string) => {
   }
 };
 
-const ACTIONS: ReadonlySet<string> = new Set(['goto', 'click', 'dblclick', 'fill', 'press', 'back', 'reload', 'login', 'logout']);
+const ACTIONS: ReadonlySet<string> = new Set(['goto', 'click', 'dblclick', 'fill', 'press', 'back', 'reload', 'login', 'logout', 'focus']);
 
 /** The target of a step a slow, small device can fail to reach. */
 function actionTarget(step: Step): PlanTarget | undefined {
@@ -101,6 +104,26 @@ export function startActor(steps: readonly Step[], env: ActorEnv): { run: ActorR
     return { loc, xy };
   };
 
+  /**
+   * Tabs to the target (D-48), once a match is visible: like a click, it waits for a late render. A
+   * visible, enabled control the walk never reached is the app's failure.
+   */
+  const reach = async (t: PlanTarget, result: StepResult): Promise<{ xy?: { x: number; y: number }; editable: boolean }> => {
+    await locateTarget(page, t).filter({ visible: true }).first().waitFor({ state: 'visible' });
+    const walk = await focusWalk(page, t);
+    if (walk.reached) {
+      result.note = `reached after ${walk.tabs} Tab${walk.tabs === 1 ? '' : 's'}`;
+      if (walk.xy) await moveCursor(page, walk.xy.x, walk.xy.y);
+      return { ...(walk.xy ? { xy: walk.xy } : {}), editable: walk.editable };
+    }
+    if (walk.why === 'cap') throw new StepFailure(`gave up after ${MAX_TABS} Tabs`);
+    if ((await probeReachable(page, t)) === 'visible') {
+      result.unreachable = env.loaded.redactor.redact(`${describeTarget(t)} can't be reached with Tab`);
+      throw new StepFailure(result.unreachable);
+    }
+    throw new StepFailure(`${describeTarget(t)} is not visible or disabled`);
+  };
+
   const exec = async (step: Step, result: StepResult): Promise<{ x: number; y: number } | undefined> => {
     const url = (path: string) => new URL(path, env.origin).href;
     if ('goto' in step) await page.goto(url(step.goto), { waitUntil: 'load' });
@@ -111,6 +134,13 @@ export function startActor(steps: readonly Step[], env: ActorEnv): { run: ActorR
     } else if ('dblclick' in step) {
       const { loc, xy } = await resolveTarget(step.dblclick, result);
       await loc.dblclick();
+      return xy;
+    } else if ('focus' in step) return (await reach(step.focus, result)).xy;
+    else if ('fill' in step && env.keyboard) {
+      const { xy, editable } = await reach(step.fill.target, result);
+      if (!editable) throw new StepFailure(`${describeTarget(step.fill.target)} is not a text field`);
+      await page.keyboard.press('ControlOrMeta+A');
+      await page.keyboard.type(generate(step.fill.input.generator, env.seed, fills++));
       return xy;
     } else if ('fill' in step) {
       const { loc, xy } = await resolveTarget(step.fill.target, result);

@@ -1,10 +1,10 @@
 import type { DeviceId } from './devices.js';
 import { UnknownPersonaError } from './errors.js';
 import type { GeneratorId } from './generators/index.js';
-import type { StepType } from './steps.js';
+import type { PressKey, StepType } from './steps.js';
 
-/** Built-in personas (D-13). Lich and Revenant arrived in F16 (D-44); Changeling arrives in F20. */
-export const PERSONA_IDS = Object.freeze(['wraith', 'banshee', 'doppelganger', 'lich', 'revenant'] as const);
+/** Built-in personas (D-13). Lich and Revenant arrived in F16 (D-44), the Changeling in F20 (D-48). */
+export const PERSONA_IDS = Object.freeze(['wraith', 'banshee', 'doppelganger', 'lich', 'revenant', 'changeling'] as const);
 
 export type PersonaId = (typeof PERSONA_IDS)[number];
 
@@ -13,6 +13,8 @@ export type PersonaId = (typeof PERSONA_IDS)[number];
  * prompt, so it uses plain QA wording (D-09). `sprite` is a key the Costume Kit resolves (F26). `device`
  * names a fixed preset the runner emulates for every actor (D-44). `ownSession` personas run their actors as
  * tabs of one browser context that logs in for itself, so signing out can't end Scout's shared session.
+ * `keys` limits what `press` may use. `keyboard` personas reach targets with Tab: `fill` tabs to its
+ * field and types (D-48).
  */
 export type Persona = {
   readonly id: PersonaId;
@@ -25,6 +27,8 @@ export type Persona = {
   readonly sprite: string;
   readonly device?: DeviceId;
   readonly ownSession?: true;
+  readonly keys?: readonly PressKey[];
+  readonly keyboard?: true;
 };
 
 function define(p: Persona): Persona {
@@ -32,6 +36,7 @@ function define(p: Persona): Persona {
     ...p,
     allowedSteps: Object.freeze([...p.allowedSteps]),
     generators: Object.freeze([...p.generators]),
+    ...(p.keys ? { keys: Object.freeze([...p.keys]) } : {}),
   });
 }
 
@@ -93,6 +98,19 @@ const PERSONAS: ReadonlyMap<PersonaId, Persona> = new Map(
       actors: 2,
       sprite: 'revenant',
       ownSession: true,
+    }),
+    define({
+      id: 'changeling',
+      name: 'Changeling',
+      tagline: 'Never touches the mouse: Tab, Enter and Space only.',
+      behaviour:
+        'A user who only uses the keyboard. Moves between controls with Tab (a focus step tabs to a control), presses Enter or Space to activate the focused control, and types into fields (a fill step tabs to the field and types). Never uses a mouse. Checks that every control the task needs can be reached and used from the keyboard, and that the task completes.',
+      allowedSteps: ['goto', 'focus', 'fill', 'press', 'back', 'reload', 'wait'],
+      generators: ['plain'],
+      actors: 1,
+      sprite: 'changeling',
+      keys: ['Tab', 'Enter', 'Space'],
+      keyboard: true,
     }),
   ].map((p) => [p.id, p]),
 );

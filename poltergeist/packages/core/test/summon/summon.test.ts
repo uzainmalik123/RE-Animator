@@ -78,7 +78,7 @@ describe('summon', () => {
   });
 
   it('rejects an unknown persona', async () => {
-    await expect(summon(opts({ personas: ['ghost'] }))).rejects.toThrow(/unknown persona: ghost \(known: wraith, banshee, doppelganger, lich, revenant\)/);
+    await expect(summon(opts({ personas: ['ghost'] }))).rejects.toThrow(/unknown persona: ghost \(known: wraith, banshee, doppelganger, lich, revenant, changeling\)/);
   });
 
   it('rejects reps outside 1–10', async () => {

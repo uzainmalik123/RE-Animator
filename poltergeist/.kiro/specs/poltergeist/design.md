@@ -126,7 +126,7 @@ Every browser Poltergeist launches goes through one path:
 }
 ```
 
-- **Steps:** `goto` (a picked route only), `click`, `dblclick`, `fill {target, input:{generator}}` (no `literal`: the LLM never writes values, D-04, D-32), `press` (`Enter Tab Escape Space Backspace ArrowUp ArrowDown ArrowLeft ArrowRight`), `back`, `reload`, `wait (0…2000 ms)`, `throttle {profile: slow-3g|fast-3g}`, `barrier` (reached once by every actor), `holdRequests` / `releaseRequests` (`"METHOD /path"`, every hold released later in the same actor), `login {account}`, `logout`. Each persona allows a subset (D-31).
+- **Steps:** `goto` (a picked route only), `click`, `dblclick`, `fill {target, input:{generator}}` (no `literal`: the LLM never writes values, D-04, D-32), `press` (`Enter Tab Escape Space Backspace ArrowUp ArrowDown ArrowLeft ArrowRight`), `back`, `reload`, `wait (0…2000 ms)`, `throttle {profile: slow-3g|fast-3g}`, `barrier` (reached once by every actor), `holdRequests` / `releaseRequests` (`"METHOD /path"`, every hold released later in the same actor), `login {account}`, `logout`, `focus` (a target; the runner presses Tab until it holds focus, D-48). Each persona allows a subset (D-31), and a persona's `keys` can narrow `press` (the Changeling: Tab, Enter, Space).
 - **Targets:** D-15 only, and only ones Scout emitted.
 - **Assertions:** `textVisible`, `textNotVisible`, `urlMatches`, `elementCount`, `api {method,path,jsonPath?,status?,equals?}`, `noConsoleErrors`, `noUncaughtExceptions`.
 - **What the LLM returns:** `{ "result": { "kind": "plan", "intent", "actors", "assert" } }` or `{ "result": { "kind": "notApplicable", "reason": "…" } }` (the wrapper exists because a structured-output root must be an object). The compiler stamps `criterion`, `persona` and `routes` (`{path, identity}` of the ≤ 2 picked routes, so F06 knows each session) onto the plan above (D-32).
@@ -142,7 +142,7 @@ Every browser Poltergeist launches goes through one path:
 | **Doppelgänger** (twin) | Same account in two contexts, racing via barrier + held requests | Double-claims, lost updates | ectoplasm (two sprites) |
 | **Lich** (ancient device) | Fixed `small-slow` device (360×640, mobile, touch, 4× CPU) on every actor, plus a `throttle` step (`fast-3g`/`slow-3g`) | Controls hidden on small screens (`usable` failure), slow-network double submits | ectoplasm |
 | **Revenant** (returning) | Two tabs of one context that logs in for itself (never Scout's shared session): tab b signs out (app control, or `logout`, target origin only), tab a carries on from its stale page | Actions on a dead session, private data after sign-out, crashes on stale state | ectoplasm (two sprites) |
-| **Changeling** (keyboard-only) | Tab, Enter and Space only | Unreachable controls | ectoplasm |
+| **Changeling** (keyboard-only) | `focus` (Tab to a control), `press` Tab/Enter/Space, `fill` that Tabs and types; no mouse steps | Controls Tab never reaches (a failed `reachable` assertion, D-48) | ectoplasm |
 
 Device presets live in `core/personas/devices.ts` and are applied by the runner through `newGuardedContext` options plus CDP `Emulation.setCPUThrottlingRate`; the LLM never picks one. When a device persona's action step times out, the runner probes the target: present but not visible → the rep is `completed` with one failed assertion `{type: 'usable', index: assert.length, failure: 'app'}`; any other timeout stays `timeout` (D-44, Req 6.9, 7.5).
 

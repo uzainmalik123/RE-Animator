@@ -5,7 +5,7 @@ import type { Criterion } from '../spec/types.js';
 import { PRESS_KEYS } from './dsl.js';
 
 /** Bump whenever the prompt or the DSL changes: it is part of the cache key (Req 5.5). */
-export const PROMPT_VERSION = 'f05-1';
+export const PROMPT_VERSION = 'f20-1';
 
 /** Plain QA wording only (D-09, Req 5.6). No persona ids or names: the compiler stamps those. */
 export const SYSTEM_PROMPT = `You write edge-case end-to-end tests for a web app that the user owns and runs locally on their own machine.
@@ -61,7 +61,7 @@ export function buildUserPrompt(
     `Allowed steps: ${persona.allowedSteps.join(', ')}`,
     'Allowed input generators:',
     ...generators,
-    `Keys for "press": ${PRESS_KEYS.join(', ')}`,
+    `Keys for "press": ${(persona.keys ?? PRESS_KEYS).join(', ')}`,
     '',
     '## Pages',
     ...routes.map((r) => routeBlock(r, notes.get(r.path))),
