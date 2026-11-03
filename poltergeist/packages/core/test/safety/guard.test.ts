@@ -155,6 +155,24 @@ describe('network guard (real Chromium)', { timeout: 15_000 }, () => {
     await expect.poll(() => blocked).toEqual([expect.objectContaining({ reason: 'forbidden', rule, method: 'POST' })]);
   });
 
+  it('reports a redirect hop to a forbidden path on an allowed host (KI-17)', async () => {
+    const rule = { method: '*', path: '/api/secret*' };
+    const { page, blocked } = await open({ forbidden: [rule] });
+    await tryFetch(page, redirect(`${fixture.origin}/api/secret`));
+    await expect.poll(() => blocked).toEqual([
+      expect.objectContaining({ reason: 'forbidden', rule, url: `${fixture.origin}/api/secret`, method: 'GET' }),
+    ]);
+    await new Promise((r) => setTimeout(r, 200));
+    expect(blocked).toHaveLength(1);
+  });
+
+  it('does not report a redirect hop to an allowed path', async () => {
+    const { page, blocked } = await open({ forbidden: [{ method: '*', path: '/api/secret*' }] });
+    expect(await tryFetch(page, redirect(`${fixture.origin}/ok`))).toBe('ok');
+    await new Promise((r) => setTimeout(r, 200));
+    expect(blocked).toEqual([]);
+  });
+
   it('blocks and reports other schemes', async () => {
     const { page, blocked } = await open();
     await expect(page.goto('file:///etc/hostname')).rejects.toThrow('ERR_BLOCKED_BY_CLIENT');
