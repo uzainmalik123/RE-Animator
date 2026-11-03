@@ -97,7 +97,16 @@ export function bedrockModelId(model: string): string {
  */
 export function createBedrockClient(opts: { awsRegion?: string; mantle?: Messages; maxTokens?: number } = {}): LlmClient {
   const { mantle, awsRegion } = opts;
-  return messagesClient(() => mantle ?? new AnthropicBedrockMantle(awsRegion ? { awsRegion } : {}), { ...opts, mapModel: bedrockModelId });
+  const make = () => {
+    if (mantle) return mantle;
+    const env = process.env;
+    if (!awsRegion && !env.AWS_REGION && !env.AWS_DEFAULT_REGION && !env.ANTHROPIC_BEDROCK_MANTLE_BASE_URL) {
+      // The SDK's own message points at its constructor, which a Poltergeist user never sees.
+      throw new Error('Bedrock needs an AWS region: set "awsRegion" in poltergeist.config.json, or AWS_REGION.');
+    }
+    return new AnthropicBedrockMantle(awsRegion ? { awsRegion } : {});
+  };
+  return messagesClient(make, { ...opts, mapModel: bedrockModelId });
 }
 
 export function createLlmClient(opts: { provider: LlmProvider; awsRegion?: string | undefined }): LlmClient {

@@ -70,7 +70,7 @@ export const ConfigSchema = z
     model: z.string().min(1).default('claude-sonnet-5-5'),
     provider: z.enum(LLM_PROVIDERS).default('anthropic'),
     /** Bedrock only; else `AWS_REGION` / `AWS_DEFAULT_REGION`. */
-    awsRegion: z.string().regex(/^[a-z]{2}(-[a-z]+)+-\d+$/, 'must be an AWS region such as "us-east-1"').optional(),
+    awsRegion: z.string().regex(/^[a-z]{2,4}(-[a-z]+)+-\d+$/, 'must be an AWS region such as "us-east-1"').optional(),
   })
   .superRefine((config, ctx) => {
     if (config.awsRegion !== undefined && config.provider !== 'bedrock') {

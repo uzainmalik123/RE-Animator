@@ -140,7 +140,7 @@ describe('createBedrockClient (F19)', () => {
     try {
       const err = await createBedrockClient().complete(req).catch((e: unknown) => e);
       expect(err).toBeInstanceOf(CompilerError);
-      expect((err as Error).message).toMatch(/could not be set up: No AWS region/);
+      expect((err as Error).message).toMatch(/could not be set up: Bedrock needs an AWS region: set "awsRegion" in poltergeist\.config\.json, or AWS_REGION/);
     } finally {
       vi.unstubAllEnvs();
     }
@@ -155,6 +155,17 @@ describe('createBedrockClient (F19)', () => {
 });
 
 describe('createLlmClient (F19)', () => {
+  it('provider bedrock really builds the Bedrock client (no region → the Bedrock setup error)', async () => {
+    vi.stubEnv('AWS_REGION', '');
+    vi.stubEnv('AWS_DEFAULT_REGION', '');
+    vi.stubEnv('ANTHROPIC_BEDROCK_MANTLE_BASE_URL', '');
+    try {
+      await expect(createLlmClient({ provider: 'bedrock' }).complete(req)).rejects.toThrow(/Bedrock needs an AWS region/);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it.each(['anthropic', 'bedrock'] as const)('builds a %s client without touching the network', (provider) => {
     expect(createLlmClient({ provider, ...(provider === 'bedrock' ? { awsRegion: 'us-east-1' } : {}) }).complete).toBeTypeOf('function');
   });

@@ -674,4 +674,9 @@
 ### KI-67: F19 Bedrock not yet run live · Minor · Open
 - **Context:** F19 (2026-11-03, D-47) was built and tested against stubbed clients; no AWS account was used.
 - **Unverified:** that `anthropic.claude-sonnet-5-5` is enabled and accepts `output_config.format` on the Mantle endpoint in the chosen region; that a denied model or missing access maps to the credentials `CompilerError` (HTTP 403) rather than a raw error; that the SDK's default chain finds SSO/profile credentials from the CLI and from a Kiro-spawned MCP server.
+- **Review minors (deferred, 2026-11-03):**
+  - A Bedrock 403 reads "rejected the credentials"; on Bedrock it's often model access not enabled or an inference profile needed. Reword once the live check shows the real errors.
+  - Try the default `anthropic.claude-sonnet-5-5` bare id first; if Mantle wants a `us.`/`eu.` inference profile, say so in the docs or map it.
+  - The reset env strips AWS key/token variables but not `AWS_CONTAINER_AUTHORIZATION_TOKEN`, and the reset command can still read `AWS_PROFILE` / `~/.aws` (it's the user's own command; low risk).
+  - When a Bedrock run merges over an Anthropic report, carried criteria sit under a "via Bedrock" run line (the same as `model` today); `carriedFrom` doesn't say which provider produced a line.
 - **Next action:** with AWS credentials, set `"provider": "bedrock"` on Candy Swap's config (or the fixture's) and run one `npm run summon`, together with the batched Candy Swap checks. If the model id or structured outputs differ, record it here and in D-47.

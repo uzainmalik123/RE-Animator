@@ -32,6 +32,10 @@ describe('ConfigSchema', () => {
     expect(c.awsRegion).toBe('us-east-1');
   });
 
+  it('accepts the European Sovereign Cloud region shape (F19 review)', () => {
+    expect(ConfigSchema.parse({ ...base, provider: 'bedrock', awsRegion: 'eusc-de-east-1' }).awsRegion).toBe('eusc-de-east-1');
+  });
+
   it('accepts bedrock without a region (the AWS env supplies it)', () => {
     expect(ConfigSchema.parse({ ...base, provider: 'bedrock' }).awsRegion).toBeUndefined();
   });
