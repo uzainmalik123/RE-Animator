@@ -19,13 +19,13 @@ jobs:
         id: pragent
         uses: the-pr-agent/pr-agent@main
         env:
-          # NVIDIA API catalog (build.nvidia.com), OpenAI-compatible endpoint.
+          # NVIDIA API catalog (build.nvidia.com) via LiteLLM's nvidia_nim provider.
           # The OPENAI_KEY secret holds the NVIDIA (nvapi-...) key.
-          OPENAI.KEY: ${{ secrets.OPENAI_KEY }}
-          OPENAI.API_BASE: "https://integrate.api.nvidia.com/v1"
+          NVIDIA_NIM_API_KEY: ${{ secrets.OPENAI_KEY }}
+          NVIDIA_NIM_API_BASE: "https://integrate.api.nvidia.com/v1"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          config.model: "openai/moonshotai/kimi-k2.6"
-          config.fallback_models: '["openai/deepseek-ai/deepseek-v4.1-flash", "openai/z-ai/glm-5.3-flash"]'
+          config.model: "nvidia_nim/moonshotai/kimi-k2.6"
+          config.fallback_models: '["nvidia_nim/deepseek-ai/deepseek-v4.1-flash", "nvidia_nim/z-ai/glm-5.3-flash"]'
           config.custom_model_max_tokens: "64000"
           github_action_config.auto_review: "true"
           github_action_config.auto_describe: "true"
