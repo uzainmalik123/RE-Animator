@@ -1,5 +1,6 @@
 import { parseArgs } from 'node:util';
 import { UsageError } from '@poltergeist/core';
+import { SANDBOX_PORT } from './sandbox/server.js';
 
 export type CliArgs =
   | { command: 'help' }
@@ -16,7 +17,19 @@ export type CliArgs =
   | { command: 'init'; dir?: string; target?: string; spec?: string; hook: boolean; force: boolean }
   | { command: 'export'; runDir: string; out: string; maxMb?: number }
   | { command: 'replay'; dir: string; speed: number }
-  | { command: 'power'; out: string };
+  | { command: 'power'; out: string }
+  | {
+      command: 'sandbox';
+      spec: string;
+      config?: string;
+      reps?: number;
+      host: string;
+      port: number;
+      perClientHour: number;
+      runTimeoutSec: number;
+      keep: number;
+      trustProxy: boolean;
+    };
 
 export const HELP_TEXT = `poltergeist: haunt a Kiro spec with adversarial ghosts
 
@@ -26,6 +39,7 @@ Usage:
   poltergeist export <runDir> --out <dir> [--max-mb <n>]
   poltergeist replay <dir> [--speed <n>]
   poltergeist power --out <dir>
+  poltergeist sandbox --spec <dir> [sandbox options]
 
 Summon options:
   --spec <dir>        spec folder holding requirements.md (required)
@@ -56,6 +70,19 @@ Kiro Power (load the tools only when testing a spec):
   power --out <dir>   write a Kiro Power for this checkout into a new or empty folder;
                       install it in Kiro with "Import power from a folder"
 
+Sandbox (let anyone start a haunting of one spec, from cached plans only):
+  sandbox             serve POST /runs, GET /runs/<id> and ws /runs/<id>/live, one run at a time;
+                      warm the plan cache with one summon first. Ctrl-C stops it
+  --spec <dir>        the one spec it haunts (required)
+  --config <path>     config file (default ./poltergeist.config.json)
+  --reps <n>          repetitions per plan, 1-10 (default from config)
+  --host <addr>       listen address (default 127.0.0.1; anything else is public)
+  --port <n>          listen port (default 6662)
+  --per-client-hour <n>  runs each client may start per hour, 0-1000 (default 6, 0 = unlimited)
+  --run-timeout <s>   abort a run after this many seconds, 10-3600 (default 300)
+  --keep <n>          finished runs kept for late viewers, 1-50 (default 5); older run folders are deleted
+  --trust-proxy       key clients by X-Forwarded-For (only behind your own proxy)
+
 Exit codes:
   0  nothing haunted (init: every file written or already up to date)
   1  at least one criterion haunted (init: some files differ and were kept)
@@ -69,6 +96,12 @@ const list = (flag: string, value: string | undefined): string[] | undefined => 
   return ids;
 };
 
+const intFlag = (flag: string, value: string, min: number, max: number): number => {
+  const n = /^\d+$/.test(value) ? Number(value) : NaN;
+  if (!(n >= min && n <= max)) throw new UsageError(`${flag} must be an integer ${min}–${max}, got ${value}`);
+  return n;
+};
+
 /** The flags each command accepts (`help` is everyone's). */
 const OWNED = {
   summon: ['spec', 'config', 'only', 'personas', 'reps', 'recompile', 'seance'],
@@ -76,6 +109,7 @@ const OWNED = {
   export: ['out', 'max-mb'],
   replay: ['speed'],
   power: ['out'],
+  sandbox: ['spec', 'config', 'reps', 'host', 'port', 'per-client-hour', 'run-timeout', 'keep', 'trust-proxy'],
 } as const;
 type Command = keyof typeof OWNED;
 const isCommand = (c: string): c is Command => Object.hasOwn(OWNED, c);
@@ -103,6 +137,12 @@ export function parseCliArgs(argv: readonly string[]): CliArgs {
         out: { type: 'string' },
         'max-mb': { type: 'string' },
         speed: { type: 'string' },
+        host: { type: 'string' },
+        port: { type: 'string' },
+        'per-client-hour': { type: 'string' },
+        'run-timeout': { type: 'string' },
+        keep: { type: 'string' },
+        'trust-proxy': { type: 'boolean', default: false },
         help: { type: 'boolean', short: 'h', default: false },
       },
     });
@@ -156,6 +196,21 @@ export function parseCliArgs(argv: readonly string[]): CliArgs {
     };
   }
   if (values.spec === undefined) throw new UsageError('--spec is required');
+  if (command === 'sandbox') {
+    const reps = values.reps === undefined ? undefined : intFlag('--reps', values.reps, 1, 10);
+    return {
+      command: 'sandbox',
+      spec: values.spec,
+      ...(values.config !== undefined ? { config: values.config } : {}),
+      ...(reps !== undefined ? { reps } : {}),
+      host: values.host ?? '127.0.0.1',
+      port: values.port === undefined ? SANDBOX_PORT : intFlag('--port', values.port, 0, 65535),
+      perClientHour: values['per-client-hour'] === undefined ? 6 : intFlag('--per-client-hour', values['per-client-hour'], 0, 1000),
+      runTimeoutSec: values['run-timeout'] === undefined ? 300 : intFlag('--run-timeout', values['run-timeout'], 10, 3600),
+      keep: values.keep === undefined ? 5 : intFlag('--keep', values.keep, 1, 50),
+      trustProxy: values['trust-proxy'],
+    };
+  }
 
   let reps: number | undefined;
   if (values.reps !== undefined) {

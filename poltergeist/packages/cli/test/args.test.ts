@@ -110,3 +110,27 @@ describe('parseCliArgs power (F18)', () => {
   it('rejects positionals', () => expect(() => parseCliArgs(['power', 'x', '--out', 'd'])).toThrow(UsageError));
   it('is in the help', () => expect(HELP_TEXT).toContain('poltergeist power --out <dir>'));
 });
+
+describe('parseCliArgs sandbox (F21)', () => {
+  const base = ['sandbox', '--spec', 's'];
+  it('defaults', () =>
+    expect(parseCliArgs(base)).toEqual({ command: 'sandbox', spec: 's', host: '127.0.0.1', port: 6662, perClientHour: 6, runTimeoutSec: 300, keep: 5, trustProxy: false }));
+  it('parses every flag', () =>
+    expect(
+      parseCliArgs([...base, '--config', 'c.json', '--reps', '2', '--host', '0.0.0.0', '--port', '8080', '--per-client-hour', '0', '--run-timeout', '60', '--keep', '9', '--trust-proxy']),
+    ).toEqual({ command: 'sandbox', spec: 's', config: 'c.json', reps: 2, host: '0.0.0.0', port: 8080, perClientHour: 0, runTimeoutSec: 60, keep: 9, trustProxy: true }));
+  it('requires --spec', () => expect(() => parseCliArgs(['sandbox'])).toThrow(new UsageError('--spec is required')));
+  it.each([
+    ['--port', '70000', '--port must be an integer 0–65535, got 70000'],
+    ['--per-client-hour', '1001', '--per-client-hour must be an integer 0–1000, got 1001'],
+    ['--run-timeout', '9', '--run-timeout must be an integer 10–3600, got 9'],
+    ['--keep', '0', '--keep must be an integer 1–50, got 0'],
+    ['--keep', '2.5', '--keep must be an integer 1–50, got 2.5'],
+    ['--reps', '11', '--reps must be an integer 1–10, got 11'],
+  ])('bounds %s %s', (flag, value, msg) => expect(() => parseCliArgs([...base, flag, value])).toThrow(new UsageError(msg)));
+  it('rejects summon-only flags', () => expect(() => parseCliArgs([...base, '--seance'])).toThrow(/not a sandbox option/));
+  it('is in the help', () => {
+    expect(HELP_TEXT).toContain('poltergeist sandbox --spec <dir>');
+    for (const flag of ['--host', '--port', '--per-client-hour', '--run-timeout', '--keep', '--trust-proxy']) expect(HELP_TEXT).toContain(flag);
+  });
+});
