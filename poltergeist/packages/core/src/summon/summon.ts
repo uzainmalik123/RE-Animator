@@ -144,7 +144,7 @@ export async function summon(opts: SummonOptions): Promise<SummonResult> {
 
   // Merge into the spec's previous report, so a subset run keeps the full picture (F14, D-42).
   const previous = await readReportJson(specDir);
-  const rendered = renderReport({ specDir, criteria: all, compiled: compiled.pairs, verdicts, run: { runId, runDir, target, reps: run.reps, model, startedAt }, previous });
+  const rendered = renderReport({ specDir, criteria: all, compiled: compiled.pairs, verdicts, run: { runId, runDir, target, reps: run.reps, model, startedAt }, previous, retired: house.rules.disabled });
   const reportPaths = await writeReport(specDir, rendered);
   const changes = diffVerdicts(previous, rendered.json);
 
