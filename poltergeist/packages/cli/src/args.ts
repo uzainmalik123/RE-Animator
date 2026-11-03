@@ -15,7 +15,8 @@ export type CliArgs =
     }
   | { command: 'init'; dir?: string; target?: string; spec?: string; hook: boolean; force: boolean }
   | { command: 'export'; runDir: string; out: string; maxMb?: number }
-  | { command: 'replay'; dir: string; speed: number };
+  | { command: 'replay'; dir: string; speed: number }
+  | { command: 'power'; out: string };
 
 export const HELP_TEXT = `poltergeist: haunt a Kiro spec with adversarial ghosts
 
@@ -24,6 +25,7 @@ Usage:
   poltergeist init [--dir <project>] [init options]
   poltergeist export <runDir> --out <dir> [--max-mb <n>]
   poltergeist replay <dir> [--speed <n>]
+  poltergeist power --out <dir>
 
 Summon options:
   --spec <dir>        spec folder holding requirements.md (required)
@@ -50,6 +52,10 @@ Recordings (replay a finished run with no app, LLM or browser):
                       labelled RECORDED, once a client connects
   --speed <n>         playback speed, 1-16 (default 1)
 
+Kiro Power (load the tools only when testing a spec):
+  power --out <dir>   write a Kiro Power for this checkout into a new or empty folder;
+                      install it in Kiro with "Import power from a folder"
+
 Exit codes:
   0  nothing haunted (init: every file written or already up to date)
   1  at least one criterion haunted (init: some files differ and were kept)
@@ -69,6 +75,7 @@ const OWNED = {
   init: ['dir', 'target', 'spec', 'no-hook', 'force'],
   export: ['out', 'max-mb'],
   replay: ['speed'],
+  power: ['out'],
 } as const;
 type Command = keyof typeof OWNED;
 const isCommand = (c: string): c is Command => Object.hasOwn(OWNED, c);
@@ -133,6 +140,10 @@ export function parseCliArgs(argv: readonly string[]): CliArgs {
       if (!(speed >= 1 && speed <= 16)) throw new UsageError(`--speed must be a number 1–16, got ${values.speed}`);
     }
     return { command: 'replay', dir: folder, speed };
+  }
+  if (command === 'power') {
+    if (values.out === undefined) throw new UsageError('--out is required');
+    return { command: 'power', out: values.out };
   }
   if (command === 'init') {
     return {

@@ -102,3 +102,11 @@ describe('parseCliArgs init (F13)', () => {
     for (const flag of ['--max-mb', '--speed']) expect(HELP_TEXT).toContain(flag);
   });
 });
+
+describe('parseCliArgs power (F18)', () => {
+  it('parses --out', () => expect(parseCliArgs(['power', '--out', 'd'])).toEqual({ command: 'power', out: 'd' }));
+  it('requires --out', () => expect(() => parseCliArgs(['power'])).toThrow(new UsageError('--out is required')));
+  it('rejects other flags', () => expect(() => parseCliArgs(['power', '--out', 'd', '--force'])).toThrow(/not a power option/));
+  it('rejects positionals', () => expect(() => parseCliArgs(['power', 'x', '--out', 'd'])).toThrow(UsageError));
+  it('is in the help', () => expect(HELP_TEXT).toContain('poltergeist power --out <dir>'));
+});
