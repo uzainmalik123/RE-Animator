@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { newRunId, summon as coreSummon, type SummonEvent, type SummonOptions, type SummonResult } from '@poltergeist/core';
 import { capIds, summarize, type RunProgress, type RunSummary } from './format.js';
 
@@ -39,10 +40,10 @@ export class RunManager {
   private readonly runs = new Map<string, Run>();
   private active: Run | undefined;
   private readonly summon: SummonFn;
-  private readonly root: string;
+  private readonly root: string | undefined;
   private readonly log: (msg: string) => void;
 
-  constructor(opts: { summon?: SummonFn; root: string; log?: (msg: string) => void }) {
+  constructor(opts: { summon?: SummonFn; root?: string; log?: (msg: string) => void }) {
     this.summon = opts.summon ?? coreSummon;
     this.root = opts.root;
     this.log = opts.log ?? (() => undefined);
@@ -70,7 +71,7 @@ export class RunManager {
     };
     run.settled = this.summon({ ...opts, runId: id, signal: ac.signal, onEvent, onWarning }).then(
       (result) => {
-        run.summary = summarize(result, this.root);
+        run.summary = summarize(result, opts.cwd ?? this.root ?? process.cwd());
         if (warnings.length > 0) run.summary.warnings = capIds(warnings);
       },
       (err: unknown) => {

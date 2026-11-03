@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { parseMcpArgs } from '../src/main.js';
+import { parseMcpArgs, USAGE } from '../src/main.js';
 
 const bin = fileURLToPath(new URL('../bin/poltergeist-mcp.js', import.meta.url));
 
@@ -23,6 +23,11 @@ describe('parseMcpArgs', () => {
     expect(parseMcpArgs(['--help'], '/w')).toEqual({ command: 'help' });
   });
   it('rejects unknown flags', () => expect(() => parseMcpArgs(['--bogus'], '/w')).toThrow());
+  it('takes --root-from-spec, never with --root (D-46)', () => {
+    expect(parseMcpArgs(['--root-from-spec'], '/w')).toEqual({ command: 'serve', rootFromSpec: true });
+    expect(() => parseMcpArgs(['--root', 'a', '--root-from-spec'], '/w')).toThrow(/--root/);
+    expect(USAGE).toContain('--root-from-spec');
+  });
 });
 
 describe('poltergeist-mcp bin', () => {
@@ -32,6 +37,15 @@ describe('poltergeist-mcp bin', () => {
     await client.connect(transport);
     const { tools } = await client.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual(['get_haunting_report', 'get_run_status', 'list_criteria', 'rehaunt', 'summon_ghosts']);
+    await client.close();
+  }, 30_000);
+
+  it('serves the five tools with --root-from-spec', async () => {
+    const transport = new StdioClientTransport({ command: process.execPath, args: [bin, '--root-from-spec'], cwd: tmp, stderr: 'pipe' });
+    const client = new Client({ name: 'bin-test', version: '0' });
+    await client.connect(transport);
+    const { tools } = await client.listTools();
+    expect(tools).toHaveLength(5);
     await client.close();
   }, 30_000);
 

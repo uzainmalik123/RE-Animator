@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import type { SummonOptions, SummonResult } from '@poltergeist/core';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { MAX_TEXT } from '../src/format.js';
 import { createServer } from '../src/server.js';
 
@@ -55,8 +55,8 @@ function fakeSummon() {
   return { summon, calls, finish };
 }
 
-async function connect(summon = fakeSummon().summon) {
-  const { server } = createServer({ root, summon, log: () => undefined });
+async function connect(summon = fakeSummon().summon, fromSpec = false) {
+  const { server } = createServer({ ...(fromSpec ? { rootFromSpec: true as const } : { root }), summon, log: () => undefined });
   const [a, b] = InMemoryTransport.createLinkedPair();
   await server.connect(a);
   const client = new Client({ name: 'test', version: '0' });
@@ -168,5 +168,52 @@ describe('MCP server', () => {
     const r = await call('get_haunting_report', { specDir: small });
     expect(r.isError).toBe(true);
     expect(r.text).toMatch(/^NoReportError.*summon_ghosts/);
+  });
+});
+
+describe('MCP server --root-from-spec (D-46)', () => {
+  const abs = () => join(root, small);
+
+  it('takes the root from an absolute specDir', async () => {
+    const { call } = await connect(undefined, true);
+    const r = await call('list_criteria', { specDir: abs() });
+    expect(r.isError, r.text).toBe(false);
+    expect(JSON.parse(r.text).criteria.map((c: { id: string }) => c.id)).toEqual(['1.1', '1.2']);
+  });
+
+  it('rejects a relative specDir and says to pass an absolute one', async () => {
+    const { call } = await connect(undefined, true);
+    for (const tool of ['list_criteria', 'get_haunting_report', 'summon_ghosts']) {
+      const r = await call(tool, { specDir: small });
+      expect(r.isError).toBe(true);
+      expect(r.text).toMatch(/^PathError:.*absolute/);
+    }
+  });
+
+  it('rejects a configPath outside the spec\'s project', async () => {
+    const { call } = await connect(undefined, true);
+    const r = await call('summon_ghosts', { specDir: abs(), configPath: join(outside, 'poltergeist.config.json'), waitMs: 0 });
+    expect(r.isError).toBe(true);
+    expect(r.text).toMatch(/^PathError:/);
+  });
+
+  it('runs in the spec\'s project and reports paths relative to it', async () => {
+    const fake = fakeSummon();
+    const { call } = await connect(fake.summon, true);
+    const started = call('summon_ghosts', { specDir: abs(), waitMs: 5_000 });
+    await vi.waitFor(() => expect(fake.calls).toHaveLength(1));
+    expect(fake.calls[0]!.cwd).toBe(join(root, 'app'));
+    expect(fake.calls[0]!.configPath).toBe(join(root, 'app', 'poltergeist.config.json'));
+    fake.finish();
+    const r = await started;
+    expect(r.isError, r.text).toBe(false);
+    expect(JSON.parse(r.text).reportPath).toBe('.kiro/specs/small/haunting-report.md');
+  });
+
+  it('describes specDir as an absolute path', async () => {
+    const { client } = await connect(undefined, true);
+    const { tools } = await client.listTools();
+    const list = tools.find((t) => t.name === 'list_criteria')!;
+    expect((list.inputSchema.properties as Record<string, { description: string }>).specDir!.description).toMatch(/absolute/);
   });
 });

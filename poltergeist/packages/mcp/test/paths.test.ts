@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, realpath, rm, symlink, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { findConfig, PathError, resolveInside } from '../src/paths.js';
+import { findConfig, PathError, projectRootOf, resolveInside } from '../src/paths.js';
 
 describe('resolveInside', () => {
   it('resolves relative paths against root', () => {
@@ -62,5 +62,28 @@ describe('resolveInside with symlinks', () => {
     const linkedRoot = join(outside, 'root-link');
     await symlink(root, linkedRoot);
     expect(resolveInside(linkedRoot, 'real')).toBe(join(linkedRoot, 'real'));
+  });
+});
+
+describe('projectRootOf (--root-from-spec)', () => {
+  it('takes the project above an absolute .kiro/specs/<name>', () => {
+    expect(projectRootOf('/w/app/.kiro/specs/claims', '/h')).toBe('/w/app');
+    expect(projectRootOf('/w/app/.kiro/specs/claims/', '/h')).toBe('/w/app');
+    expect(projectRootOf('/w/app/x/../.kiro/specs/c', '/h')).toBe('/w/app');
+  });
+
+  it('asks for an absolute path', () => {
+    expect(() => projectRootOf('.kiro/specs/claims', '/h')).toThrow(/absolute/);
+    expect(() => projectRootOf('.kiro/specs/claims', '/h')).toThrow(PathError);
+  });
+
+  it.each(['/w/app/.kiro/specs', '/w/app/.kiro/specs/a/b', '/w/app/specs/a', '/w/app/kiro/specs/a'])('rejects %s (not <project>/.kiro/specs/<name>)', (p) => {
+    expect(() => projectRootOf(p, '/h')).toThrow(PathError);
+  });
+
+  it('refuses the filesystem root and the home folder as a project', () => {
+    expect(() => projectRootOf('/.kiro/specs/c', '/h')).toThrow(PathError);
+    expect(() => projectRootOf('/h/.kiro/specs/c', '/h')).toThrow(PathError);
+    expect(() => projectRootOf('/h/.kiro/specs/c', '/h/')).toThrow(PathError);
   });
 });
