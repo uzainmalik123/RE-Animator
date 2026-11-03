@@ -21,16 +21,23 @@ Rules:
 - Keep plans short and deterministic: at most 30 steps per actor and "wait" at most 2000 ms.
 - If this user behaviour cannot meaningfully exercise this criterion on these pages, answer with kind "notApplicable" and a one-sentence reason instead of a plan.`;
 
-function routeBlock(r: RouteScout): string {
+function routeBlock(r: RouteScout, note: string | undefined): string {
   return [
     `Page ${r.path}${r.title ? ` (title: ${r.title})` : ''}, signed in as: ${r.identity}`,
+    ...(note !== undefined ? [`Project note: ${note}`] : []),
     `Elements: ${JSON.stringify({ interactive: r.interactive, testIds: r.testIds })}`,
     'Accessibility snapshot:',
     r.snapshot,
   ].join('\n');
 }
 
-export function buildUserPrompt(criterion: Criterion, persona: Persona, routes: RouteScout[]): string {
+/** `notes` are the project's house-rule route notes (F17), by exact path. */
+export function buildUserPrompt(
+  criterion: Criterion,
+  persona: Persona,
+  routes: RouteScout[],
+  notes: ReadonlyMap<string, string> = new Map(),
+): string {
   const gens = new Set<string>(persona.generators);
   const generators = listGenerators()
     .filter((g) => gens.has(g.id))
@@ -57,7 +64,7 @@ export function buildUserPrompt(criterion: Criterion, persona: Persona, routes: 
     `Keys for "press": ${PRESS_KEYS.join(', ')}`,
     '',
     '## Pages',
-    ...routes.map(routeBlock),
+    ...routes.map((r) => routeBlock(r, notes.get(r.path))),
   ].join('\n');
 }
 

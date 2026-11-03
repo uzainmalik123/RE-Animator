@@ -10,6 +10,7 @@ import { CompilerError } from './errors.js';
 import type { LlmClient, LlmTurn } from './llm.js';
 import { buildRetryPrompt, buildUserPrompt, PROMPT_VERSION, SYSTEM_PROMPT } from './prompt.js';
 import { pickRoutes } from './routes.js';
+import type { RouteNote } from '../steering/rules.js';
 import { validatePlan } from './validate.js';
 
 /** At most four LLM calls at once (PRD F05). */
@@ -22,6 +23,8 @@ export type CompileOptions = {
   cacheDir: string;
   /** When set, every pair is written to `<outDir>/plans/<criterion>__<persona>.json`. */
   outDir?: string;
+  /** House-rule route notes (F17): shown under their page in the prompt and part of the cache key. */
+  notes?: readonly RouteNote[];
   /** Defaults to every built-in persona. */
   personas?: readonly string[];
   /** 1…4, default 4. */
@@ -105,6 +108,7 @@ export async function compile(
   };
   const errText = (err: unknown) => (err instanceof Error ? err.message : String(err));
   const hashes = new Map(personas.map((p) => [p.id, personaHash(p)]));
+  const allNotes = new Map((opts.notes ?? []).map((n) => [n.path, n.text]));
   const limit = createLimiter(concurrency);
   let llmCalls = 0;
   let cacheHits = 0;
@@ -121,6 +125,7 @@ export async function compile(
     const routes = pickRoutes(criterion, scout.routes);
     if (routes.length === 0) return { status: 'uncompilable', ...base, reason: 'no matching route', errors: [], attempts: 0 };
 
+    const notes = new Map(routes.flatMap((r) => (allNotes.has(r.path) ? [[r.path, allNotes.get(r.path)!] as const] : [])));
     const key = cacheKey({
       criterionHash: criterion.hash,
       personaId: persona.id,
@@ -128,6 +133,7 @@ export async function compile(
       routes: routes.map(({ path, identity, routeHash }) => ({ path, identity, routeHash })),
       model: opts.model,
       promptVersion: PROMPT_VERSION,
+      notes: Object.fromEntries(notes),
     });
     const hit = opts.recompile ? undefined : await readCache(opts.cacheDir, key);
     if (hit) {
@@ -135,7 +141,7 @@ export async function compile(
       return fromCached(criterion.id, persona.id, hit, true, 0);
     }
 
-    const turns: LlmTurn[] = [{ role: 'user', text: buildUserPrompt(criterion, persona, routes) }];
+    const turns: LlmTurn[] = [{ role: 'user', text: buildUserPrompt(criterion, persona, routes, notes) }];
     let errors: string[] = [];
     for (const attempt of [1, 2] as const) {
       let response;

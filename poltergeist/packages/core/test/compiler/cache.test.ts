@@ -101,4 +101,11 @@ describe('personaHash', () => {
     expect(personaHash({ ...w, behaviour: w.behaviour + ' More.' })).not.toBe(personaHash(w));
     expect(personaHash({ ...w, allowedSteps: ['goto'] })).not.toBe(personaHash(w));
   });
+
+  it('notes leave the key unchanged when empty and change it when set', () => {
+    expect(cacheKey({ ...base, notes: {} })).toBe(cacheKey(base));
+    const a = cacheKey({ ...base, notes: { '/market': 'x' } });
+    expect(a).not.toBe(cacheKey(base));
+    expect(cacheKey({ ...base, notes: { '/market': 'y' } })).not.toBe(a);
+  });
 });

@@ -25,12 +25,17 @@ export type CacheKeyInput = {
   routes: { path: string; identity: string; routeHash: string }[];
   model: string;
   promptVersion: string;
+  /** House-rule route notes for these routes (F17), by path. Empty or absent keeps the pre-F17 key. */
+  notes?: Record<string, string>;
 };
 
 /** Req 5.5. Routes include path and identity, because `routeHash` covers only the elements. */
 export function cacheKey(k: CacheKeyInput): string {
   const routes = k.routes.map((r) => `${r.path}@${r.identity}:${r.routeHash}`).sort();
-  return sha(JSON.stringify([k.criterionHash, k.personaId, k.personaHash, routes, k.model, k.promptVersion])).slice(0, 32);
+  const parts: unknown[] = [k.criterionHash, k.personaId, k.personaHash, routes, k.model, k.promptVersion];
+  const notes = Object.entries(k.notes ?? {}).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  if (notes.length > 0) parts.push(notes);
+  return sha(JSON.stringify(parts)).slice(0, 32);
 }
 
 const CachedResultSchema = z.discriminatedUnion('kind', [
