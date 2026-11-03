@@ -8,9 +8,9 @@ afterEach(async () => {
   await Promise.all(closers.splice(0).map((c) => c()));
 });
 
-async function make(modes: FakeBehaviour[] = [], perClientHour = 0, runTimeoutMs = 60_000) {
+async function make(modes: FakeBehaviour[] = [], perClientHour = 0, runTimeoutMs = 60_000, maxClients?: number) {
   const fake = fakeSummon(() => modes.shift() ?? 'finish');
-  const s = await startSandbox({ specDir: '/spec', cwd: '/', env: {}, runTimeoutMs, keep: 5, summon: fake.fn, port: 0, perClientHour, trustProxy: false });
+  const s = await startSandbox({ specDir: '/spec', cwd: '/', env: {}, runTimeoutMs, keep: 5, summon: fake.fn, port: 0, perClientHour, trustProxy: false, ...(maxClients ? { maxClients } : {}) });
   closers.push(() => s.close());
   const call = (path: string, init?: RequestInit) => fetch(`${s.url}${path}`, init);
   const post = (body?: string) => call('/runs', { method: 'POST', headers: { 'content-type': 'application/json' }, ...(body !== undefined ? { body } : {}) });
@@ -126,5 +126,23 @@ describe('startSandbox', () => {
     const ws = new WebSocket(`${s.url.replace('http', 'ws')}/runs/nope/live`);
     const err = await new Promise<Error>((resolve) => ws.on('error', resolve));
     expect(err.message).toMatch(/404/);
+  });
+
+  it('refuses live sockets beyond the cap', async () => {
+    const { post, s } = await make(['hang'], 0, 60_000, 1);
+    const { live } = (await (await post('{}')).json()) as { live: string };
+    const url = `${s.url.replace('http', 'ws')}${live}`;
+    const first = new WebSocket(url);
+    await new Promise((r) => first.on('open', r));
+    const err = await new Promise<Error>((resolve) => new WebSocket(url).on('error', resolve));
+    expect(err.message).toMatch(/503/);
+    first.close();
+  });
+
+  it('does not echo a usage error that names a local path', async () => {
+    const { post } = await make(['usage-path']);
+    const res = await post('{}');
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: 'bad request' });
   });
 });

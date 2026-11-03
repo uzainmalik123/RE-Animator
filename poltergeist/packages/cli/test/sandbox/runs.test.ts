@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { CACHE_ONLY_MESSAGE, UsageError } from '@poltergeist/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { WebSocket } from 'ws';
-import { SandboxBusyError, SandboxRuns, type SandboxRunsOptions } from '../../src/sandbox/runs.js';
+import { SandboxBusyError, SandboxClosedError, SandboxRuns, type SandboxRunsOptions } from '../../src/sandbox/runs.js';
 import { fakeSummon, type FakeBehaviour } from './fake-summon.js';
 
 const managers: SandboxRuns[] = [];
@@ -91,4 +91,50 @@ describe('SandboxRuns', () => {
     const started = sent.map((s) => JSON.parse(s) as { type: string; runDir?: string; specDir?: string }).find((m) => m.type === 'run.started');
     expect(started).toMatchObject({ runDir: '.', specDir: 'claims' });
   });
+
+  it('closes viewers of a run that timed out, and a late viewer after the backlog', async () => {
+    const { runs } = make(['hang'], { runTimeoutMs: 50 });
+    const id = await runs.start({});
+    const live = fakeWs();
+    runs.get(id)!.broadcast.attach(live.socket);
+    await settled(runs, id);
+    expect(live.close).toHaveBeenCalledWith(1000, 'aborted');
+    const late = fakeWs();
+    runs.get(id)!.broadcast.attach(late.socket);
+    expect(late.sent().map((m) => m.type)).toEqual(['live.hello', 'run.started']);
+    expect(late.close).toHaveBeenCalledWith(1000, 'aborted');
+  });
+
+  it('closes viewers of a finished run', async () => {
+    const { runs } = make();
+    const id = await runs.start({});
+    await settled(runs, id);
+    const late = fakeWs();
+    runs.get(id)!.broadcast.attach(late.socket);
+    expect(late.sent().map((m) => m.type)).toEqual(['live.hello', 'run.started', 'run.finished']);
+    expect(late.close).toHaveBeenCalledWith(1000, 'finished');
+  });
+
+  it('never summons once closing has begun', async () => {
+    const { runs, fake } = make();
+    const starting = runs.start({});
+    await runs.close();
+    await expect(starting).rejects.toThrow();
+    expect(fake.calls).toHaveLength(0);
+    await expect(runs.start({})).rejects.toBeInstanceOf(SandboxClosedError);
+  });
+
+  it('keeps the old runs when a request fails before starting', async () => {
+    const { runs } = make(['finish', 'usage'], { keep: 1 });
+    const id = await runs.start({});
+    await settled(runs, id);
+    await expect(runs.start({ only: ['9.9'] })).rejects.toBeInstanceOf(UsageError);
+    expect(runs.list().map((s) => s.runId)).toEqual([id]);
+  });
 });
+
+function fakeWs() {
+  const sent: string[] = [];
+  const ws = { readyState: 1, bufferedAmount: 0, send: (s: string) => sent.push(s), on: () => undefined, close: vi.fn(), terminate: () => undefined };
+  return { socket: ws as unknown as WebSocket, close: ws.close, sent: () => sent.map((s) => JSON.parse(s) as { type: string }) };
+}

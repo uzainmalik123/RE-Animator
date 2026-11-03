@@ -12,4 +12,9 @@ describe('publicEvent', () => {
     const e = { type: 'rep.started', t: 1, rep: 1 } as unknown as SummonEvent;
     expect(publicEvent(e)).toBe(e);
   });
+
+  it('hides why a reset failed', () => {
+    const e = { type: 'reset.finished', t: 1, rep: 1, ok: false, durationMs: 3, error: 'spawn /home/x/reset.sh ENOENT' } as unknown as SummonEvent;
+    expect(publicEvent(e)).toEqual({ ...e, error: 'reset failed' });
+  });
 });

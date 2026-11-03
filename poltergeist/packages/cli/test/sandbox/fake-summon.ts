@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CACHE_ONLY_MESSAGE, type SummonEvent, type SummonOptions, type SummonResult } from '@poltergeist/core';
 
-export type FakeBehaviour = 'finish' | 'hang' | 'usage' | 'crash';
+export type FakeBehaviour = 'finish' | 'hang' | 'usage' | 'usage-path' | 'crash';
 
 /** A summon that emits `run.started` into a real temp run folder, then finishes, hangs until aborted, or throws. */
 export function fakeSummon(behaviour: () => FakeBehaviour = () => 'finish') {
@@ -15,6 +15,7 @@ export function fakeSummon(behaviour: () => FakeBehaviour = () => 'finish') {
     const mode = behaviour();
     const { UsageError } = await import('@poltergeist/core');
     if (mode === 'usage') throw new UsageError('unknown criterion id: 9.9 (known: 3.1, 3.2)');
+    if (mode === 'usage-path') throw new UsageError('no acceptance criteria to haunt in /spec/requirements.md');
     root ??= await mkdtemp(join(tmpdir(), 'sandbox-runs-'));
     const runId = opts.runId!;
     const runDir = join(root, '.poltergeist', 'runs', runId);

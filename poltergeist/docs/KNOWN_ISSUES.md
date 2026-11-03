@@ -699,4 +699,7 @@
 ### KI-70: F21 sandbox not yet hosted · Minor · Open
 - **Context:** F21 (2026-11-03, D-49) built `poltergeist sandbox` and proved ten back-to-back runs on the claims fixture. The PRD's Done-when is a *public* sandbox surviving ten runs, which needs Candy Swap (KI-44), a container and a host.
 - **Unverified:** a container image with Node 22, Chromium (`npx playwright-core install --with-deps chromium`), Candy Swap and the sandbox; Chromium's memory and CPU on a small VM (12 ghosts); `--trust-proxy` behind the host's proxy (Fly.io sets `Fly-Client-IP` and `X-Forwarded-For`); that the reset command keeps Candy Swap clean between strangers' runs; a warmed plan cache baked into the image.
+- **Review minors (deferred, 2026-11-03):**
+  - Every sandbox run rewrites the spec's `haunting-report.md`/`.json` (F14 merge), and carried lines can link evidence in run folders the sandbox later evicts. Treat the sandbox's spec folder as disposable (a copy in the image), never the operator's working spec.
+  - `args.ts` imports `SANDBOX_PORT` from the server module, so parsing arguments loads `ws`/`http` (cosmetic).
 - **Next action:** after the batched Candy Swap session, decide with R11 whether judges get a live sandbox or only the recorded replay. If live: build the image, run `poltergeist summon` once to warm the cache, start `poltergeist sandbox --host 0.0.0.0 --trust-proxy`, and fire ten runs at the public URL.

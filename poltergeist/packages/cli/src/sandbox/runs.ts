@@ -54,6 +54,13 @@ export class SandboxBusyError extends Error {
   }
 }
 
+export class SandboxClosedError extends Error {
+  override name = 'SandboxClosedError';
+  constructor() {
+    super('the sandbox is shutting down');
+  }
+}
+
 type Run = { id: string; summary: SandboxSummary; broadcast: LiveBroadcast; ac: AbortController; runDir?: string; done: Promise<void> };
 
 const message = (err: unknown) => (err instanceof Error ? err.message : String(err));
@@ -69,22 +76,29 @@ export class SandboxRuns {
   private active: Run | undefined;
   private readonly summon: SummonFn;
   private readonly log: (message: string) => void;
+  private closing = false;
 
   constructor(private readonly opts: SandboxRunsOptions) {
     this.summon = opts.summon ?? coreSummon;
     this.log = opts.log ?? (() => undefined);
   }
 
-  /** Resolves with the run id once the run has started; rejects with `SandboxBusyError`, `UsageError` or a generic error. */
+  /**
+   * Resolves with the run id once the run has started; rejects with `SandboxBusyError`, `SandboxClosedError`,
+   * `UsageError` or a generic error. Older runs are evicted only once this one has really started.
+   */
   async start(req: { only?: string[]; personas?: string[] }): Promise<string> {
+    if (this.closing) throw new SandboxClosedError();
     if (this.active) throw new SandboxBusyError(this.active.id);
     let id = newRunId();
     while (this.runs.has(id)) id = newRunId();
     const ac = new AbortController();
-    const run: Run = { id, ac, broadcast: createLiveBroadcast(id), summary: { runId: id, status: 'running', startedAt: Date.now() }, done: Promise.resolve() };
-    this.active = run; // claimed before any await, so a concurrent start sees it
-    await this.evict(this.opts.keep - 1);
-    this.runs.set(id, run);
+    let settle!: () => void;
+    const run: Run = {
+      id, ac, broadcast: createLiveBroadcast(id), summary: { runId: id, status: 'running', startedAt: Date.now() },
+      done: new Promise<void>((r) => (settle = r)),
+    };
+    this.active = run; // claimed before any await, so a concurrent start (or close) sees it
 
     let started!: () => void;
     const startedP = new Promise<void>((r) => (started = r));
@@ -96,36 +110,48 @@ export class SandboxRuns {
       }
       run.broadcast.publish(publicEvent(e));
     };
-    const summoned = this.summon({
-      specDir: this.opts.specDir,
-      configPath: this.opts.configPath,
-      cwd: this.opts.cwd,
-      env: this.opts.env,
-      only: req.only,
-      personas: req.personas,
-      reps: this.opts.reps,
-      recompile: false,
-      runId: id,
-      llm: cacheOnlyLlm(),
-      signal: ac.signal,
-      onEvent,
-      onWarning: (w) => this.log(`warning: ${w}`),
-      ...this.opts.summonOverrides,
+    const summoned = Promise.resolve().then(() => {
+      // close() may have begun since start(): never launch a browser nobody will stop.
+      ac.signal.throwIfAborted();
+      return this.summon({
+        specDir: this.opts.specDir,
+        configPath: this.opts.configPath,
+        cwd: this.opts.cwd,
+        env: this.opts.env,
+        only: req.only,
+        personas: req.personas,
+        reps: this.opts.reps,
+        recompile: false,
+        runId: id,
+        llm: cacheOnlyLlm(),
+        signal: ac.signal,
+        onEvent,
+        onWarning: (w) => this.log(`warning: ${w}`),
+        ...this.opts.summonOverrides,
+      });
     });
-    run.done = summoned.then(
-      (result) => this.finish(run, result),
-      (err: unknown) => this.fail(run, err),
-    ).finally(() => {
-      clearTimeout(timer);
-      if (this.active === run) this.active = undefined;
-    });
+    void summoned
+      .then(
+        (result) => this.finish(run, result),
+        (err: unknown) => this.fail(run, err),
+      )
+      .finally(() => {
+        clearTimeout(timer);
+        if (this.active === run) this.active = undefined;
+        run.broadcast.end(1000, run.summary.status);
+        settle();
+      });
 
     const first = await Promise.race([startedP.then(() => 'started' as const), run.done.then(() => 'settled' as const)]);
-    if (first === 'started' || run.runDir !== undefined) return id;
-    // Nothing started (a bad criterion id, a broken config): nothing to keep.
-    this.runs.delete(id);
+    if (first === 'started' || run.runDir !== undefined) {
+      this.runs.set(id, run);
+      await this.evict(this.opts.keep);
+      return id;
+    }
+    // Nothing started (a bad criterion id, a broken config, closing): nothing to keep.
     const err = await summoned.then(() => new Error('run failed'), (e: unknown) => e);
     if (err instanceof UsageError) throw err;
+    if (this.closing) throw new SandboxClosedError();
     throw new Error('run failed');
   }
 
@@ -142,7 +168,9 @@ export class SandboxRuns {
     return this.active?.id;
   }
 
+  /** Refuses new runs from now on, aborts the active one and waits for it to settle. */
   async close(): Promise<void> {
+    this.closing = true;
     const active = this.active;
     active?.ac.abort(new DOMException('sandbox closing', 'AbortError'));
     await active?.done;
@@ -179,7 +207,7 @@ export class SandboxRuns {
     };
   }
 
-  /** Drops the oldest settled runs until at most `max` remain. */
+  /** Drops the oldest settled runs until at most `max` remain (the active run is never dropped). */
   private async evict(max: number) {
     for (const run of this.runs.values()) {
       if (this.runs.size <= max) break;

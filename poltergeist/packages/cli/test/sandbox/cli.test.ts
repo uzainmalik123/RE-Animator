@@ -1,3 +1,5 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { makeClaimsProject, type ClaimsProject } from '../../../core/test/summon/project-fixture.js';
 import { main } from '../../src/main.js';
@@ -55,5 +57,21 @@ describe('poltergeist sandbox (F21)', () => {
     });
     expect(code).toBe(2);
     expect(out.stderr).toMatch(/error:/);
+  });
+
+  it('exits 2 when the spec has no criteria', async () => {
+    const empty = join(project.root, '.kiro', 'specs', 'empty');
+    await mkdir(empty, { recursive: true });
+    await writeFile(join(empty, 'requirements.md'), '# Requirements Document\n');
+    const out = { stdout: '', stderr: '' };
+    const code = await main(['sandbox', '--spec', empty, '--config', project.configPath], {
+      stdout: { write: (s) => void (out.stdout += s) },
+      stderr: { write: (s) => void (out.stderr += s) },
+      env: { ...project.env, NO_COLOR: '1' },
+      signal: new AbortController().signal,
+      sandboxPort: 0,
+    });
+    expect(code).toBe(2);
+    expect(out.stderr).toMatch(/no acceptance criteria/);
   });
 });

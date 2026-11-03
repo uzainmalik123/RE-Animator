@@ -2,7 +2,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { UsageError } from '@poltergeist/core';
 import { WebSocketServer } from 'ws';
 import { clientKey, createRateLimiter } from './limit.js';
-import { SandboxBusyError, SandboxRuns, type SandboxRunsOptions } from './runs.js';
+import { SandboxBusyError, SandboxClosedError, SandboxRuns, type SandboxRunsOptions } from './runs.js';
 
 /** The sandbox's HTTP + WebSocket port (F21, D-49; STACK). */
 export const SANDBOX_PORT = 6662;
@@ -11,6 +11,8 @@ export const SANDBOX_PORT = 6662;
 const MAX_BODY = 4096;
 const MAX_IDS = 64;
 const MAX_ID_LENGTH = 32;
+/** Live sockets across every kept run; more are refused with 503. */
+export const MAX_LIVE_CLIENTS = 200;
 
 export type SandboxOptions = SandboxRunsOptions & {
   /** Default 127.0.0.1. */
@@ -21,6 +23,8 @@ export type SandboxOptions = SandboxRunsOptions & {
   perClientHour: number;
   /** Key clients by the first `X-Forwarded-For` hop (only behind a proxy you run). */
   trustProxy: boolean;
+  /** Default `MAX_LIVE_CLIENTS`. */
+  maxClients?: number;
   /** Tests only. */
   now?: () => number;
 };
@@ -121,7 +125,9 @@ export async function startSandbox(opts: SandboxOptions): Promise<Sandbox> {
         return send(res, 202, { runId, status: at, live: `${at}/live` });
       } catch (err) {
         if (err instanceof SandboxBusyError) return send(res, 409, { error: 'busy', runId: err.activeRunId });
-        if (err instanceof UsageError) return send(res, 400, { error: err.message });
+        if (err instanceof SandboxClosedError) return send(res, 503, { error: 'shutting down' });
+        // Usage errors name criteria and personas; one that names a local path (a spec edited while serving) doesn't go out.
+        if (err instanceof UsageError) return send(res, 400, { error: /[/\\]/.test(err.message) ? 'bad request' : err.message });
         return send(res, 500, { error: 'run failed' });
       }
     }
@@ -148,6 +154,10 @@ export async function startSandbox(opts: SandboxOptions): Promise<Sandbox> {
       socket.end('HTTP/1.1 404 Not Found\r\nconnection: close\r\ncontent-length: 0\r\n\r\n');
       return;
     }
+    if (wss.clients.size >= (opts.maxClients ?? MAX_LIVE_CLIENTS)) {
+      socket.end('HTTP/1.1 503 Service Unavailable\r\nconnection: close\r\ncontent-length: 0\r\n\r\n');
+      return;
+    }
     wss.handleUpgrade(req, socket, head, (ws) => run.broadcast.attach(ws));
   });
 
@@ -161,12 +171,12 @@ export async function startSandbox(opts: SandboxOptions): Promise<Sandbox> {
   return {
     url: `http://${shown}:${actual}`,
     async close() {
+      // Stop taking connections first, so nothing can start a run while the active one drains.
+      const closed = new Promise<void>((resolve) => server.close(() => resolve()));
       await runs.close();
       for (const ws of wss.clients) ws.terminate();
-      await new Promise<void>((resolve) => {
-        server.close(() => resolve());
-        server.closeAllConnections();
-      });
+      server.closeAllConnections();
+      await closed;
     },
   };
 }

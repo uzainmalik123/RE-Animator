@@ -774,7 +774,8 @@
   - **Public-safe:** events go out through `publicEvent` (core; D-43's export now uses it too): `run.started` gets `runDir: '.'` and `specDir` as its folder name. A failed run says `run failed`; the real error goes to the operator's stderr. CORS `*` and WS from any origin, since there are no credentials or settings to steal.
   - **Binding:** `127.0.0.1:6662` by default; `--host` other than loopback prints a warning. The target is still loopback-only (D-05).
   - **Shared feed:** the backlog/frame/backpressure logic moved from `seance-server.ts` into `createLiveBroadcast` (`packages/cli/src/live-broadcast.ts`), used by `--seance`, `replay` and the sandbox. Behaviour unchanged.
-  - Ctrl-C aborts the active run and exits 0. A bad config or spec fails before listening (exit 2).
+  - Ctrl-C aborts the active run and exits 0. A bad config or spec (or one with no criteria) fails before listening (exit 2).
+  - **Review fixes (2026-11-03):** a settled run closes its live sockets (code 1000, reason = status) and later viewers get the backlog then that close, so a timed-out run doesn't look live forever; at most 200 live sockets (503); shutdown stops accepting connections and refuses new runs before draining the active one, and a run never launches once closing has begun; eviction waits until the new run has started (a bad request can't wipe a kept run); `publicEvent` also hides reset error text, and a usage error naming a path goes out as `bad request`. Deferred minors are in KI-70.
   - Requirement 11.5 is new.
   - **Done-when (fixture):** on the claims fixture with a warmed cache, ten back-to-back `POST /runs` all finish with 3.2 `haunted` and 0 cache misses, a POST during the first run gets 409, a live client folds 3.2 `haunted`, and only `keep` sandbox run folders remain (`packages/cli/test/sandbox-done-when.test.ts`).
 - **Consequences:**

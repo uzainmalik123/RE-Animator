@@ -10,6 +10,8 @@ export type LiveBroadcast = {
   publish(e: SummonEvent): void;
   clientCount(): number;
   closeAll(code?: number, reason?: string): void;
+  /** The run is over: closes every client, and later clients get the hello and backlog, then the same close. */
+  end(code: number, reason: string): void;
 };
 
 /**
@@ -24,6 +26,7 @@ export function createLiveBroadcast(
 ): LiveBroadcast {
   const maxBuffered = opts.maxBuffered ?? MAX_BUFFERED;
   const clients = new Set<WebSocket>();
+  let ended: { code: number; reason: string } | undefined;
   /** Every event so far; a ghost's superseded frames become holes, so the latest stays where it arrived. */
   const backlog: (string | undefined)[] = [];
   const ghosts = new Map<string, { criterion: string; persona: string; rep: number; failed: boolean }>();
@@ -40,6 +43,7 @@ export function createLiveBroadcast(
       ws.on('error', () => ws.terminate()); // a malformed frame from one client must not crash the run
       ws.send(JSON.stringify({ type: 'live.hello', protocol: LIVE_PROTOCOL, runId, t: Date.now(), ...opts.hello } satisfies LiveHello));
       for (const line of backlog) if (line !== undefined) ws.send(line);
+      if (ended) ws.close(ended.code, ended.reason);
     },
     publish(e) {
       const line = JSON.stringify(e);
@@ -73,6 +77,10 @@ export function createLiveBroadcast(
     clientCount: () => clients.size,
     closeAll(code, reason) {
       // A graceful close flushes queued events (run.finished) before the socket goes.
+      for (const client of clients) client.close(code, reason);
+    },
+    end(code, reason) {
+      ended = { code, reason };
       for (const client of clients) client.close(code, reason);
     },
   };

@@ -1,5 +1,5 @@
 import { resolve } from 'node:path';
-import { loadConfig, parseSpec, type SummonOptions } from '@poltergeist/core';
+import { loadConfig, parseSpec, UsageError, type SummonOptions } from '@poltergeist/core';
 import type { CliArgs } from '../args.js';
 import { paint, termSafe } from '../term/color.js';
 import { startSandbox } from './server.js';
@@ -23,7 +23,8 @@ export async function runSandbox(
   const specDir = resolve(deps.cwd, args.spec);
   // Fail fast on a typo, before anyone can press the button.
   await loadConfig({ path: args.config, cwd: deps.cwd, env: deps.env });
-  await parseSpec(specDir);
+  const { criteria } = await parseSpec(specDir);
+  if (criteria.length === 0) throw new UsageError(`no acceptance criteria to haunt in ${specDir}`);
   const sandbox = await startSandbox({
     specDir,
     ...(args.config !== undefined ? { configPath: args.config } : {}),
