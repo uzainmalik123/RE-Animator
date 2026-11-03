@@ -52,6 +52,7 @@
 | D-44 | F16 Lich & Revenant: fixed `small-slow` device preset (360×640 mobile, touch, 4× CPU) applied by the runner; Revenant = two tabs on one session; `logout` scoped to the target origin; a device persona's timeout on a present-but-hidden target is a failed `usable` app assertion (resolves KI-39); all five personas run by default | Accepted |
 | D-45 | F17 house rules: `## House rules` in `<configDir>/.kiro/steering/poltergeist.md`, `- disable:` / `- forbid:` / `- note <path>:` lines, only tightening, bad lines warn; disabled personas dropped (not carried) in the report; notes in the prompt and cache key; forbidden redirect hops reported (KI-17) | Accepted |
 | D-43 | F15 re-scoped to headless **Recordings** (extends D-39, D-40): `frames.ndjson` frame index, `poltergeist export` (a static bundle ≤ 50 MB with `recording.json`, thinned frames, no config or artifacts), `poltergeist replay` on the live-feed WebSocket with `live.hello.recorded`, pure `buildTimeline`/`stateAt` for scrubbing; hosting moves to Reanimator R11 | Accepted |
+| D-46 | F18 Kiro Power (extends D-38, D-41): Agent Plugins format (`plugin.json` + `mcp.json` + `skills/poltergeist/SKILL.md`), template in `integrations/kiro/power/`, `poltergeist power --out <dir>` fills this checkout's absolute bin and validates the bundle; `poltergeist-mcp --root-from-spec` takes each call's root from an absolute `<project>/.kiro/specs/<name>`; no hook or `autoApprove` in the Power | Accepted |
 
 ---
 
@@ -694,4 +695,24 @@
   - The template's `## House rules` comment now documents the syntax.
   - Req 4.3 is reworded to cover forbidden rules and notes.
   - The Candy Swap Done-when with a live LLM is KI-63.
+
+### D-46: F18 Kiro Power packaging (extends D-38, D-41)
+- **Context:** grilling F18 (2026-11-03) in Claude Code, without Kiro (Kiro tokens are saved for the demo). Kiro's Powers docs and the kirodotdev/powers repo were researched for KI-06 (`docs/kiro-notes.md` § Powers). The user asked to accept the recommended answers.
+- **Decision:**
+  - **Still worth building under D-39.** A Power is another first-class Kiro integration (judged under "how well Kiro is used"). The tools load only when a task mentions the Power's keywords. It stays small.
+  - **Agent Plugins format only:** `plugin.json` + `mcp.json` + `skills/poltergeist/SKILL.md`. Kiro recommends it for new Powers. The legacy `POWER.md` + `steering/` format is the fallback if the IDE rejects it (KI-65).
+  - **Template + generator.** `poltergeist-mcp` isn't on npm (KI-33) and runs from the checkout through tsx, so `${PLUGIN_ROOT}` can't reach it. The committed template in `integrations/kiro/power/` has the same placeholder bin path as `integrations/kiro/mcp.json`. `poltergeist power --out <dir>` (and `buildPower()`/`planPower()` from `@poltergeist/cli`) fills in this checkout's absolute bin, validates the bundle, and writes it into a new or empty folder. It never overwrites. You install the folder with Kiro's "Import power from a folder".
+  - **`poltergeist-mcp --root-from-spec`.** A Power's server is user-level and its cwd is the plugin folder, so no fixed `--root` fits. In this mode every `specDir` must be an absolute `<project>/.kiro/specs/<name>`. `<project>` is that call's root, and `resolveInside`/`findConfig` apply unchanged inside it, so a `configPath` or symlink outside the project is a `PathError`. The filesystem root and the home folder are never a project. `--root` and `--root-from-spec` are exclusive. Summary paths are relative to the run's project.
+  - **The bundle:**
+    - `plugin.json`: `name: poltergeist`, version, description, author, MIT, and 6 specific keywords (`poltergeist`, `summon ghosts`, `haunting report`, `rehaunt`, `adversarial acceptance tests`, `haunt spec`). No bare "test", because broad keywords activate on unrelated work.
+    - `mcp.json`: one stdio server `poltergeist`, `command: node` (the format wants one bare token), `args: [<abs bin>, "--root-from-spec"]`, `env.ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY}"`.
+    - **No `autoApprove`:** it isn't in the plugin schema, and an invalid entry gets skipped. Kiro asks before each call.
+    - `SKILL.md`: the steering file's loop in plain QA wording (D-09), with absolute paths. It points to `poltergeist init` for the hook and house rules.
+  - **No hook in the Power.** The plugin format has no hooks part. `init` stays the way to get one (D-41).
+  - **Validator:** `validatePower()` checks the documented rules (schemas, name regex, required fields, broad keywords, one-token command, absolute bin, no reserved env keys, the skill name matching its folder, a description of 1–1024 chars, and `power-poltergeist-poltergeist_<tool>` ≤ 64 chars). It is run on every build.
+  - **Done-when (fixture):** `packages/cli/test/power-done-when.test.ts`. The real bin writes the Power, the bundle validates, and the server, spawned exactly as `mcp.json` says from the plugin folder, lists the five tools, answers `list_criteria` on an absolute fixture spec, and rejects a relative one. The in-Kiro install and the F11 loop through it are KI-65.
+- **Consequences:**
+  - Requirement 10.4 is reworded (a skill instead of steering, per-call project root).
+  - The Power and `init` can be used together: `init` adds the hook and house rules, the Power adds the on-demand tools. Using both gives two servers (`poltergeist` and `power-poltergeist-poltergeist`). That's harmless, but the agent sees duplicate tools (KI-65 notes it).
+  - Publishing to npm (KI-33) would let the Power use `npx` and be installed from GitHub with no generator step.
 

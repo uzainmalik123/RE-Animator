@@ -36,7 +36,7 @@
 | 17 | F13 | Kiro Installer (`init`) + Agent Hook | Med | Done (fixture, D-41; Kiro check KI-51) | F11 |
 | 18 | F16 | Extended Personas: Lich & Revenant | Med | Done (fixture, D-44; Candy Swap check KI-59) | F04 |
 | 19 | F17 | Steering-driven House Rules | Med | Done | F13 |
-| 20 | F18 | Kiro Power Packaging | Med | TBD | F11, F17 |
+| 20 | F18 | Kiro Power Packaging | Med | Done (fixture, D-46; Kiro check KI-65) | F11, F17 |
 | 21 | F22 | Séance Atmosphere Polish (sound, trails, idle motion) | Low | TBD | F12 |
 | 22 | F19 | Amazon Bedrock Provider | Low | TBD | F05 |
 | 23 | F20 | Changeling Persona (keyboard-only) | Low | TBD | F04 |
@@ -398,7 +398,9 @@ Implements Requirement 12.
   - Fix KI-17 (decode paths before matching) at the same time.
 - **Done when:** disabling the Banshee in steering removes all Banshee plans from the next run.
 
-### F18: Kiro Power Packaging · Med · TBD
+### F18: Kiro Power Packaging · Med · Done (fixture, D-46; Kiro check KI-65)
+
+> 2026-11-03: built in Claude Code without Kiro. Plan `docs/plans/2026-11-03-F18-kiro-power.md`. Agent Plugins bundle (`plugin.json`, `mcp.json`, `skills/poltergeist/SKILL.md`) templated in `integrations/kiro/power/`; `poltergeist power --out <dir>` fills this checkout's absolute server path, validates it against the documented rules and writes it; `poltergeist-mcp --root-from-spec` lets the one user-level server take each call's root from an absolute spec path. No hook in the Power (`init` adds it). Done-when (fixture): `packages/cli/test/power-done-when.test.ts`. **Still to do:** install it in Kiro and run the F11 loop through it (KI-65).
 
 **Owns:** the Power bundle in `integrations/kiro/power/` and its install docs.
 **Not this feature:** MCP code (F11) · `init` (F13).
@@ -488,3 +490,4 @@ Implements Requirement 12.
 - 2026-11-02: **F15 Done against a fixture, re-scoped to headless Recordings** (D-43, under D-39). `frames.ndjson`, `poltergeist export` (static bundle, 50 MB cap with evidence-preserving thinning), `poltergeist replay` (live-feed WebSocket, `recorded` hello, 1–16× speed), pure `buildTimeline`/`stateAt`. Requirement 11.4 reworded. Hosting and the hero run are KI-55 (Reanimator R11).
 - 2026-11-02: **F16 Done against a fixture** (D-44). Lich (`small-slow` device: 360×640 mobile, 4× CPU; `throttle` step) and Revenant (two tabs, one session; origin-scoped `logout`). A device persona's timeout on a present-but-hidden target becomes a failed `usable` app assertion, so it can be `haunted` (KI-39 resolved). All five personas run by default. Requirement 4.4, 6.9, 6.10 and 7.5 added. Candy Swap check KI-59; desktop-only Scout risk KI-60.
 - 2026-11-03: **F17 Done against a fixture** (D-45). `## House rules` in the target's steering file: `disable` (personas), `forbid` (extra forbidden rules), `note` (page hints in the prompt and cache key). Only tightens; bad lines warn. Retired personas aren't carried in the report. Forbidden redirect hops are now reported (KI-17 resolved; not prevented, KI-62). Requirement 4.3 reworded. Candy Swap check KI-63.
+- 2026-11-03: **F18 Done against a fixture** (D-46). Kiro Power in the Agent Plugins format: `poltergeist power --out <dir>` writes a validated bundle for this checkout, and `poltergeist-mcp --root-from-spec` serves any project by absolute spec path. Requirement 10.4 reworded. Power facts in `docs/kiro-notes.md` (KI-06). The Kiro install check is KI-65.
