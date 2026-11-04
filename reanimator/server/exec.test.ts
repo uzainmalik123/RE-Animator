@@ -26,6 +26,17 @@ describe('runCommand', () => {
     expect(Date.now() - t0).toBeLessThan(2000);
   });
 
+  it('kills a running command when its signal aborts', async () => {
+    const ac = new AbortController();
+    const t0 = Date.now();
+    const pending = runCommand([node, '-e', 'setInterval(()=>{},1000)'], { cwd, timeoutMs: 60_000, signal: ac.signal });
+    setTimeout(() => ac.abort(), 100);
+    const r = await pending;
+    expect(r.code).toBeNull();
+    expect(r.output).toContain('stopped');
+    expect(Date.now() - t0).toBeLessThan(2000);
+  });
+
   it('keeps only the tail of long output', async () => {
     const r = await runCommand([node, '-e', "process.stdout.write('x'.repeat(10000))"], { cwd, timeoutMs: 10_000 });
     expect(r.output.length).toBeLessThanOrEqual(TAIL_BYTES);

@@ -6,8 +6,10 @@ const LOOPBACK = new Set(['127.0.0.1', 'localhost', '[::1]']);
 
 export async function renderCheck(origin: string, o: { timeoutMs?: number } = {}): Promise<{ ok: boolean; detail: string }> {
   const timeout = o.timeoutMs ?? 20_000;
-  const browser = await chromium.launch({ headless: true });
+  let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null;
   try {
+    // Inside the try: a missing or broken Chromium is a failed vital, never a throw (it would orphan the app).
+    browser = await chromium.launch({ headless: true });
     const context = await browser.newContext();
     await context.route('**/*', (route) => {
       const host = new URL(route.request().url()).hostname;
@@ -24,6 +26,6 @@ export async function renderCheck(origin: string, o: { timeoutMs?: number } = {}
   } catch (e) {
     return { ok: false, detail: e instanceof Error ? e.message.split('\n')[0]! : String(e) };
   } finally {
-    await browser.close();
+    await browser?.close();
   }
 }

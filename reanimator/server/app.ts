@@ -21,7 +21,7 @@ export function createApp(o: { rituals?: RitualsApi } = {}): Hono {
 
   app.post('/api/rituals', (c) => {
     const s = rituals.start();
-    if ('busy' in s) return c.json({ error: 'a ritual is already running' }, 409);
+    if ('busy' in s) return c.json({ error: 'a ritual is already running', id: s.id }, 409);
     return c.json({ id: s.id }, 202);
   });
 

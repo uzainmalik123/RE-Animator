@@ -74,7 +74,7 @@ describe('Rituals', () => {
   it('refuses a second ritual while one runs, and stops the old app before the next', async () => {
     const { r, apps, deps } = await make();
     const id = start(r);
-    expect(r.start()).toEqual({ busy: true });
+    expect(r.start()).toEqual({ busy: true, id });
     await settle(r, id);
     const id2 = start(r);
     await settle(r, id2);
@@ -130,5 +130,23 @@ describe('Rituals', () => {
     await r.dispose();
     expect(apps.at(-1)!.stop).toHaveBeenCalled();
     expect(existsSync(join(workRoot, (await dirs)[0]!))).toBe(false);
+  });
+
+  it('dispose during a ritual stops the running command promptly and starts no app', async () => {
+    const { r, deps, workRoot } = await make();
+    // An install that only ends when its signal aborts, like a slow npm install being killed.
+    vi.mocked(deps.runCommand).mockImplementation(
+      (_argv, o) =>
+        new Promise((resolve) => {
+          o.signal?.addEventListener('abort', () => resolve({ code: null, output: 'stopped', timedOut: false, ms: 1 }));
+        }),
+    );
+    start(r);
+    await new Promise((res) => setTimeout(res, 50));
+    const t0 = Date.now();
+    await r.dispose();
+    expect(Date.now() - t0).toBeLessThan(1000);
+    expect(deps.startApp).not.toHaveBeenCalled();
+    expect((await (await import('node:fs/promises')).readdir(workRoot)).length).toBe(0);
   });
 });

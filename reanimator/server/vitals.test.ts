@@ -81,4 +81,29 @@ describe('runVitals', () => {
     expect(JSON.stringify(events.at(-1))).toContain('util.puts is not a function');
     expect(app.stop).toHaveBeenCalled();
   });
+
+  it('stops the app and fails the vital when a check throws (e.g. Chromium missing)', async () => {
+    const { deps, app } = fakeDeps({ renderCheck: vi.fn(async () => { throw new Error("Executable doesn't exist at /chromium"); }) });
+    const { r, events } = await run(deps);
+    expect(r).toEqual({ ok: false, app: null, failed: 'render' });
+    expect(app.stop).toHaveBeenCalled();
+    expect(events.at(-1)).toMatchObject({ type: 'vital', result: { vital: 'render', ok: false, detail: "Executable doesn't exist at /chromium" } });
+  });
+
+  it('stops at the next vital once aborted, stopping the app', async () => {
+    const ac = new AbortController();
+    const { deps, app } = fakeDeps({ waitForHttp: vi.fn(async () => { ac.abort(); return { ok: true, detail: 'HTTP 200' }; }) });
+    const events: RitualEvent[] = [];
+    const r = await runVitals('revived', '/work', fixture, deps, (e) => events.push(e), ac.signal);
+    expect(r.ok).toBe(false);
+    expect(app.stop).toHaveBeenCalled();
+    expect(deps.renderCheck).not.toHaveBeenCalled();
+  });
+
+  it('passes the abort signal to its commands', async () => {
+    const ac = new AbortController();
+    const { deps } = fakeDeps();
+    await runVitals('revived', '/work', fixture, deps, () => {}, ac.signal);
+    expect(deps.runCommand).toHaveBeenCalledWith(expect.any(Array), expect.objectContaining({ signal: ac.signal }));
+  });
 });

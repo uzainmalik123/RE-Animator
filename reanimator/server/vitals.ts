@@ -28,26 +28,35 @@ export async function runVitals(
   fixture: Fixture,
   deps: VitalDeps,
   emit: (e: RitualEvent) => void,
+  signal?: AbortSignal,
 ): Promise<{ ok: boolean; app: RunningApp | null; failed: VitalName | null }> {
   let app: RunningApp | null = null;
   for (const vital of VITALS) {
     const t0 = Date.now();
-    let ok: boolean;
+    let ok = false;
     let detail: string;
-    if (vital === 'install' || vital === 'build') {
-      const r = await deps.runCommand([...COMMANDS[vital]], { cwd: workdir, timeoutMs: TIMEOUTS[vital] });
-      ok = r.code === 0;
-      detail = r.timedOut ? timedOut(vital) : r.output.trim();
-    } else if (vital === 'serve') {
-      const port = await deps.freePort();
-      app = deps.startApp(fixture.serve, { cwd: workdir, port });
-      const up = await deps.waitForHttp(app.origin, { timeoutMs: TIMEOUTS.serve, exited: app.exited });
-      ok = up.ok;
-      detail = up.ok ? `${app.origin} answered ${up.detail}` : `${up.detail}\n${app.output().trim()}`.trim();
-    } else {
-      const r = await deps.renderCheck(app!.origin, { timeoutMs: TIMEOUTS.render });
-      ok = r.ok;
-      detail = r.detail;
+    try {
+      if (signal?.aborted) {
+        detail = 'stopped: the ritual was stopped';
+      } else if (vital === 'install' || vital === 'build') {
+        const r = await deps.runCommand([...COMMANDS[vital]], { cwd: workdir, timeoutMs: TIMEOUTS[vital], signal });
+        ok = r.code === 0;
+        detail = r.timedOut ? timedOut(vital) : r.output.trim();
+      } else if (vital === 'serve') {
+        const port = await deps.freePort();
+        app = deps.startApp(fixture.serve, { cwd: workdir, port });
+        const up = await deps.waitForHttp(app.origin, { timeoutMs: TIMEOUTS.serve, exited: app.exited });
+        ok = up.ok;
+        detail = up.ok ? `${app.origin} answered ${up.detail}` : `${up.detail}\n${app.output().trim()}`.trim();
+      } else {
+        const r = await deps.renderCheck(app!.origin, { timeoutMs: TIMEOUTS.render });
+        ok = r.ok;
+        detail = r.detail;
+      }
+    } catch (e) {
+      // A check that throws is a failed vital; the app it may have started must not be orphaned.
+      ok = false;
+      detail = e instanceof Error ? e.message : String(e);
     }
     const result: VitalResult = { vital, ok, detail, ms: Date.now() - t0 };
     emit({ type: 'vital', phase, result });

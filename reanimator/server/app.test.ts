@@ -15,7 +15,7 @@ function fakeRituals(): RitualsApi {
   let started = false;
   return {
     start: () => {
-      if (started) return { busy: true };
+      if (started) return { busy: true, id: 'r1' };
       started = true;
       return { id: 'r1' };
     },
@@ -48,7 +48,7 @@ describe('createApp', () => {
     expect(await first.json()).toEqual({ id: 'r1' });
     const second = await app.request(`${BASE}/api/rituals`, { method: 'POST' });
     expect(second.status).toBe(409);
-    expect(await second.json()).toEqual({ error: 'a ritual is already running' });
+    expect(await second.json()).toEqual({ error: 'a ritual is already running', id: 'r1' });
   });
 
   it('404s events for an unknown ritual', async () => {

@@ -51,7 +51,11 @@ function launch(argv: string[], cwd: string, env: NodeJS.ProcessEnv): { child: C
   return { child, exited };
 }
 
-export async function runCommand(argv: string[], o: { cwd: string; timeoutMs: number; env?: NodeJS.ProcessEnv }): Promise<CommandResult> {
+// `signal` aborts the command (a ritual being stopped): its whole group is killed and it reports 'stopped'.
+export async function runCommand(
+  argv: string[],
+  o: { cwd: string; timeoutMs: number; env?: NodeJS.ProcessEnv; signal?: AbortSignal },
+): Promise<CommandResult> {
   const t0 = Date.now();
   const { child, exited } = launch(argv, o.cwd, o.env ?? process.env);
   const output = tail(child);
@@ -60,13 +64,22 @@ export async function runCommand(argv: string[], o: { cwd: string; timeoutMs: nu
     timedOut = true;
     void killGroup(child, exited);
   }, o.timeoutMs);
+  let aborted = false;
+  const onAbort = () => {
+    aborted = true;
+    void killGroup(child, exited);
+  };
+  if (o.signal?.aborted) onAbort();
+  else o.signal?.addEventListener('abort', onAbort, { once: true });
   let spawnError = '';
   child.once('error', (e) => {
     spawnError = e.message;
   });
   const code = await exited;
   clearTimeout(timer);
-  return { code: timedOut ? null : code, output: (output() + spawnError).slice(-TAIL_BYTES), timedOut, ms: Date.now() - t0 };
+  o.signal?.removeEventListener('abort', onAbort);
+  const note = aborted ? '\nstopped: the ritual was stopped' : spawnError;
+  return { code: timedOut || aborted ? null : code, output: (output() + note).slice(-TAIL_BYTES), timedOut, ms: Date.now() - t0 };
 }
 
 export interface RunningApp {

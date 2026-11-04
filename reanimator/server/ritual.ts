@@ -17,11 +17,22 @@ async function countFiles(dir: string): Promise<number> {
   return entries.filter((e) => e.isFile()).length;
 }
 
-export async function performRitual(fixture: Fixture, deps: VitalDeps, workdir: string, emit: (e: RitualEvent) => void): Promise<RunningApp | null> {
+// `signal` stops the ritual early (the backend shutting down, or a new ritual replacing it).
+export async function performRitual(
+  fixture: Fixture,
+  deps: VitalDeps,
+  workdir: string,
+  emit: (e: RitualEvent) => void,
+  signal?: AbortSignal,
+): Promise<RunningApp | null> {
   emit({ type: 'started', repo: fixture.name, diedIn: fixture.diedIn });
   const corpse = join(workdir, 'corpse');
   await cp(fixture.corpseDir, corpse, { recursive: true });
-  const exam = await runVitals('corpse', corpse, fixture, deps, emit);
+  const exam = await runVitals('corpse', corpse, fixture, deps, emit, signal);
+  if (signal?.aborted) {
+    emit({ type: 'failed', phase: 'corpse', reason: 'stopped: the ritual was stopped' });
+    return null;
+  }
   if (exam.ok) {
     await exam.app?.stop();
     emit({ type: 'failed', phase: 'corpse', reason: 'not dead: every vital passed before the remedy' });
@@ -35,7 +46,7 @@ export async function performRitual(fixture: Fixture, deps: VitalDeps, workdir: 
   const raise = await runVitals('revived', revived, fixture, deps, (e) => {
     if (e.type === 'vital') lastDetail = e.result.detail;
     emit(e);
-  });
+  }, signal);
   if (!raise.ok || !raise.app) {
     emit({ type: 'failed', phase: 'revived', reason: `${raise.failed ?? 'ritual'}: ${firstLine(lastDetail) || 'failed'}` });
     return null;
@@ -51,6 +62,7 @@ interface Current {
   listeners: Set<(e: RitualEvent, index: number) => void>;
   workdir: string | null;
   app: RunningApp | null;
+  abort: AbortController;
   finished: Promise<void>;
 }
 
@@ -68,10 +80,11 @@ export class Rituals {
     this.workRoot = o.workRoot ?? tmpdir();
   }
 
-  start(): { id: string } | { busy: true } {
-    if (this.current && !this.current.done) return { busy: true };
+  // A busy answer carries the running ritual's id, so a reloaded page can reattach to it.
+  start(): { id: string } | { busy: true; id: string } {
+    if (this.current && !this.current.done) return { busy: true, id: this.current.id };
     const previous = this.current;
-    const cur: Current = { id: randomUUID(), log: [], done: false, listeners: new Set(), workdir: null, app: null, finished: Promise.resolve() };
+    const cur: Current = { id: randomUUID(), log: [], done: false, listeners: new Set(), workdir: null, app: null, abort: new AbortController(), finished: Promise.resolve() };
     this.current = cur;
     const emit = (e: RitualEvent) => {
       if (cur.done) return;
@@ -84,7 +97,7 @@ export class Rituals {
       try {
         await stopping;
         cur.workdir = await mkdtemp(join(this.workRoot, 'reanimator-'));
-        cur.app = await performRitual(await this.fixture(), this.deps, cur.workdir, emit);
+        cur.app = await performRitual(await this.fixture(), this.deps, cur.workdir, emit, cur.abort.signal);
       } catch (e) {
         emit({ type: 'failed', phase: 'revived', reason: e instanceof Error ? e.message : String(e) });
       }
@@ -114,6 +127,7 @@ export class Rituals {
 
   private async release(cur: Current): Promise<void> {
     cur.listeners.clear();
+    cur.abort.abort(); // a ritual still running stops at its current command instead of finishing first
     await cur.finished;
     await cur.app?.stop();
     cur.app = null;
