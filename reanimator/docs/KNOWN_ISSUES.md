@@ -17,6 +17,7 @@
 | KI-R10 | `npm audit`: moderate `minimatch` advisory in the ESLint dev chain | Minor | none (dev-only) | Accepted |
 | KI-R11 | Canvas sizing: CSS `100vw/100vh` vs `innerWidth/innerHeight`, and a DPR-only change isn't redrawn | Minor | R1 | Resolved |
 | KI-R12 | The backend has no Origin/Host check yet; needed once routes run commands | Major | R2, R3 | Open |
+| KI-R13 | R1 demo-page polish from review: void flash on pitch/mode click, resize jank, late web font, breath jump, no OffscreenCanvas fallback, fractional-DPR cell seams | Minor | R4 (seams) | Open |
 
 ---
 
@@ -82,3 +83,13 @@
 ### KI-R12: Backend request origin checks · Major · Open
 - **Problem (R0 review):** the backend binds 127.0.0.1 only (D-R12), but a web page in the user's browser could still send requests to it (CSRF / DNS rebinding). Harmless with only `/api/health`; not harmless once R2/R3 add routes that install, build or attack.
 - **Next action:** R2's plan adds Host/Origin validation (allow only the Vite origin and loopback hosts), with tests, before any command-running route.
+
+### KI-R13: R1 renderer polish (from the R1 code review) · Minor · Open
+- **Findings (2026-11-04, none blocking):**
+  1. **Fractional-DPR seams** (`renderer.ts`): `DotRenderer` clears a changed cell with a fractional-pixel rect at DPR 1.25/1.5, which erodes the antialiased edge of the neighbouring dot over time. Fix it before R4's moving scenes: clear on integer pixels and repaint the 4 neighbours.
+  2. **Void flash** on each pitch/mode click: the image is re-decoded inside the `[pitch, mode]` effect. Load it once in its own effect.
+  3. **Resize jank:** every ResizeObserver callback does a full layout (~147 ms at 1080p). Coalesce them into one rAF.
+  4. **Late font:** glyph mode draws once. If JetBrains Mono loads later, the glyphs stay in the fallback font. Redraw on `document.fonts.ready`.
+  5. **Breath jump:** the first animated frame jumps from breath(0) to `breath(performance.now())`. Offset by the first rAF timestamp.
+  6. **No OffscreenCanvas fallback** (Safari before 16.4 throws, and the error is swallowed, leaving a blank stage). Fall back to `document.createElement('canvas')`.
+- **Next action:** fix 1 in R4. Fold 2–6 into the first scene that reuses the App's layout code (R2).
