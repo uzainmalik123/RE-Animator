@@ -17,6 +17,7 @@
 | D-R10 | Humans open PRs. Reanimator produces a branch/patch/PR text; it never opens PRs on third-party repos | Accepted |
 | D-R11 | Nothing is faked for the camera: a pulse = real vitals, a wound = a real finding, a heal = a real fix + re-run | Accepted |
 | D-R12 | Stack confirmed and pinned in R0: one standalone package, Vite 8 + React 19 UI, Hono backend on 127.0.0.1:7070, own CI workflow | Accepted |
+| D-R13 | The R1 renderer: a pure dither core plus thin canvas painters in `src/render/`, with a cached `DotRenderer` for animation | Accepted |
 
 ---
 
@@ -80,3 +81,13 @@
   - Tests are Vitest in the **node** environment; UI smoke tests use `react-dom/server` (no jsdom until a feature needs a DOM).
   - CI is its own workflow, `.github/workflows/reanimator-ci.yml`, separate from Poltergeist's.
 - **Consequences:** R1 draws onto the existing `.stage` canvas in `src/App.tsx`; R2/R3 add routes to `createApp()`.
+
+### D-R13: The R1 renderer's shape
+- **Decision (from the R1 grill, 2026-11-04):**
+  - `src/render/dither.ts` is **pure** (no canvas): `gridSize`, `luminanceGrid` (Rec. 709, alpha-weighted, gamma 1.2), `ditherLevels` (`floor(v·(steps−1) + (BAYER4+0.5)/16)`, clamped, NaN = dark), and `levelsToText`. It runs in Vitest's node env, and an inline glyph snapshot pins it.
+  - `draw.ts` paints levels: `drawDots` / `drawGlyphs` (from an image) and `drawLevelsAsDots` / `drawLevelsAsGlyphs` (from levels). Level 0 draws nothing. Dot radius is `((pitch−gap)/2)·(0.4+0.6·level/(steps−1))`, and the defaults are steps 4, gap 1 CSS px, circles. Glyphs use the ramp `" .:-=+*#%@"` in JetBrains Mono.
+  - Everything is laid out in **CSS px × `scale` (DPR)**. Pitch is 2 under 640 CSS px wide and 3 otherwise (`pitchFor`).
+  - `DotRenderer` keeps the last frame's levels and repaints only changed cells. A new grid size or `reset()` repaints everything. Scenes sample an image once per layout and modulate luminance per frame (cheap), rather than re-sampling every frame.
+  - The palette is one ink per draw call, so `--magic` and `--death` can't mix on one element. `readPalette` reads the CSS tokens.
+  - Images are fitted with **contain** (`containRect`) so the art never stretches.
+- **Consequences:** R2/R4 scenes compose a source image (or build a luminance grid directly) and hand it to `DotRenderer`. Real text stays in HTML over the canvas.

@@ -4,7 +4,7 @@ Work one PRD feature at a time, through the grill → plan → implement → rev
 
 - [x] 0. R0 Scaffold (Vite + React + TS, canvas page, health gate, CI, backend entry)
   - _Requirements: none (infrastructure)_
-- [ ] 1. R1 Dot-matrix renderer (the art engine)
+- [x] 1. R1 Dot-matrix renderer (the art engine)
   - _Requirements: 4.1, 4.3, 4.4_
 - [ ] 2. Choose + prepare the one demo repo (KI-R1), keep before/after in fixtures/
   - _Requirements: 1 (groundwork)_

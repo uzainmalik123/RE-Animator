@@ -34,7 +34,7 @@
 | Order | ID | Feature | Priority | Status |
 |---|---|---|---|---|
 | 0 | R0 | Scaffold (Vite + React + TS, canvas, health gate, CI) | High | Done |
-| 1 | R1 | Dot-matrix renderer (the art engine) | High | TBD |
+| 1 | R1 | Dot-matrix renderer (the art engine) | High | Done |
 | 2 | R2 | The Raise: revive one prepared dead repo, prove it with vitals | High | TBD |
 | 3 | R3 | Death's attack: wire in the Poltergeist engine | High | TBD |
 | 4 | R4 | The attack scene: draw Death + minions over the running app | High | TBD |
@@ -69,13 +69,14 @@
 - **Constraints:** TypeScript. Pin versions. Mirror Poltergeist's health-gate discipline (see the sibling's AGENTS.md).
 - **Done when:** `npm run dev` serves a blank canvas page, and `npm run health` is green locally and in CI.
 
-### R1: Dot-matrix renderer · High · TBD
+### R1: Dot-matrix renderer · High · Done
 **Owns:** the reusable renderer that turns an image (or a live frame) into dithered dots/glyphs on a canvas, per [THEME.md](THEME.md) §3: Bayer dither, brightness steps, empty-darkest, `pitch`, palette tokens.
 **Not this feature:** the scenes that use it (R2, R4).
 - **User story:** As every later scene, I need one renderer so the whole app shares the look.
 - **User flow:** `drawDots(ctx, image, { pitch, palette })` and a glyph variant `drawGlyphs(...)`.
 - **Constraints:** deterministic (same input → same dots). 30fps on an animated frame. Honour `prefers-reduced-motion`.
 - **Done when:** a demo page renders a sample image as purple-on-void dots, a snapshot test pins the output, and switching `pitch` changes density. Put a picture of it in front of the team to approve the look.
+- **Built (2026-11-04, D-R13):** `src/render/` (`dither.ts` pure core, `draw.ts` painters, `renderer.ts` `DotRenderer`, `viewport.ts`). The demo is `npm run dev`. Screenshots: `docs/img/r1-renderer-{dots,glyphs}.png`. The team's look approval is still open on KI-R2.
 
 ### R2: The Raise · High · TBD
 **Owns:** reviving **one prepared dead repo** (bundled in `fixtures/`), and proving it with deterministic **vitals** (install, build, serve, render), plus the raise scene (spell circle + heart monitor flatline → pulse). The backend runs the commands in a temp dir and streams status to the UI.
@@ -185,3 +186,4 @@
 ## Changelog
 - 2026-11-01: PRD created for the merged entry. Reanimator is the product; Poltergeist is its red-team engine (Death). Frankenstein category.
 - 2026-11-02: R0 Done. Vite + React canvas page, Hono backend (`/api/health`, 127.0.0.1:7070), `npm run health` green, CI `reanimator-ci.yml` (D-R12, plan `docs/plans/2026-11-02-R0-scaffold.md`).
+- 2026-11-04: R1 Done. Dot-matrix renderer in `src/render/` (Bayer 4x4, empty-darkest, dots and glyphs, a per-cell cached `DotRenderer`, ~3 ms/frame at 1080p) and a demo page on our own SVG sample art. Fixes KI-R11 (D-R13, plan `docs/plans/2026-11-04-R1-renderer.md`). Look approval stays open on KI-R2.

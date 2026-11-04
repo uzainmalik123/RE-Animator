@@ -6,8 +6,8 @@
 | ID | Issue | Severity | Blocks | Status |
 |---|---|---|---|---|
 | KI-R1 | We haven't chosen the one demo repo (must be small, permissively licensed, genuinely dead on Node 22, quick to revive) | Blocker | R2, demo | Open |
-| KI-R2 | Art quality: the original author left, the teammate is vibe-coding, and we can't copy the prototype | Major | R1, R4, costume | Open |
-| KI-R3 | Dot-matrix render performance (many dots, live frames) | Minor | R1, R4 | Open |
+| KI-R2 | Art quality: the original author left, the teammate is vibe-coding, and we can't copy the prototype | Major | R4, costume | Investigating |
+| KI-R3 | Dot-matrix render performance (many dots, live frames) | Minor | R4 | Investigating |
 | KI-R4 | How exactly Reanimator calls Poltergeist (CLI vs MCP; monorepo wiring) | Major | R3 | Open |
 | KI-R5 | The revived app needs a spec ("chart") for Poltergeist to test against | Major | R3 | Open |
 | KI-R6 | Eligibility: the idea was prototyped before the window; present the rebuild honestly | Major | submission | Open |
@@ -15,7 +15,7 @@
 | KI-R8 | Reviving arbitrary cloned repos runs untrusted code | Major | R9 | Open (deferred to R9) |
 | KI-R9 | Scene scope: four scenes is a lot for a vibe-coder; which are essential | Minor | R4, R6, R7 | Open |
 | KI-R10 | `npm audit`: moderate `minimatch` advisory in the ESLint dev chain | Minor | none (dev-only) | Accepted |
-| KI-R11 | Canvas sizing: CSS `100vw/100vh` vs `innerWidth/innerHeight`, and a DPR-only change isn't redrawn | Minor | R1 | Open |
+| KI-R11 | Canvas sizing: CSS `100vw/100vh` vs `innerWidth/innerHeight`, and a DPR-only change isn't redrawn | Minor | R1 | Resolved |
 | KI-R12 | The backend has no Origin/Host check yet; needed once routes run commands | Major | R2, R3 | Open |
 
 ---
@@ -25,17 +25,19 @@
 - **What it needs to be:** small; an OSI licence; genuinely fails to install/build/run on Node 22 (e.g. a ~2014–2017 jQuery/Backbone/AngularJS app with Bower/Grunt/Gulp 3/node-sass); quick to revive; and with at least one real, demoable flaw Death can find (a form with no validation, a naive action with a race).
 - **Next action:** shortlist 3 candidates, revive each by hand once, pick the most reliable and the most demoable. Keep its before/after in `fixtures/`.
 
-### KI-R2: Art quality without the original author · Major · Open
+### KI-R2: Art quality without the original author · Major · Investigating
 - **Problem:** the look is the costume angle, the original artist left, and we can't copy their files (D-R2). The teammate is vibe-coding.
 - **Plan (also in AGENTS.md § the art):**
   - Build the renderer first (R1) — it does most of the work: feed it a decent source image and it looks good automatically.
   - Make source art the easy way: start from a plain silhouette or an openly licensed / self-made image, then let the ditherer stylise it. The dither hides a lot.
   - Iterate the sprites and scenes with the user in short loops; put screenshots in front of them.
 - **Next action:** get R1 rendering one good hero image the team likes before building scenes.
+- **2026-11-04 (R1):** the renderer is built, and the demo page renders our own sample SVG (headstone and moon) in `--magic` dots or glyphs at pitch auto/2/3/4/6. Screenshots are in `docs/img/r1-renderer-{dots,glyphs}.png`. **Still needed:** the team runs `npm run dev` and approves or redirects the look (pitch, dot size, gap, gamma). Until then, scenes may still change the defaults.
 
-### KI-R3: Render performance · Minor · Open
+### KI-R3: Render performance · Minor · Investigating
 - **Plan:** compute luminance on a downscaled copy; cache per-cell values; redraw only changed cells; raise `pitch` if it stalls. Target 30fps.
 - **Next action:** benchmark R1 with an animated frame at phone and desktop `pitch`.
+- **2026-11-04 measurement** (headless Chromium, this dev laptop, 1920×1080, DPR 1, pitch 3 = 230,400 cells, breathing frame): the first full paint is ~147 ms, and the steady state is a **~3 ms/frame** median with `DotRenderer`'s changed-cells-only diff. That's well inside 30 fps. The full repaint after a resize or pitch change is the slow path. Revisit with R4's moving minions, which change more cells per frame.
 
 ### KI-R4: How Reanimator calls Poltergeist · Major · Open
 - **Problem:** Poltergeist is a sibling package with a CLI (`summon`) and an MCP server. We need to decide how Reanimator invokes it and gets the report.
@@ -72,9 +74,10 @@
 - **Why accepted:** dev-only; lint never sees untrusted globs; nothing ships to the browser or the backend.
 - **Next action:** before submission, check for patched pins and bump both projects together.
 
-### KI-R11: Canvas sizing for R1 · Minor · Open
+### KI-R11: Canvas sizing for R1 · Minor · Resolved
 - **Problem (R0 review):** `.stage` is sized `100vw/100vh` in CSS but its backing store uses `innerWidth/innerHeight`; on mobile those differ (address bar), so dots would stretch slightly. Moving the window to a monitor with a different scale fires no `resize`, so the old DPR sticks until the next resize. Invisible on R0's solid fill.
 - **Next action:** in R1, size from `canvas.clientWidth/clientHeight` (CSS `width/height: 100%`) and listen for `matchMedia('(resolution: …dppx)')` changes.
+- **Resolved 2026-11-04 (R1):** the stage is `width/height: 100%` inside a fixed `.stage-wrap`, sized from `clientWidth/Height × DPR` on a `ResizeObserver`, plus a `matchMedia('(resolution: Xdppx)')` listener that re-arms itself on each DPR change.
 
 ### KI-R12: Backend request origin checks · Major · Open
 - **Problem (R0 review):** the backend binds 127.0.0.1 only (D-R12), but a web page in the user's browser could still send requests to it (CSRF / DNS rebinding). Harmless with only `/api/health`; not harmless once R2/R3 add routes that install, build or attack.

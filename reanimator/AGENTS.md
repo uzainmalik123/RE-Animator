@@ -112,10 +112,10 @@ Death's attack is the sibling engine. When you reach R3:
 - **Eligibility (KI-R6):** fresh repo, fresh code, first commit inside the window. In the write-up, say plainly the idea was prototyped before the event and rebuilt from scratch during it. Confirm the 2026 "new project" rules (Poltergeist `docs/KNOWN_ISSUES.md` KI-05).
 - **Submission needs:** public repo + OSI licence + committed `.kiro/`, a working app URL (a recorded replay is fine, R11), a < 3-min public video, and a write-up of how Kiro was used.
 
-## Do first (as of 2026-11-01)
+## Do first (as of 2026-11-04)
 
 1. Read `docs/STORY.md`, `docs/THEME.md`, `docs/PRD.md`.
-2. **R0** scaffold, then **R1** renderer, and get one hero image rendering in the dot style the user likes (KI-R2).
+2. ~~R0 scaffold, R1 renderer~~ (done). **Approve the look:** run `npm run dev`, try pitch and dots/glyphs, and sign off or ask for changes (KI-R2; screenshots in `docs/img/`).
 3. Shortlist and pick the one demo repo (KI-R1).
 4. Read the 2026 rules (KI-R6 / Poltergeist KI-05).
 
