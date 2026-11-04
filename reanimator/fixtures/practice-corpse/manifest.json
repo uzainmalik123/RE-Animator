@@ -1,0 +1,6 @@
+{
+  "name": "guestbook-2016",
+  "diedIn": 2016,
+  "licence": "MIT",
+  "serve": ["node", "server.js"]
+}
