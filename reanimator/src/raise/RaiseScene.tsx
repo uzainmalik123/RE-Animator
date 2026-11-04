@@ -4,6 +4,7 @@ import { sizeCanvas } from '../canvas';
 import { DotRenderer, gridSize } from '../render';
 import { pitchFor, readPalette } from '../render/viewport';
 import { circleLuminance, monitorLuminance } from './scene';
+import { AttackPanel } from '../attack/AttackPanel';
 import { useRitual } from './useRitual';
 
 const FRAME_MS = 1000 / 30;
@@ -141,6 +142,7 @@ export function RaiseScene({ initial }: { initial?: RitualState } = {}) {
               It lives: <a href={state.origin}>{state.origin}</a>
             </p>
             <iframe className="raise-app" title="The revived app" src={state.origin} />
+            <AttackPanel key={live.id ?? 'none'} ritualId={live.id} />
           </>
         )}
       </section>
