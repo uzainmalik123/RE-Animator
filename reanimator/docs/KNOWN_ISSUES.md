@@ -18,6 +18,7 @@
 | KI-R11 | Canvas sizing: CSS `100vw/100vh` vs `innerWidth/innerHeight`, and a DPR-only change isn't redrawn | Minor | R1 | Resolved |
 | KI-R12 | Backend Origin/Host check before routes run commands | Major | R2, R3 | Resolved |
 | KI-R14 | R2 review minors: grandchild-kill test, negative Last-Event-ID, `close` vs `exit`, inherited env, render-check port scope, error-line pick, freePort race, uncancellable serve/render waits | Minor | none (#2, #4 fixed in R3) | Open |
+| KI-R16 | R3 review minors: shared engine home between `attack:check` and the server, unbounded `runs/`, UTF-8 split across reads, no Bedrock selection, a lost stream's message shown twice, an abort during prepare still spawns the engine, the integration test's skip check | Minor | none | Open |
 | KI-R15 | R3's live run (a real key, a real report with a reproduced wound) hasn't been run; whether the guestbook really yields a wound is unproven | Major | R3 Done-when, R4 | Open |
 | KI-R13 | R1 demo-page polish from review: void flash on pitch/mode click, resize jank, late web font, breath jump, no OffscreenCanvas fallback, fractional-DPR cell seams | Minor | R4 (seams) | Open |
 
@@ -117,4 +118,16 @@
 ### KI-R15: R3's live run is unproven · Major · Open
 - **Problem:** R3's Done-when needs a real compile (an LLM key), so CI and this session only proved the wiring: the real CLI scouts the risen guestbook and stops at the compiler without a key (`server/attack.integration.test.ts`). Whether the practice corpse's chart really yields a reproduced wound (we expect 1.2 double-submit and 1.3 empty name) is not yet known.
 - **Next action:** `cd reanimator && doppler run -- npm run attack:check` (exits 0 with at least one wound; the first run compiles ~36 plans, later runs hit the plan cache in `.reanimator/`). If it finds nothing, tighten the chart's wording, not the app. Then repeat on the real demo repo once KI-R1 picks it.
+
+### KI-R16: R3 review minors (from the R3 code review) · Minor · Open
+- **Findings (2026-11-04, none blocking):**
+  1. **Shared engine home** (`server/chart.ts`, `server/engine.ts`): `attack:check` and a running backend share `.reanimator/<fixture>/`, so running both at once lets one rewrite the other's config `target`, and the tailer may pick up the other's run (the runId check then fails it honestly). Fix: a per-attack config file name.
+  2. **`.reanimator/<fixture>/.poltergeist/runs/` grows without limit.** Prune old runs (keep the plan cache).
+  3. **UTF-8 split across reads** (`server/engine.ts` tailer): `buf.toString` before line splitting can turn a split multibyte character into U+FFFD. Use a `StringDecoder`.
+  4. **No Bedrock selection:** `AWS_*` reaches the engine, but the written config never sets `provider: "bedrock"`. Add a `REANIMATOR_PROVIDER` passthrough when needed.
+  5. **A lost stream shows twice** in `AttackPanel` (as `live.error` and as "Death faltered: …"). Set only one.
+  6. **An abort during `prepareAttack` still spawns the engine** (killed at once). Check `signal.aborted` before calling it.
+  7. **`it.skipIf(!existsSync(DEFAULT_CLI))`** never skips (the bin is tracked); without `poltergeist/node_modules` the test fails, now with the real "Cannot find package" line. Check for the engine's `node_modules` instead.
+  8. **Proxy/CA vars** (`HTTPS_PROXY`, `NODE_EXTRA_CA_CERTS`) are dropped by the child env allowlist, including for `npm install`. Fine locally; add them if a demo machine needs a proxy.
+- **Next action:** fold into R4/R5's backend work.
 

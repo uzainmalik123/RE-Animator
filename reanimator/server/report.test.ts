@@ -52,6 +52,12 @@ describe('readWounds', () => {
     expect(await readWounds(p)).toEqual({ counts, wounds: [] });
   });
 
+  it('refuses a report from another run (a stale one left beside the spec)', async () => {
+    const p = await write(JSON.stringify(report([])));
+    await expect(readWounds(p, 'run-2')).rejects.toThrow('the engine wrote no readable report');
+    await expect(readWounds(p, 'run-1')).resolves.toMatchObject({ wounds: [] });
+  });
+
   it('refuses a missing or unreadable report', async () => {
     await expect(readWounds('/nonexistent/haunting-report.json')).rejects.toThrow('the engine wrote no readable report');
     await expect(readWounds(await write('not json'))).rejects.toThrow('the engine wrote no readable report');

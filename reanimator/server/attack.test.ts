@@ -39,7 +39,7 @@ describe('Attacks', () => {
   it('summons the engine at the risen origin and reports its wounds', async () => {
     const engine = vi.fn<Engine>(async (o) => {
       o.onEvent({ type: 'run.started', criteria: ['1.2'], personas: ['wraith'], reps: 3 });
-      return { code: 1, error: null, reportPath: join(o.specDir, 'haunting-report.json') };
+      return { code: 1, error: null, runId: 'run-7', reportPath: join(o.specDir, 'haunting-report.json') };
     });
     const { a, read } = await make(engine);
     const log = await settle(a, begin(a, ['1.2']));
@@ -52,14 +52,14 @@ describe('Attacks', () => {
     expect(call.cli).toBe('/cli.js');
     expect(call.only).toEqual(['1.2']);
     expect(call.env).toEqual({ PATH: '/bin', ANTHROPIC_API_KEY: 'k', NO_COLOR: '1' });
-    expect(read).toHaveBeenCalledWith(join(call.specDir, 'haunting-report.json'));
+    expect(read).toHaveBeenCalledWith(join(call.specDir, 'haunting-report.json'), 'run-7');
   });
 
   it('refuses a second attack while one runs', async () => {
     let finish!: () => void;
     const engine = vi.fn<Engine>(async (o) => {
       await new Promise<void>((r) => (finish = r));
-      return { code: 0, error: null, reportPath: o.specDir };
+      return { code: 0, error: null, runId: 'run-1', reportPath: o.specDir };
     });
     const { a } = await make(engine);
     const id = begin(a);
@@ -75,9 +75,16 @@ describe('Attacks', () => {
   });
 
   it('fails with the engine\'s error line', async () => {
-    const { a } = await make(vi.fn<Engine>(async (o) => ({ code: 2, error: 'boom', reportPath: o.specDir })));
+    const { a } = await make(vi.fn<Engine>(async (o) => ({ code: 2, error: 'boom', runId: null, reportPath: o.specDir })));
     const log = await settle(a, begin(a));
     expect(log.at(-1)).toEqual({ type: 'failed', reason: 'boom' });
+  });
+
+  it('never reads a report when the engine crashed before starting a run', async () => {
+    const { a, read } = await make(vi.fn<Engine>(async (o) => ({ code: 1, error: "Cannot find package 'tsx'", runId: null, reportPath: o.specDir })));
+    const log = await settle(a, begin(a));
+    expect(log.at(-1)).toEqual({ type: 'failed', reason: "the engine wrote no readable report: Cannot find package 'tsx'" });
+    expect(read).not.toHaveBeenCalled();
   });
 
   it('stop() aborts the engine and ends the attack as stopped', async () => {
@@ -85,7 +92,7 @@ describe('Attacks', () => {
     const engine = vi.fn<Engine>(async (o) => {
       seen = o.signal;
       await new Promise((r) => o.signal!.addEventListener('abort', r, { once: true }));
-      return { code: null, error: 'stopped', reportPath: o.specDir };
+      return { code: null, error: 'stopped', runId: null, reportPath: o.specDir };
     });
     const { a } = await make(engine);
     const id = begin(a);

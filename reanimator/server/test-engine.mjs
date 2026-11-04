@@ -8,6 +8,10 @@ const argv = process.argv.slice(2);
 const specDir = argv[argv.indexOf('--spec') + 1];
 writeFileSync(join(process.cwd(), 'argv.json'), JSON.stringify(argv));
 const code = Number(process.env.STUB_CODE ?? '1');
+if (process.env.STUB_CRASH === '1') {
+  console.error("Error: Cannot find package 'tsx'");
+  process.exit(1);
+}
 if (code === 2) {
   console.error('error: The LLM client could not be set up: no key');
   process.exit(2);

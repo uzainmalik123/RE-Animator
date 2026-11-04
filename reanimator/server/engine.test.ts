@@ -22,7 +22,7 @@ describe('runEngine', () => {
     const d = await dirs();
     const seen: EngineEvent[] = [];
     const r = await runEngine({ cli: STUB, ...d, env: { PATH: process.env.PATH }, onEvent: (e) => seen.push(e), pollMs: 50 });
-    expect(r).toEqual({ code: 1, error: null, reportPath: join(d.specDir, 'haunting-report.json') });
+    expect(r).toEqual({ code: 1, error: null, runId: 'stub-1', reportPath: join(d.specDir, 'haunting-report.json') });
     expect(seen).toEqual([
       { type: 'run.started', criteria: ['1.2'], personas: ['wraith'], reps: 3 },
       { type: 'plan.compiled', criterion: '1.2', persona: 'wraith', status: 'compiled', cached: false },
@@ -34,6 +34,14 @@ describe('runEngine', () => {
     const r = await runEngine({ cli: STUB, ...d, env: { PATH: process.env.PATH, STUB_CODE: '2' }, onEvent: () => {} });
     expect(r.code).toBe(2);
     expect(r.error).toBe('The LLM client could not be set up: no key');
+  });
+
+  it('treats an exit 1 with no run as a crash, keeping its last words', async () => {
+    const d = await dirs();
+    const r = await runEngine({ cli: STUB, ...d, env: { PATH: process.env.PATH, STUB_CRASH: '1' }, onEvent: () => {} });
+    expect(r.code).toBe(1);
+    expect(r.runId).toBeNull();
+    expect(r.error).toBe("Error: Cannot find package 'tsx'");
   });
 
   it('stops the engine when its signal aborts', async () => {

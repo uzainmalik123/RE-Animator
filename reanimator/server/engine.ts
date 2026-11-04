@@ -37,12 +37,14 @@ const listRuns = (runsDir: string) => readdir(runsDir).then((names) => new Set(n
 // Follows the events.ndjson of whichever run dir appears after `before`, parsing whole lines only.
 function tailer(runsDir: string, before: Set<string>, onEvent: (e: EngineEvent) => void) {
   let file: string | null = null;
+  let runId: string | null = null;
   let offset = 0;
   let partial = '';
-  return async () => {
+  const poll = async () => {
     if (!file) {
       const fresh = [...(await listRuns(runsDir))].find((n) => !before.has(n));
       if (!fresh) return;
+      runId = fresh;
       file = join(runsDir, fresh, 'events.ndjson');
     }
     const fh = await open(file, 'r').catch(() => null);
@@ -70,6 +72,7 @@ function tailer(runsDir: string, before: Set<string>, onEvent: (e: EngineEvent) 
       await fh.close();
     }
   };
+  return { poll, runId: () => runId };
 }
 
 // The CLI's `error: …` line (exit 2), else its last words.
@@ -90,9 +93,9 @@ export async function runEngine(o: {
   timeoutMs?: number;
   onEvent: (e: EngineEvent) => void;
   pollMs?: number;
-}): Promise<{ code: number | null; error: string | null; reportPath: string }> {
+}): Promise<{ code: number | null; error: string | null; runId: string | null; reportPath: string }> {
   const runsDir = join(o.home, '.poltergeist', 'runs');
-  const poll = tailer(runsDir, await listRuns(runsDir), o.onEvent);
+  const { poll, runId: foundRun } = tailer(runsDir, await listRuns(runsDir), o.onEvent);
   let polling = Promise.resolve();
   const timer = setInterval(() => {
     polling = polling.then(poll).catch(() => undefined);
@@ -107,7 +110,9 @@ export async function runEngine(o: {
   }
   await polling;
   await poll().catch(() => undefined); // whatever landed between the last tick and the exit
-  const ok = r.code === 0 || r.code === 1;
+  const runId = foundRun();
+  // Node also exits 1 on a crash (an uncaught error, a missing dependency): with no run dir it never ran.
+  const ok = (r.code === 0 || r.code === 1) && runId !== null;
   const error = ok ? null : r.timedOut ? `the engine timed out after ${Math.round((o.timeoutMs ?? ENGINE_TIMEOUT_MS) / 60_000)} min` : errorLine(r.output);
-  return { code: r.code, error, reportPath: join(o.specDir, 'haunting-report.json') };
+  return { code: r.code, error, runId, reportPath: join(o.specDir, 'haunting-report.json') };
 }

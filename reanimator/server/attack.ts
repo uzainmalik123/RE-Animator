@@ -58,7 +58,9 @@ export class Attacks {
         });
         if (signal.aborted) return emit({ type: 'failed', reason: STOPPED });
         if (r.code !== 0 && r.code !== 1) return emit({ type: 'failed', reason: r.error ?? 'the engine failed' });
-        emit({ type: 'finished', ...(await read(r.reportPath)) });
+        // Exit 1 with no run is a crash, and the spec folder may still hold an earlier run's report.
+        if (r.runId === null) return emit({ type: 'failed', reason: `the engine wrote no readable report: ${r.error ?? 'no run'}` });
+        emit({ type: 'finished', ...(await read(r.reportPath, r.runId)) });
       } catch (e) {
         emit({ type: 'failed', reason: signal.aborted ? STOPPED : e instanceof Error ? e.message : String(e) });
       }

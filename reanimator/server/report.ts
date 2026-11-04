@@ -31,7 +31,8 @@ function wound(criterion: Obj, pair: Obj): Wound {
   };
 }
 
-export async function readWounds(jsonPath: string): Promise<{ counts: Counts; wounds: Wound[] }> {
+// `runId`, when given, must be the report's own: a stale report from an earlier run is never read as new.
+export async function readWounds(jsonPath: string, runId?: string): Promise<{ counts: Counts; wounds: Wound[] }> {
   let raw: unknown;
   try {
     raw = JSON.parse(await readFile(jsonPath, 'utf8'));
@@ -39,6 +40,7 @@ export async function readWounds(jsonPath: string): Promise<{ counts: Counts; wo
     throw new Error(UNREADABLE);
   }
   if (!isObj(raw) || raw.version !== 1 || !Array.isArray(raw.criteria)) throw new Error(UNREADABLE);
+  if (runId !== undefined && raw.runId !== runId) throw new Error(UNREADABLE);
   const c = isObj(raw.counts) ? raw.counts : {};
   const counts = Object.fromEntries(COUNT_KEYS.map((k) => [k, typeof c[k] === 'number' ? c[k] : 0])) as Counts;
   const wounds: Wound[] = [];
