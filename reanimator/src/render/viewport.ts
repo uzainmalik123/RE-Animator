@@ -22,13 +22,13 @@ export function containRect(srcW: number, srcH: number, dstW: number, dstH: numb
   return { x: (dstW - w) / 2, y: (dstH - h) / 2, w, h };
 }
 
-const FALLBACK = { magic: '#b98cff', void: '#06060a' };
+const FALLBACK = { magic: '#b98cff', void: '#06060a', death: '#ff3b4e', bone: '#cfc8b8' };
 
-// The palette tokens the demo needs, read from CSS (THEME §4), with the THEME values as fallback.
-export function readPalette(el: Element): { magic: string; void: string } {
+export type ScenePalette = typeof FALLBACK;
+
+// The palette tokens the scenes need, read from CSS (THEME §4), with the THEME values as fallback.
+export function readPalette(el: Element): ScenePalette {
   const css = getComputedStyle(el);
-  return {
-    magic: css.getPropertyValue('--magic').trim() || FALLBACK.magic,
-    void: css.getPropertyValue('--void').trim() || FALLBACK.void,
-  };
+  const read = (k: keyof ScenePalette) => css.getPropertyValue(`--${k}`).trim() || FALLBACK[k];
+  return { magic: read('magic'), void: read('void'), death: read('death'), bone: read('bone') };
 }

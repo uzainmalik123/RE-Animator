@@ -2,16 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { App } from './App';
 
-describe('App (R1 renderer demo)', () => {
-  const html = renderToStaticMarkup(<App />);
-
-  it('renders the stage canvas with a text alternative', () => {
-    expect(html).toMatch(/<canvas[^>]*class="stage"[^>]*aria-label="[^"]*dot-matrix[^"]*"/);
-  });
-
-  it('offers real-text pitch and mode controls', () => {
-    for (const label of ['auto', '2', '3', '4', '6', 'dots', 'glyphs']) {
-      expect(html).toContain(`>${label}</button>`);
-    }
+describe('App', () => {
+  it('opens on the raise scene', () => {
+    expect(renderToStaticMarkup(<App />)).toContain('Begin the ritual');
   });
 });
