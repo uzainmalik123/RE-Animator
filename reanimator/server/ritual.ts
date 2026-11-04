@@ -1,6 +1,6 @@
 // The ritual (R2, D-R15): prove the corpse is dead, lay the remedy over a fresh copy, and raise it
 // with real vitals. Rituals keeps one ritual at a time, its event log (for SSE replay) and the
-// revived app, which stays up for Death (R3) until the next ritual or shutdown.
+// revived app, which stays up for Death (R3) until the next ritual or shutdown; Death is stopped first.
 import { randomUUID } from 'node:crypto';
 import { cp, mkdtemp, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -61,6 +61,7 @@ interface Current {
   done: boolean;
   listeners: Set<(e: RitualEvent, index: number) => void>;
   workdir: string | null;
+  fixture: Fixture | null;
   app: RunningApp | null;
   abort: AbortController;
   finished: Promise<void>;
@@ -73,18 +74,21 @@ export class Rituals {
   private readonly fixture: () => Promise<Fixture>;
   private readonly deps: VitalDeps;
   private readonly workRoot: string;
+  private readonly onRelease: () => Promise<void>;
 
-  constructor(o: { fixture: () => Promise<Fixture>; deps: VitalDeps; workRoot?: string }) {
+  // `onRelease` runs first whenever a ritual is let go (Death's attack stops before its target does).
+  constructor(o: { fixture: () => Promise<Fixture>; deps: VitalDeps; workRoot?: string; onRelease?: () => Promise<void> }) {
     this.fixture = o.fixture;
     this.deps = o.deps;
     this.workRoot = o.workRoot ?? tmpdir();
+    this.onRelease = o.onRelease ?? (() => Promise.resolve());
   }
 
   // A busy answer carries the running ritual's id, so a reloaded page can reattach to it.
   start(): { id: string } | { busy: true; id: string } {
     if (this.current && !this.current.done) return { busy: true, id: this.current.id };
     const previous = this.current;
-    const cur: Current = { id: randomUUID(), log: [], done: false, listeners: new Set(), workdir: null, app: null, abort: new AbortController(), finished: Promise.resolve() };
+    const cur: Current = { id: randomUUID(), log: [], done: false, listeners: new Set(), workdir: null, fixture: null, app: null, abort: new AbortController(), finished: Promise.resolve() };
     this.current = cur;
     const emit = (e: RitualEvent) => {
       if (cur.done) return;
@@ -97,7 +101,8 @@ export class Rituals {
       try {
         await stopping;
         cur.workdir = await mkdtemp(join(this.workRoot, 'reanimator-'));
-        cur.app = await performRitual(await this.fixture(), this.deps, cur.workdir, emit, cur.abort.signal);
+        cur.fixture = await this.fixture();
+        cur.app = await performRitual(cur.fixture, this.deps, cur.workdir, emit, cur.abort.signal);
       } catch (e) {
         emit({ type: 'failed', phase: 'revived', reason: e instanceof Error ? e.message : String(e) });
       }
@@ -110,6 +115,13 @@ export class Rituals {
     const cur = this.current;
     if (!cur || cur.id !== id) return null;
     return { log: cur.log.slice(after + 1), done: cur.done };
+  }
+
+  // What Death needs from the current ritual once it has risen (R3); null otherwise.
+  risen(id: string): { origin: string; revivedDir: string; fixture: Fixture } | null {
+    const cur = this.current;
+    if (!cur || cur.id !== id || !cur.app || !cur.workdir || !cur.fixture || cur.log.at(-1)?.type !== 'risen') return null;
+    return { origin: cur.app.origin, revivedDir: join(cur.workdir, 'revived'), fixture: cur.fixture };
   }
 
   subscribe(id: string, fn: (e: RitualEvent, index: number) => void): () => void {
@@ -126,6 +138,7 @@ export class Rituals {
   }
 
   private async release(cur: Current): Promise<void> {
+    await this.onRelease().catch(() => undefined);
     cur.listeners.clear();
     cur.abort.abort(); // a ritual still running stops at its current command instead of finishing first
     await cur.finished;
