@@ -21,6 +21,7 @@
 | D-R14 | R2 is built repo-agnostic and proven on our own **practice corpse**; the real demo repo (KI-R1) is a drop-in fixture | Accepted |
 | D-R15 | The ritual protocol: a real flatline from the untouched corpse, "not dead" refused, vitals stop at the first failure, SSE with resume, one ritual at a time | Accepted |
 | D-R16 | Calling Death: the Poltergeist CLI as a subprocess, the fixture's chart copied into the revived repo, a persistent per-fixture engine home, an allowlisted env | Accepted |
+| D-R18 | R6, R8 and R10 are built in **Kiro** (spec-first), last; Claude Code never builds them | Accepted |
 | D-R17 | The attack protocol: `POST /api/rituals/:id/attack` + SSE, a wound = a haunted pair, one attack at a time, a new ritual stops it first | Accepted |
 
 ---
@@ -134,4 +135,13 @@
   - **One attack at a time**, on the current risen ritual. A new ritual or shutdown stops it first (`Rituals` `onRelease` → `Attacks.stop()`, which kills the engine's group) and it ends `failed: stopped: a new ritual began`.
   - **The R3 panel** is real text only (a **Summon Death** button, progress, the wounds in `--death`); the attack art is R4's.
 - **Consequences:** R4 folds the same stream into the scene; R5 posts `{only}` for a re-run.
+
+### D-R18: Some features are built in Kiro
+- **Context (2026-11-04):** judging weighs how well Kiro is used, and the write-up must truthfully list what Kiro did. So far the code has been written in Claude Code, and the user is saving Kiro tokens for one batched session near the demo. A Kiro review at the end alone would be thin.
+- **Decision:**
+  - **R6 (graveyard), R8 (autopsy) and R10 (sound & atmosphere) are built in Kiro**, spec-first: Kiro writes the spec (`requirements.md`, `design.md`, `tasks.md`) and implements it, and its output is committed as it is. Poltergeist's F10 Candy Swap is already Kiro-only (D-10).
+  - They're self-contained, off the critical path (the vertical slice R0–R5 doesn't need them), and they show Kiro's spec workflow on the product itself.
+  - They move to the **end** of the build order. **Claude Code sessions never grill, plan, implement or review them**, and nothing Claude Code builds depends on them. If asked, they stop and remind the user (AGENTS hard rule 7).
+  - The same Kiro session also does: the Candy Swap build (KI-44), the real heal loop through Poltergeist's MCP tools (R5's demo; KI-51, KI-65), one project hook in this repo (e.g. run `npm run health` on save), and a final whole-app Kiro review.
+- **Consequences:** the write-up can honestly say Kiro built three Reanimator features and the demo target, and heals wounds live. R6's fixture choice in `server/main.ts` stays a hard-coded practice corpse until Kiro builds R6.
 

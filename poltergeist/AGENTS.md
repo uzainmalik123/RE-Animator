@@ -96,7 +96,7 @@ Each PRD feature (or KNOWN_ISSUES item) goes through this cycle. The skills are 
 - **Verdicts must reproduce** (D-06). Plan errors are `inconclusive`, never app bugs.
 - **Never edit the user's `requirements.md`, `design.md` or `tasks.md`** (D-14).
 - **DSL targets** are only `{role,name}`, `{label}`, `{text}` or `{testId}`, and only ones Scout emitted (D-15, D-21).
-- **Candy Swap is built in Kiro, honestly, with no planted bugs** (D-10).
+- **Candy Swap is built in Kiro, honestly, with no planted bugs** (D-10). 🔒 Claude Code never writes its app code (`fixtures/candy-swap/` beyond the prep kit): if asked, stop and remind the user it's for their Kiro session (see also Reanimator D-R18).
 - **Kiro is integrated, not just used to write the code (D-01).** Templates for *other* projects go in `integrations/kiro/`.
 - **Costume (D-24):**
   - ectoplasm green for ghosts only;

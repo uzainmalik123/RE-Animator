@@ -30,6 +30,7 @@ Reanimator revives a dead repo and serves it on localhost. Then it runs **Polter
 - **Fresh code only.** Nothing is copied from `../reanimator` (the earlier prototype) or `../poltergeist-old` — both predate the hacking window and are off-limits. Every line here is written inside the window (eligibility).
 - **`npm run health` stays green** in each project, after every change. CI runs it.
 - **Keep each project's `docs/DECISIONS.md` and `docs/KNOWN_ISSUES.md` current** every session (each AGENTS.md says how).
+- **🔒 Some features are built in Kiro, not Claude Code** (Reanimator D-R18): Reanimator **R6, R8, R10** and Poltergeist **F10 Candy Swap** (D-10). A Claude Code session asked to build, plan or review one of them stops and reminds the user. They're done in the batched Kiro session near the demo.
 - **Don't point the red-team at anything but the local app we revived.** It's QA/robustness testing of our own code (see `poltergeist/docs/DECISIONS.md` D-08).
 
 ## Tools

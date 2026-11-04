@@ -36,6 +36,7 @@ This repo holds **two sibling projects**:
 4. **Nothing faked for the camera** (D-R11). A pulse means real vitals passed. A wound means a real finding reproduced. A healed wound means a real fix plus a real re-run. If you're tempted to animate a result on a timer with no real check behind it, don't — ask the user instead.
 5. **Death only attacks the local app we revived.** Poltergeist refuses non-localhost targets by design. We never point it at anyone else's site. This is QA/robustness testing of a repo the user owns (`../poltergeist/docs/DECISIONS.md` D-08). It is not an exploit tool and we don't make it one.
 6. **Humans open PRs** (D-R10). We output a branch, a patch and a PR description; a person decides whether to send it. No auto-PRs on third-party repos.
+7. **🔒 Kiro-only features (D-R18): R6 (graveyard), R8 (autopsy) and R10 (sound) are built in Kiro, not here.** If you are Claude Code (or any agent other than Kiro) and the user asks you to grill, plan, implement or review one of them, **stop and remind them** it's reserved for their Kiro session, so the entry really shows Kiro building part of the product. Don't write their code or their spec files, and don't make anything else depend on them. Explaining them, or fixing a bug Kiro left in them that breaks `npm run health`, is fine; say so first.
 
 ## The art, step by step (this is the costume — it matters)
 
@@ -57,7 +58,7 @@ The palette, the scene list, the minion sprites and the grimoire-as-chat metapho
 
 Follow `docs/PRD.md`. The short version:
 
-1. **R0** scaffold → **R1** renderer → pick the demo repo (KI-R1) → **R2** the raise → **R3** wire in Poltergeist → **R4** attack scene → **R5** heal loop. That's the **vertical slice**: get it working end to end on ONE repo before adding more scenes (graveyard R6, grimoire R7) or more repos (R9).
+1. **R0** scaffold → **R1** renderer → pick the demo repo (KI-R1) → **R2** the raise → **R3** wire in Poltergeist → **R4** attack scene → **R5** heal loop. That's the **vertical slice**: get it working end to end on ONE repo before adding the grimoire (R7), the hosted replay (R11) or more repos (R9). **R6, R8 and R10 come last and are built in Kiro** (hard rule 7).
 2. A working slice beats four half-built scenes. The video needs the raise and the attack most.
 
 ## The work cycle (same as the sibling)
