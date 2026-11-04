@@ -37,6 +37,16 @@ describe('runCommand', () => {
     expect(Date.now() - t0).toBeLessThan(2000);
   });
 
+  it('does not hand the backend\'s secrets to the command', async () => {
+    process.env.SECRET_X = 's';
+    try {
+      const r = await runCommand([node, '-e', 'process.stdout.write(String(process.env.SECRET_X))'], { cwd, timeoutMs: 5000 });
+      expect(r.output).toBe('undefined');
+    } finally {
+      delete process.env.SECRET_X;
+    }
+  });
+
   it('keeps only the tail of long output', async () => {
     const r = await runCommand([node, '-e', "process.stdout.write('x'.repeat(10000))"], { cwd, timeoutMs: 10_000 });
     expect(r.output.length).toBeLessThanOrEqual(TAIL_BYTES);
