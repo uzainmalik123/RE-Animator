@@ -37,7 +37,7 @@ Reanimator revives a dead repo and serves it on localhost. Then it runs **Polter
 - `hackathon-ai-strategist` subagent (strategy, scope, pitch).
 - Repo-wide skills: `superpowers` (grill → plan → implement → review) and `grill-me` / `grilling`.
 
-## State (2026-11-02)
+## State (2026-11-04)
 
 - `poltergeist/`: engine built through its F09 (spec reader, config/safety, scout, personas, compiler, runner, verdicts, report, CLI); tests green. Now consumed by Reanimator (its standalone Séance/Costume work is deprioritised — see `poltergeist/docs/DECISIONS.md`).
-- `reanimator/`: R0 scaffold done (Vite + React canvas page, Hono backend, `npm run health`, CI `reanimator-ci.yml`). Next: R1 renderer.
+- `reanimator/`: R0 scaffold and R1 dot-matrix renderer done (`src/render/`: Bayer dither, `drawDots`/`drawGlyphs`, a cached `DotRenderer`, and a demo page on our own sample art). The team still has to approve the look (KI-R2). Next: pick the demo repo (KI-R1), then R2.
