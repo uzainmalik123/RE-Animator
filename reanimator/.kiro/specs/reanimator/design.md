@@ -30,6 +30,7 @@
 - v1 operates on **one prepared repo** in `fixtures/` (D-R6) that genuinely fails on Node 22.
 - `revive()` copies it to a temp dir, applies the prepared toolchain fix (or runs a Kiro step), and runs **vitals**: `install` (npm installs clean), `build` (exits 0, or none), `serve` (HTTP up), `render` (loads in headless Chromium with no uncaught errors). Each vital result streams to the UI as a heartbeat step.
 - The revived app is served at `http://localhost:<port>` so Poltergeist can reach it (D-R7).
+- **As built (D-R14, D-R15):** a fixture is `manifest.json` + `corpse/` + `remedy/`. The ritual first runs the vitals on the untouched corpse (its failure is the real flatline; a corpse that passes is refused as "not dead"), then on a remedied copy. Events stream over SSE (`POST /api/rituals`, `GET /api/rituals/:id/events`) and fold through `shared/ritual.ts`. The app is served on `127.0.0.1:<free port>`. Every `/api` route is loopback-only (KI-R12).
 
 ## 3. Death's attack (R3, R4)
 

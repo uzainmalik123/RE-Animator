@@ -85,7 +85,8 @@ Before you hand back, if anything changed:
 
 - `npm install` once.
 - `npm run dev` → the UI at http://localhost:5173 (a dark canvas until R1 draws on it).
-- `npm run server` → the backend at http://127.0.0.1:7070 (`/api/health`). The UI proxies `/api` to it.
+- `npm run server` → the backend at http://127.0.0.1:7070 (`/api/health`, `POST /api/rituals`). The UI proxies `/api` to it. Ctrl-C also stops the revived app.
+- `npx playwright-core install chromium` once per machine: the render vital and its integration test need it.
 - `npm run health` → typecheck + lint + test.
 
 ## Health check (after every implementation)
@@ -115,8 +116,8 @@ Death's attack is the sibling engine. When you reach R3:
 ## Do first (as of 2026-11-04)
 
 1. Read `docs/STORY.md`, `docs/THEME.md`, `docs/PRD.md`.
-2. ~~R0 scaffold, R1 renderer~~ (done). **Approve the look:** run `npm run dev`, try pitch and dots/glyphs, and sign off or ask for changes (KI-R2; screenshots in `docs/img/`).
-3. Shortlist and pick the one demo repo (KI-R1).
+2. ~~R0 scaffold, R1 renderer~~ (done). **Approve the look:** run `npm run dev` + `npm run server`, press **Begin the ritual** on the raise, and try the renderer at `?renderer`; sign off or ask for changes (KI-R2; screenshots in `docs/img/`).
+3. ~~R2 machinery~~ (built on the practice corpse, D-R14). Shortlist and pick the one demo repo (KI-R1) and drop it in as a fixture. Then R3.
 4. Read the 2026 rules (KI-R6 / Poltergeist KI-05).
 
 ## Tools available

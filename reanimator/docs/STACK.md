@@ -51,7 +51,7 @@ UI reads vitals + report and draws the raise, Death's attack, and the wounds.
 |---|---|
 | 5173 | Vite dev server (Reanimator UI) |
 | 7070 | Reanimator backend |
-| 7100+ | The revived app (served for the attack) |
+| random free | The revived app on 127.0.0.1 (served for the attack; chosen per ritual, D-R15) |
 
 ## Pinned versions
 
@@ -62,6 +62,7 @@ Pinned exactly in `reanimator/package.json` (R0, D-R12). Shared tools match Polt
 | react, react-dom | 19.3.1 | runtime |
 | hono | 4.13.16 | runtime |
 | @hono/node-server | 2.1.5 | runtime |
+| playwright-core | 1.64.1 | runtime (R2 render vital; needs `npx playwright-core install chromium` once per machine, CI installs it) |
 | vite | 8.3.5 | dev |
 | @vitejs/plugin-react | 6.2.1 | dev |
 | typescript | 5.9.3 | dev |
