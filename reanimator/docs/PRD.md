@@ -36,7 +36,7 @@
 | 0 | R0 | Scaffold (Vite + React + TS, canvas, health gate, CI) | High | Done |
 | 1 | R1 | Dot-matrix renderer (the art engine) | High | Done |
 | 2 | R2 | The Raise: revive one prepared dead repo, prove it with vitals | High | Built (practice corpse); demo repo pending KI-R1 |
-| 3 | R3 | Death's attack: wire in the Poltergeist engine | High | TBD |
+| 3 | R3 | Death's attack: wire in the Poltergeist engine | High | Built; live run pending KI-R15 |
 | 4 | R4 | The attack scene: draw Death + minions over the running app | High | TBD |
 | 5 | R5 | Wounds + heal loop: show findings, fix with Kiro, re-attack | High | TBD |
 | 6 | R6 | The graveyard: pick a dead repo | Med | TBD |
@@ -94,7 +94,7 @@
 - **Done when:** on the demo machine, the demo repo goes from failing to served-and-rendering, and the pulse scene reflects the real vital results.
 - **Built (2026-11-04, D-R14, D-R15):** `shared/ritual.ts` (protocol + reducer), `server/{exec,fixtures,vitals,render-check,ritual,guard}.ts`, `POST /api/rituals` + SSE events, and the raise scene in `src/raise/`. Proven end to end on `fixtures/practice-corpse` (a real `EBADENGINE` flatline → 4 real vitals → the guestbook served on 127.0.0.1 and shown; `server/ritual.integration.test.ts`). Screenshots: `docs/img/r2-raise-{idle,risen}.png`. The real demo repo's run waits on KI-R1.
 
-### R3: Death's attack (wire in Poltergeist) · High · TBD
+### R3: Death's attack (wire in Poltergeist) · High · Built; live run pending KI-R15
 **Owns:** calling the Poltergeist engine against the revived app and getting findings back: write a `poltergeist.config.json` pointing at the revived app's origin, provide/author a spec (the "chart") of the revived app, run Poltergeist (its CLI `summon` or MCP), and parse `haunting-report.json`.
 **Not this feature:** drawing the attack (R4) · the engine itself (that's the sibling, already built).
 - **User story:** As Death, I fall on the revived app and try to break it; whatever I break comes back as a list.
@@ -108,6 +108,7 @@
   - Poltergeist only attacks localhost by design, so the revived app must be local. Good — it is (R2).
   - Each persona = one class of adversarial test (input-injection-style, race, impatient resubmit, stale session, slow device, keyboard-only), using the engine's existing safe mechanisms (vetted static inputs + generators; the model never writes payloads). This is QA/robustness testing of the app **you revived and own** — not an exploit tool (see Poltergeist D-08).
 - **Done when:** running the full loop on the demo repo produces a real `haunting-report.json` with at least one reproduced finding.
+- **Built (2026-11-04, D-R16, D-R17):** `server/{env,event-log,sse,chart,engine,report,attack}.ts`, `shared/attack.ts`, `POST /api/rituals/:id/attack` + `GET /api/attacks/:id/events` (SSE), the practice corpse's chart (`fixtures/practice-corpse/chart/`) and a real-text **Summon Death** panel (`src/attack/`). The real Poltergeist CLI runs end to end in CI against the risen guestbook with no key: Scout walks it, the chart parses, and the run stops at the compiler (`server/attack.integration.test.ts`). The Done-when itself needs a key: `doppler run -- npm run attack:check` (KI-R15), then again on the real demo repo (KI-R1).
 
 ### R4: The attack scene · High · TBD
 **Owns:** the scene where Death and his six minions attack the running app: the app rendered as dots, minion sprites (`--death`) swarming it, and a wound opening where a finding lands (THEME §5–6).
@@ -189,3 +190,4 @@
 - 2026-11-02: R0 Done. Vite + React canvas page, Hono backend (`/api/health`, 127.0.0.1:7070), `npm run health` green, CI `reanimator-ci.yml` (D-R12, plan `docs/plans/2026-11-02-R0-scaffold.md`).
 - 2026-11-04: R1 Done. Dot-matrix renderer in `src/render/` (Bayer 4x4, empty-darkest, dots and glyphs, a per-cell cached `DotRenderer`, ~3 ms/frame at 1080p) and a demo page on our own SVG sample art. Fixes KI-R11 (D-R13, plan `docs/plans/2026-11-04-R1-renderer.md`). Look approval stays open on KI-R2.
 - 2026-11-04: R2 Built on a practice corpse (D-R14, D-R15, plan `docs/plans/2026-11-04-R2-raise.md`): the repo-agnostic ritual (real flatline, remedy, 4 vitals incl. headless-Chromium render), SSE with resume, one ritual at a time, and the raise scene (spell circle + heart monitor). Resolves KI-R12 (loopback guard). The demo repo itself is still KI-R1.
+- 2026-11-04: R3 Built (D-R16, D-R17, plan `docs/plans/2026-11-04-R3-death.md`): Death is the Poltergeist CLI run as a subprocess against the risen origin, from the fixture's chart; progress tailed from its `events.ndjson`, wounds read from `haunting-report.json` (haunted pairs only), over SSE to a real-text panel. Resolves KI-R4, KI-R5; fixes KI-R14 #2 and #4. The live run with a key is KI-R15.
