@@ -1,0 +1,1910 @@
+{
+  ".claude/settings.json": {
+    "mtime": 1793434167.684153,
+    "seen": 1793780211.1700625,
+    "ast_hash": "f6794ee9e595a8e1e64bc6eea94a6174",
+    "semantic_hash": "f6794ee9e595a8e1e64bc6eea94a6174"
+  },
+  ".github/workflows/ci.yml": {
+    "mtime": 1793595938.7126012,
+    "seen": 1793780211.1700668,
+    "ast_hash": "11b054ccee013e2d31aee403ac0ee6dd",
+    "semantic_hash": "11b054ccee013e2d31aee403ac0ee6dd"
+  },
+  ".github/workflows/reanimator-ci.yml": {
+    "mtime": 1793616434.0146105,
+    "seen": 1793780211.170069,
+    "ast_hash": "9b0f8e273131e96f69d8afa51f7ee83b",
+    "semantic_hash": "9b0f8e273131e96f69d8afa51f7ee83b"
+  },
+  "poltergeist/eslint.config.js": {
+    "mtime": 1793595938.7141998,
+    "seen": 1793780211.1700702,
+    "ast_hash": "9dbbecd101d837518924c514861b524e",
+    "semantic_hash": "9dbbecd101d837518924c514861b524e"
+  },
+  "poltergeist/fixtures/candy-swap/poltergeist.config.json": {
+    "mtime": 1793595938.7148402,
+    "seen": 1793780211.1700714,
+    "ast_hash": "3fffc5a0c9d6b2d9fd9af5e6c08d5853",
+    "semantic_hash": "3fffc5a0c9d6b2d9fd9af5e6c08d5853"
+  },
+  "poltergeist/integrations/kiro/hooks/poltergeist-summon.json": {
+    "mtime": 1793613589.466385,
+    "seen": 1793780211.1700723,
+    "ast_hash": "92d17159c4ff692261737d721bc53bd5",
+    "semantic_hash": "92d17159c4ff692261737d721bc53bd5"
+  },
+  "poltergeist/integrations/kiro/mcp.json": {
+    "mtime": 1793595938.7149165,
+    "seen": 1793780211.170073,
+    "ast_hash": "9f23b64f15658d52f55d371508ab8823",
+    "semantic_hash": "9f23b64f15658d52f55d371508ab8823"
+  },
+  "poltergeist/integrations/kiro/power/mcp.json": {
+    "mtime": 1793703443.0651515,
+    "seen": 1793780211.1700737,
+    "ast_hash": "afbbc4f80b3134173921f6b87a93b598",
+    "semantic_hash": "afbbc4f80b3134173921f6b87a93b598"
+  },
+  "poltergeist/integrations/kiro/power/plugin.json": {
+    "mtime": 1793703443.0661676,
+    "seen": 1793780211.1700747,
+    "ast_hash": "e014d990c9f98ad5bc5c89ac43314568",
+    "semantic_hash": "e014d990c9f98ad5bc5c89ac43314568"
+  },
+  "poltergeist/package.json": {
+    "mtime": 1793642793.2510183,
+    "seen": 1793780211.1700754,
+    "ast_hash": "fe235685d4328d7cb444fbac331989a3",
+    "semantic_hash": "fe235685d4328d7cb444fbac331989a3"
+  },
+  "poltergeist/packages/cli/bin/poltergeist.js": {
+    "mtime": 1793595938.7152286,
+    "seen": 1793780211.1700761,
+    "ast_hash": "758b1a2fa5cefb2a59ecd6ce31d49d93",
+    "semantic_hash": "758b1a2fa5cefb2a59ecd6ce31d49d93"
+  },
+  "poltergeist/packages/cli/package.json": {
+    "mtime": 1793595938.7152286,
+    "seen": 1793780211.170077,
+    "ast_hash": "11993cf7746d4c84a058f9c0714921d0",
+    "semantic_hash": "11993cf7746d4c84a058f9c0714921d0"
+  },
+  "poltergeist/packages/cli/src/args.ts": {
+    "mtime": 1793704770.7086675,
+    "seen": 1793780211.170078,
+    "ast_hash": "8f2db1cfb8da28c8a403d3224f8b7072",
+    "semantic_hash": "8f2db1cfb8da28c8a403d3224f8b7072"
+  },
+  "poltergeist/packages/cli/src/exit.ts": {
+    "mtime": 1793595938.7153282,
+    "seen": 1793780211.1700788,
+    "ast_hash": "bc4a6d64a000429982ca123144b4a8f5",
+    "semantic_hash": "bc4a6d64a000429982ca123144b4a8f5"
+  },
+  "poltergeist/packages/cli/src/index.ts": {
+    "mtime": 1793704770.7086675,
+    "seen": 1793780211.1700795,
+    "ast_hash": "18e01cee6e1be3c60e5ff249ffdcbe86",
+    "semantic_hash": "18e01cee6e1be3c60e5ff249ffdcbe86"
+  },
+  "poltergeist/packages/cli/src/init/apply.ts": {
+    "mtime": 1793703443.0662072,
+    "seen": 1793780211.1700802,
+    "ast_hash": "e60fb96cba33ed9e66cf586b76c06833",
+    "semantic_hash": "e60fb96cba33ed9e66cf586b76c06833"
+  },
+  "poltergeist/packages/cli/src/init/index.ts": {
+    "mtime": 1793613589.4669657,
+    "seen": 1793780211.1700811,
+    "ast_hash": "4940803c63b8ad7f9b609c23dba2fb57",
+    "semantic_hash": "4940803c63b8ad7f9b609c23dba2fb57"
+  },
+  "poltergeist/packages/cli/src/init/plan.ts": {
+    "mtime": 1793703443.0662072,
+    "seen": 1793780211.1700819,
+    "ast_hash": "91dc2796eb3a8a4b94bd355136b98c49",
+    "semantic_hash": "91dc2796eb3a8a4b94bd355136b98c49"
+  },
+  "poltergeist/packages/cli/src/main.ts": {
+    "mtime": 1793704770.7086675,
+    "seen": 1793780211.1700826,
+    "ast_hash": "7aa7a7d1edf291df206074723a47498b",
+    "semantic_hash": "7aa7a7d1edf291df206074723a47498b"
+  },
+  "poltergeist/packages/cli/src/power/build.ts": {
+    "mtime": 1793703443.0662072,
+    "seen": 1793780211.170083,
+    "ast_hash": "1db40dbb336367b6402241d16d819746",
+    "semantic_hash": "1db40dbb336367b6402241d16d819746"
+  },
+  "poltergeist/packages/cli/src/power/index.ts": {
+    "mtime": 1793703443.067555,
+    "seen": 1793780211.1700838,
+    "ast_hash": "14549ea4c2cd482006c84bb56f8eb8dd",
+    "semantic_hash": "14549ea4c2cd482006c84bb56f8eb8dd"
+  },
+  "poltergeist/packages/cli/src/power/validate.ts": {
+    "mtime": 1793703443.067555,
+    "seen": 1793780211.1700847,
+    "ast_hash": "9a8b94ea2ceeae43bd795078f80c2aa8",
+    "semantic_hash": "9a8b94ea2ceeae43bd795078f80c2aa8"
+  },
+  "poltergeist/packages/cli/src/recording.ts": {
+    "mtime": 1793642793.251582,
+    "seen": 1793780211.1700857,
+    "ast_hash": "168f8c777b79862a7b65e53542d3213c",
+    "semantic_hash": "168f8c777b79862a7b65e53542d3213c"
+  },
+  "poltergeist/packages/cli/src/replay.ts": {
+    "mtime": 1793642793.2516196,
+    "seen": 1793780211.1700864,
+    "ast_hash": "3b58af6ba04ed32f8a7dd06e07835011",
+    "semantic_hash": "3b58af6ba04ed32f8a7dd06e07835011"
+  },
+  "poltergeist/packages/cli/src/seance-server.ts": {
+    "mtime": 1793704770.7086675,
+    "seen": 1793780211.170087,
+    "ast_hash": "732aecc89dbba2c0bb335fb3ebf3fff7",
+    "semantic_hash": "732aecc89dbba2c0bb335fb3ebf3fff7"
+  },
+  "poltergeist/packages/cli/src/term/board.ts": {
+    "mtime": 1793617807.1370378,
+    "seen": 1793780211.1700876,
+    "ast_hash": "6b42f24cd97bfb3e98e443c3e45c7cb5",
+    "semantic_hash": "6b42f24cd97bfb3e98e443c3e45c7cb5"
+  },
+  "poltergeist/packages/cli/src/term/color.ts": {
+    "mtime": 1793595938.7154443,
+    "seen": 1793780211.1700888,
+    "ast_hash": "e63f878446098d8f79346e9917e538b3",
+    "semantic_hash": "e63f878446098d8f79346e9917e538b3"
+  },
+  "poltergeist/packages/cli/src/term/live.ts": {
+    "mtime": 1793595938.7154443,
+    "seen": 1793780211.1700895,
+    "ast_hash": "3f7fc54f1c16278563673aacb4f8d08e",
+    "semantic_hash": "3f7fc54f1c16278563673aacb4f8d08e"
+  },
+  "poltergeist/packages/cli/test/args.test.ts": {
+    "mtime": 1793704770.7086675,
+    "seen": 1793780211.17009,
+    "ast_hash": "8f63cf05ba85bc0646b2c023302e772a",
+    "semantic_hash": "8f63cf05ba85bc0646b2c023302e772a"
+  },
+  "poltergeist/packages/cli/test/bin.test.ts": {
+    "mtime": 1793595938.7155151,
+    "seen": 1793780211.1700907,
+    "ast_hash": "ea91674d713bb1d5c47c101b5cf3db16",
+    "semantic_hash": "ea91674d713bb1d5c47c101b5cf3db16"
+  },
+  "poltergeist/packages/cli/test/done-when.test.ts": {
+    "mtime": 1793617807.1370378,
+    "seen": 1793780211.1700916,
+    "ast_hash": "e3e9cd1bf13d69c681a5bea6a2ff39c5",
+    "semantic_hash": "e3e9cd1bf13d69c681a5bea6a2ff39c5"
+  },
+  "poltergeist/packages/cli/test/exit.test.ts": {
+    "mtime": 1793595938.7155151,
+    "seen": 1793780211.170092,
+    "ast_hash": "34709d6b1d0b8883079b48c694b2e393",
+    "semantic_hash": "34709d6b1d0b8883079b48c694b2e393"
+  },
+  "poltergeist/packages/cli/test/init-apply.test.ts": {
+    "mtime": 1793703443.067555,
+    "seen": 1793780211.1700928,
+    "ast_hash": "418140ed4264a9ac767cd99eb03a6dd0",
+    "semantic_hash": "418140ed4264a9ac767cd99eb03a6dd0"
+  },
+  "poltergeist/packages/cli/test/init-done-when.test.ts": {
+    "mtime": 1793613589.4669657,
+    "seen": 1793780211.1700933,
+    "ast_hash": "d513c3b4a86268a5b240d6327b5df51e",
+    "semantic_hash": "d513c3b4a86268a5b240d6327b5df51e"
+  },
+  "poltergeist/packages/cli/test/init-plan.test.ts": {
+    "mtime": 1793613589.4669657,
+    "seen": 1793780211.170094,
+    "ast_hash": "0750e1f2799021d14ac6c9bb3ba2cb29",
+    "semantic_hash": "0750e1f2799021d14ac6c9bb3ba2cb29"
+  },
+  "poltergeist/packages/cli/test/power-build.test.ts": {
+    "mtime": 1793703443.067555,
+    "seen": 1793780211.170095,
+    "ast_hash": "5b7b9b5a678d42d9bcabd454f05c4a4d",
+    "semantic_hash": "5b7b9b5a678d42d9bcabd454f05c4a4d"
+  },
+  "poltergeist/packages/cli/test/power-done-when.test.ts": {
+    "mtime": 1793703443.067555,
+    "seen": 1793780211.1700957,
+    "ast_hash": "85bb1bb0034a07e2c8bcbbdc5020b59e",
+    "semantic_hash": "85bb1bb0034a07e2c8bcbbdc5020b59e"
+  },
+  "poltergeist/packages/cli/test/power-validate.test.ts": {
+    "mtime": 1793703443.067555,
+    "seen": 1793780211.1700964,
+    "ast_hash": "5a0c6da25dea870bdee761346b8224ca",
+    "semantic_hash": "5a0c6da25dea870bdee761346b8224ca"
+  },
+  "poltergeist/packages/cli/test/recording-cli.test.ts": {
+    "mtime": 1793642793.2519948,
+    "seen": 1793780211.170097,
+    "ast_hash": "1e210eea41abde1ec885eee1b0e10cdd",
+    "semantic_hash": "1e210eea41abde1ec885eee1b0e10cdd"
+  },
+  "poltergeist/packages/cli/test/recording-done-when.test.ts": {
+    "mtime": 1793642793.252184,
+    "seen": 1793780211.1700978,
+    "ast_hash": "d0abaec0ababb5fb890f6e197351cf88",
+    "semantic_hash": "d0abaec0ababb5fb890f6e197351cf88"
+  },
+  "poltergeist/packages/cli/test/replay.test.ts": {
+    "mtime": 1793642793.252233,
+    "seen": 1793780211.1700988,
+    "ast_hash": "a2b9994f70cfc2ef1bb831c0d6ff2a6c",
+    "semantic_hash": "a2b9994f70cfc2ef1bb831c0d6ff2a6c"
+  },
+  "poltergeist/packages/cli/test/seance-server.test.ts": {
+    "mtime": 1793642793.252233,
+    "seen": 1793780211.1700995,
+    "ast_hash": "1370d8114154f0e33327ae0297f49e44",
+    "semantic_hash": "1370d8114154f0e33327ae0297f49e44"
+  },
+  "poltergeist/packages/cli/test/term.test.ts": {
+    "mtime": 1793617807.1372678,
+    "seen": 1793780211.1701002,
+    "ast_hash": "4a878fd2fda491e6648a6c7c0e64a3e6",
+    "semantic_hash": "4a878fd2fda491e6648a6c7c0e64a3e6"
+  },
+  "poltergeist/packages/core/package.json": {
+    "mtime": 1793703443.067555,
+    "seen": 1793780211.1701012,
+    "ast_hash": "939d2e574fa45c2216078c5f78c6f249",
+    "semantic_hash": "939d2e574fa45c2216078c5f78c6f249"
+  },
+  "poltergeist/packages/core/src/compiler/cache.ts": {
+    "mtime": 1793703443.067555,
+    "seen": 1793780211.1701021,
+    "ast_hash": "b64b120b64969f5dbba75d0599d466de",
+    "semantic_hash": "b64b120b64969f5dbba75d0599d466de"
+  },
+  "poltergeist/packages/core/src/compiler/compile.ts": {
+    "mtime": 1793703443.0681517,
+    "seen": 1793780211.1701028,
+    "ast_hash": "6d69526728e306f92f849fb678dec96c",
+    "semantic_hash": "6d69526728e306f92f849fb678dec96c"
+  },
+  "poltergeist/packages/core/src/compiler/dsl.ts": {
+    "mtime": 1793703443.0681517,
+    "seen": 1793780211.1701035,
+    "ast_hash": "6e59ffae4e6ea209b7bec74652614ad5",
+    "semantic_hash": "6e59ffae4e6ea209b7bec74652614ad5"
+  },
+  "poltergeist/packages/core/src/compiler/errors.ts": {
+    "mtime": 1793595938.7157185,
+    "seen": 1793780211.1701043,
+    "ast_hash": "4869679c6e57e9cba7068405bcf7e4af",
+    "semantic_hash": "4869679c6e57e9cba7068405bcf7e4af"
+  },
+  "poltergeist/packages/core/src/compiler/index.ts": {
+    "mtime": 1793595938.7157185,
+    "seen": 1793780211.170105,
+    "ast_hash": "0ee952d8e929d1829d894267426fd171",
+    "semantic_hash": "0ee952d8e929d1829d894267426fd171"
+  },
+  "poltergeist/packages/core/src/compiler/llm.ts": {
+    "mtime": 1793704770.7086675,
+    "seen": 1793780211.1701057,
+    "ast_hash": "4892da81a7fd84be92afd74218615c07",
+    "semantic_hash": "4892da81a7fd84be92afd74218615c07"
+  },
+  "poltergeist/packages/core/src/compiler/prompt.ts": {
+    "mtime": 1793703443.0681517,
+    "seen": 1793780211.1701066,
+    "ast_hash": "55ee71be11ee18617e353e1638e09f7e",
+    "semantic_hash": "55ee71be11ee18617e353e1638e09f7e"
+  },
+  "poltergeist/packages/core/src/compiler/routes.ts": {
+    "mtime": 1793595938.7157185,
+    "seen": 1793780211.1701074,
+    "ast_hash": "8053cb6e7710136e447b847682907d57",
+    "semantic_hash": "8053cb6e7710136e447b847682907d57"
+  },
+  "poltergeist/packages/core/src/compiler/validate.ts": {
+    "mtime": 1793703443.0681517,
+    "seen": 1793780211.1701086,
+    "ast_hash": "7bb68d8866e7b30042de5f20d2185f23",
+    "semantic_hash": "7bb68d8866e7b30042de5f20d2185f23"
+  },
+  "poltergeist/packages/core/src/config/errors.ts": {
+    "mtime": 1793595938.7157185,
+    "seen": 1793780211.17011,
+    "ast_hash": "2705ae7103fd5f40ed1b3ed0a0523970",
+    "semantic_hash": "2705ae7103fd5f40ed1b3ed0a0523970"
+  },
+  "poltergeist/packages/core/src/config/index.ts": {
+    "mtime": 1793703443.0681517,
+    "seen": 1793780211.1701114,
+    "ast_hash": "cd0ef2c14853e60f260ce4334d240a7b",
+    "semantic_hash": "cd0ef2c14853e60f260ce4334d240a7b"
+  },
+  "poltergeist/packages/core/src/config/load.ts": {
+    "mtime": 1793595938.71596,
+    "seen": 1793780211.1701128,
+    "ast_hash": "c71ae8d3205ceadf914da0d5d657adc2",
+    "semantic_hash": "c71ae8d3205ceadf914da0d5d657adc2"
+  },
+  "poltergeist/packages/core/src/config/redact.ts": {
+    "mtime": 1793595938.71596,
+    "seen": 1793780211.1701143,
+    "ast_hash": "747b1b81f8387e2cb07d397c993e70f1",
+    "semantic_hash": "747b1b81f8387e2cb07d397c993e70f1"
+  },
+  "poltergeist/packages/core/src/config/reset.ts": {
+    "mtime": 1793703443.0681517,
+    "seen": 1793780211.1701155,
+    "ast_hash": "b338107682f706755558fe3bc2cb479f",
+    "semantic_hash": "b338107682f706755558fe3bc2cb479f"
+  },
+  "poltergeist/packages/core/src/config/schema.ts": {
+    "mtime": 1793703443.0681517,
+    "seen": 1793780211.1701162,
+    "ast_hash": "2b68a4b503777e9b53a0e6593265a9d4",
+    "semantic_hash": "2b68a4b503777e9b53a0e6593265a9d4"
+  },
+  "poltergeist/packages/core/src/index.ts": {
+    "mtime": 1793703443.0691516,
+    "seen": 1793780211.170117,
+    "ast_hash": "4859102cc1023e3bd95c05b23477dbcb",
+    "semantic_hash": "4859102cc1023e3bd95c05b23477dbcb"
+  },
+  "poltergeist/packages/core/src/live/index.ts": {
+    "mtime": 1793642793.252233,
+    "seen": 1793780211.1701176,
+    "ast_hash": "1cd03a107069ed08c81e001cacff9760",
+    "semantic_hash": "1cd03a107069ed08c81e001cacff9760"
+  },
+  "poltergeist/packages/core/src/live/reduce.ts": {
+    "mtime": 1793642793.252233,
+    "seen": 1793780211.1701183,
+    "ast_hash": "97271576e11373e3beef9cfd43c04efe",
+    "semantic_hash": "97271576e11373e3beef9cfd43c04efe"
+  },
+  "poltergeist/packages/core/src/live/timeline.ts": {
+    "mtime": 1793642793.2527986,
+    "seen": 1793780211.1701188,
+    "ast_hash": "2a45959c1ad40759a15da97e9db6312d",
+    "semantic_hash": "2a45959c1ad40759a15da97e9db6312d"
+  },
+  "poltergeist/packages/core/src/live/types.ts": {
+    "mtime": 1793642793.2527986,
+    "seen": 1793780211.1701198,
+    "ast_hash": "a312bbf214c04c69462f2be07b12c29d",
+    "semantic_hash": "a312bbf214c04c69462f2be07b12c29d"
+  },
+  "poltergeist/packages/core/src/personas/devices.ts": {
+    "mtime": 1793680301.3476257,
+    "seen": 1793780211.1701205,
+    "ast_hash": "eeb1dd2b861a4e37de4450792140ac00",
+    "semantic_hash": "eeb1dd2b861a4e37de4450792140ac00"
+  },
+  "poltergeist/packages/core/src/personas/errors.ts": {
+    "mtime": 1793595938.71596,
+    "seen": 1793780211.1701212,
+    "ast_hash": "66bb108af6c9a9fd97dd1f9dcad37296",
+    "semantic_hash": "66bb108af6c9a9fd97dd1f9dcad37296"
+  },
+  "poltergeist/packages/core/src/personas/generators/fastcheck.ts": {
+    "mtime": 1793595938.7162793,
+    "seen": 1793780211.1701217,
+    "ast_hash": "280c253d026bcf1889f40977e9522174",
+    "semantic_hash": "280c253d026bcf1889f40977e9522174"
+  },
+  "poltergeist/packages/core/src/personas/generators/index.ts": {
+    "mtime": 1793595938.7162793,
+    "seen": 1793780211.1701224,
+    "ast_hash": "d7898b6d044e09ec81f3392b3beccfdf",
+    "semantic_hash": "d7898b6d044e09ec81f3392b3beccfdf"
+  },
+  "poltergeist/packages/core/src/personas/generators/lists.ts": {
+    "mtime": 1793595938.7162793,
+    "seen": 1793780211.1701233,
+    "ast_hash": "356189ef77a88dc0a82a3200ba005ea9",
+    "semantic_hash": "356189ef77a88dc0a82a3200ba005ea9"
+  },
+  "poltergeist/packages/core/src/personas/generators/mix.ts": {
+    "mtime": 1793595938.7162793,
+    "seen": 1793780211.170124,
+    "ast_hash": "e96b2aa6f1cbee90e3a5f316fc460718",
+    "semantic_hash": "e96b2aa6f1cbee90e3a5f316fc460718"
+  },
+  "poltergeist/packages/core/src/personas/generators/naughty.ts": {
+    "mtime": 1793595938.7162793,
+    "seen": 1793780211.1701248,
+    "ast_hash": "da1d2282a3022a5df05f6145f4c2f75e",
+    "semantic_hash": "da1d2282a3022a5df05f6145f4c2f75e"
+  },
+  "poltergeist/packages/core/src/personas/index.ts": {
+    "mtime": 1793680301.3476257,
+    "seen": 1793780211.1701252,
+    "ast_hash": "eb4741a731891bf7357fb94918fe62c4",
+    "semantic_hash": "eb4741a731891bf7357fb94918fe62c4"
+  },
+  "poltergeist/packages/core/src/personas/registry.ts": {
+    "mtime": 1793703443.0691516,
+    "seen": 1793780211.170126,
+    "ast_hash": "57ae0169c6b71dadc996fbe2e3c15d46",
+    "semantic_hash": "57ae0169c6b71dadc996fbe2e3c15d46"
+  },
+  "poltergeist/packages/core/src/personas/steps.ts": {
+    "mtime": 1793703443.0691516,
+    "seen": 1793780211.170127,
+    "ast_hash": "f02cf42b02c1e05b50219dcd58f8f06c",
+    "semantic_hash": "f02cf42b02c1e05b50219dcd58f8f06c"
+  },
+  "poltergeist/packages/core/src/recording/export.ts": {
+    "mtime": 1793704770.7086675,
+    "seen": 1793780211.1701276,
+    "ast_hash": "70de268a4550d1dc93fed6938326442d",
+    "semantic_hash": "70de268a4550d1dc93fed6938326442d"
+  },
+  "poltergeist/packages/core/src/recording/index.ts": {
+    "mtime": 1793704770.7094998,
+    "seen": 1793780211.1701283,
+    "ast_hash": "a355c411b611071acc2ebd2f4a6140bc",
+    "semantic_hash": "a355c411b611071acc2ebd2f4a6140bc"
+  },
+  "poltergeist/packages/core/src/recording/load.ts": {
+    "mtime": 1793642793.2532368,
+    "seen": 1793780211.1701288,
+    "ast_hash": "5d9b9dc2ff77d70a69c7ae605194fb02",
+    "semantic_hash": "5d9b9dc2ff77d70a69c7ae605194fb02"
+  },
+  "poltergeist/packages/core/src/report/glyphs.ts": {
+    "mtime": 1793595938.7162793,
+    "seen": 1793780211.1701298,
+    "ast_hash": "40eb40b03df5cb1bbd30c1cb1c1e7b11",
+    "semantic_hash": "40eb40b03df5cb1bbd30c1cb1c1e7b11"
+  },
+  "poltergeist/packages/core/src/report/index.ts": {
+    "mtime": 1793617807.1372678,
+    "seen": 1793780211.1701307,
+    "ast_hash": "ce2d165e345ca7717d838d25679e9b3d",
+    "semantic_hash": "ce2d165e345ca7717d838d25679e9b3d"
+  },
+  "poltergeist/packages/core/src/report/merge.ts": {
+    "mtime": 1793617807.1372678,
+    "seen": 1793780211.1701314,
+    "ast_hash": "c711915bc8a569dcb74eb7abab3e6899",
+    "semantic_hash": "c711915bc8a569dcb74eb7abab3e6899"
+  },
+  "poltergeist/packages/core/src/report/render.ts": {
+    "mtime": 1793703443.0691516,
+    "seen": 1793780211.1701322,
+    "ast_hash": "aab32d74efef3e16cbc322d3986b7178",
+    "semantic_hash": "aab32d74efef3e16cbc322d3986b7178"
+  },
+  "poltergeist/packages/core/src/report/schema.ts": {
+    "mtime": 1793703443.0691516,
+    "seen": 1793780211.1701326,
+    "ast_hash": "aa86c19a95d40638d011779adefd1926",
+    "semantic_hash": "aa86c19a95d40638d011779adefd1926"
+  },
+  "poltergeist/packages/core/src/report/text.ts": {
+    "mtime": 1793595938.7166076,
+    "seen": 1793780211.1701336,
+    "ast_hash": "75d04a20e39c80e9627e9c90b531188a",
+    "semantic_hash": "75d04a20e39c80e9627e9c90b531188a"
+  },
+  "poltergeist/packages/core/src/report/write.ts": {
+    "mtime": 1793595938.7166076,
+    "seen": 1793780211.1701343,
+    "ast_hash": "de986c8458c21246b37b4d5f7d882969",
+    "semantic_hash": "de986c8458c21246b37b4d5f7d882969"
+  },
+  "poltergeist/packages/core/src/runner/actor.ts": {
+    "mtime": 1793703443.0691516,
+    "seen": 1793780211.170135,
+    "ast_hash": "d9f02b703b2b885f7e29e69fc6de892c",
+    "semantic_hash": "d9f02b703b2b885f7e29e69fc6de892c"
+  },
+  "poltergeist/packages/core/src/runner/assertions.ts": {
+    "mtime": 1793595938.71683,
+    "seen": 1793780211.1701355,
+    "ast_hash": "1f5f0b3d3a000c1ba9bc1cb0130c1029",
+    "semantic_hash": "1f5f0b3d3a000c1ba9bc1cb0130c1029"
+  },
+  "poltergeist/packages/core/src/runner/barrier.ts": {
+    "mtime": 1793595938.71683,
+    "seen": 1793780211.170137,
+    "ast_hash": "cb45d0cd98f0110d097c6b810a08d7f2",
+    "semantic_hash": "cb45d0cd98f0110d097c6b810a08d7f2"
+  },
+  "poltergeist/packages/core/src/runner/device.ts": {
+    "mtime": 1793680301.3482656,
+    "seen": 1793780211.1701376,
+    "ast_hash": "ee07e9281744c437060dd27945a11958",
+    "semantic_hash": "ee07e9281744c437060dd27945a11958"
+  },
+  "poltergeist/packages/core/src/runner/errors.ts": {
+    "mtime": 1793595938.71683,
+    "seen": 1793780211.1701384,
+    "ast_hash": "ba50a0441166379d9ede4c982924656f",
+    "semantic_hash": "ba50a0441166379d9ede4c982924656f"
+  },
+  "poltergeist/packages/core/src/runner/events.ts": {
+    "mtime": 1793642793.253322,
+    "seen": 1793780211.1701388,
+    "ast_hash": "e3fb55092a93326d413cedecd8100701",
+    "semantic_hash": "e3fb55092a93326d413cedecd8100701"
+  },
+  "poltergeist/packages/core/src/runner/focus.ts": {
+    "mtime": 1793703443.0701516,
+    "seen": 1793780211.1701396,
+    "ast_hash": "d3e90a96dfb5b4399522af695e1bb5c9",
+    "semantic_hash": "d3e90a96dfb5b4399522af695e1bb5c9"
+  },
+  "poltergeist/packages/core/src/runner/frames.ts": {
+    "mtime": 1793595938.71683,
+    "seen": 1793780211.1701405,
+    "ast_hash": "d3e0a39ff1571104f3b08413e5011e26",
+    "semantic_hash": "d3e0a39ff1571104f3b08413e5011e26"
+  },
+  "poltergeist/packages/core/src/runner/holds.ts": {
+    "mtime": 1793595938.71683,
+    "seen": 1793780211.170141,
+    "ast_hash": "86fa37808b7882d17445e7b5fc657742",
+    "semantic_hash": "86fa37808b7882d17445e7b5fc657742"
+  },
+  "poltergeist/packages/core/src/runner/index.ts": {
+    "mtime": 1793595938.71683,
+    "seen": 1793780211.1701417,
+    "ast_hash": "e39f84394a4ea8a04a1dfa75bacb2129",
+    "semantic_hash": "e39f84394a4ea8a04a1dfa75bacb2129"
+  },
+  "poltergeist/packages/core/src/runner/match.ts": {
+    "mtime": 1793595938.71683,
+    "seen": 1793780211.1701424,
+    "ast_hash": "9f3fc8224b5d14d852e81aff309b044e",
+    "semantic_hash": "9f3fc8224b5d14d852e81aff309b044e"
+  },
+  "poltergeist/packages/core/src/runner/overlay.ts": {
+    "mtime": 1793595938.71683,
+    "seen": 1793780211.170143,
+    "ast_hash": "89fdcb21a0cce72bfdc6a9e4d71050ff",
+    "semantic_hash": "89fdcb21a0cce72bfdc6a9e4d71050ff"
+  },
+  "poltergeist/packages/core/src/runner/run.ts": {
+    "mtime": 1793703443.0701516,
+    "seen": 1793780211.1701438,
+    "ast_hash": "2cd032db81fd302c2a83b61a042fc382",
+    "semantic_hash": "2cd032db81fd302c2a83b61a042fc382"
+  },
+  "poltergeist/packages/core/src/runner/schedule.ts": {
+    "mtime": 1793595938.71683,
+    "seen": 1793780211.1701446,
+    "ast_hash": "05013da896c8dd7e8a8ddc3b1eaab3a5",
+    "semantic_hash": "05013da896c8dd7e8a8ddc3b1eaab3a5"
+  },
+  "poltergeist/packages/core/src/runner/seed.ts": {
+    "mtime": 1793595938.71683,
+    "seen": 1793780211.1701453,
+    "ast_hash": "ce79ff51ef4a3075073679ea42806f5f",
+    "semantic_hash": "ce79ff51ef4a3075073679ea42806f5f"
+  },
+  "poltergeist/packages/core/src/runner/throttle.ts": {
+    "mtime": 1793595938.71683,
+    "seen": 1793780211.1701458,
+    "ast_hash": "5c25fa9d4e5c19ce23652719448af656",
+    "semantic_hash": "5c25fa9d4e5c19ce23652719448af656"
+  },
+  "poltergeist/packages/core/src/runner/types.ts": {
+    "mtime": 1793703443.0701516,
+    "seen": 1793780211.1701465,
+    "ast_hash": "155a7792207710f6b9e0c66617797a6d",
+    "semantic_hash": "155a7792207710f6b9e0c66617797a6d"
+  },
+  "poltergeist/packages/core/src/safety/allowlist.ts": {
+    "mtime": 1793595938.71683,
+    "seen": 1793780211.1701474,
+    "ast_hash": "f3974fd9e2731360f1e23f2ee090c614",
+    "semantic_hash": "f3974fd9e2731360f1e23f2ee090c614"
+  },
+  "poltergeist/packages/core/src/safety/forbidden.ts": {
+    "mtime": 1793595938.7172647,
+    "seen": 1793780211.170148,
+    "ast_hash": "ac9ebc88f529199b630d85fc003bb406",
+    "semantic_hash": "ac9ebc88f529199b630d85fc003bb406"
+  },
+  "poltergeist/packages/core/src/safety/guard.ts": {
+    "mtime": 1793703443.0701516,
+    "seen": 1793780211.1701486,
+    "ast_hash": "cc644f7940df4e18f88d80431d2c9157",
+    "semantic_hash": "cc644f7940df4e18f88d80431d2c9157"
+  },
+  "poltergeist/packages/core/src/safety/index.ts": {
+    "mtime": 1793595938.7172647,
+    "seen": 1793780211.1701493,
+    "ast_hash": "74b38b941e940c0de44d981e71d695a1",
+    "semantic_hash": "74b38b941e940c0de44d981e71d695a1"
+  },
+  "poltergeist/packages/core/src/safety/limiter.ts": {
+    "mtime": 1793595938.7172647,
+    "seen": 1793780211.1701498,
+    "ast_hash": "1dd667989906292e93c1819459b07cda",
+    "semantic_hash": "1dd667989906292e93c1819459b07cda"
+  },
+  "poltergeist/packages/core/src/scout/aria.ts": {
+    "mtime": 1793595938.7172647,
+    "seen": 1793780211.1701508,
+    "ast_hash": "8266316b47e2ca74284d8e7491fa2a0a",
+    "semantic_hash": "8266316b47e2ca74284d8e7491fa2a0a"
+  },
+  "poltergeist/packages/core/src/scout/capture.ts": {
+    "mtime": 1793595938.7174103,
+    "seen": 1793780211.1701515,
+    "ast_hash": "6d361341584d994a0b111d82cf082ac1",
+    "semantic_hash": "6d361341584d994a0b111d82cf082ac1"
+  },
+  "poltergeist/packages/core/src/scout/hash.ts": {
+    "mtime": 1793595938.7174103,
+    "seen": 1793780211.170152,
+    "ast_hash": "3e6c5a7e6774f64eb0e5584c1587c28f",
+    "semantic_hash": "3e6c5a7e6774f64eb0e5584c1587c28f"
+  },
+  "poltergeist/packages/core/src/scout/index.ts": {
+    "mtime": 1793595938.7174103,
+    "seen": 1793780211.1701527,
+    "ast_hash": "44f4a818cfa4508ae7cd8e35e6f87a2c",
+    "semantic_hash": "44f4a818cfa4508ae7cd8e35e6f87a2c"
+  },
+  "poltergeist/packages/core/src/scout/login.ts": {
+    "mtime": 1793595938.7174103,
+    "seen": 1793780211.1701534,
+    "ast_hash": "5895086b0526511973f0366d0c9d0215",
+    "semantic_hash": "5895086b0526511973f0366d0c9d0215"
+  },
+  "poltergeist/packages/core/src/scout/scout.ts": {
+    "mtime": 1793595938.7174103,
+    "seen": 1793780211.170154,
+    "ast_hash": "30d6bc6f57ab9ae995d7390104caa042",
+    "semantic_hash": "30d6bc6f57ab9ae995d7390104caa042"
+  },
+  "poltergeist/packages/core/src/scout/slug.ts": {
+    "mtime": 1793595938.7174103,
+    "seen": 1793780211.1701548,
+    "ast_hash": "ac0bb42e6a5faac448bc792ad3c82bf9",
+    "semantic_hash": "ac0bb42e6a5faac448bc792ad3c82bf9"
+  },
+  "poltergeist/packages/core/src/scout/trim.ts": {
+    "mtime": 1793595938.7174103,
+    "seen": 1793780211.1701555,
+    "ast_hash": "00583faad27aa27273dcbd54a8c35811",
+    "semantic_hash": "00583faad27aa27273dcbd54a8c35811"
+  },
+  "poltergeist/packages/core/src/scout/types.ts": {
+    "mtime": 1793595938.7174103,
+    "seen": 1793780211.170156,
+    "ast_hash": "afad3c5180c9546417cdb82456ef3288",
+    "semantic_hash": "afad3c5180c9546417cdb82456ef3288"
+  },
+  "poltergeist/packages/core/src/spec/ears.ts": {
+    "mtime": 1793595938.7174103,
+    "seen": 1793780211.1701567,
+    "ast_hash": "7f1cf3bafbdaba6671b7d36b2c4bb017",
+    "semantic_hash": "7f1cf3bafbdaba6671b7d36b2c4bb017"
+  },
+  "poltergeist/packages/core/src/spec/errors.ts": {
+    "mtime": 1793595938.7177014,
+    "seen": 1793780211.1701577,
+    "ast_hash": "8cf4694040cdacf9670f385def2162a6",
+    "semantic_hash": "8cf4694040cdacf9670f385def2162a6"
+  },
+  "poltergeist/packages/core/src/spec/hash.ts": {
+    "mtime": 1793595938.7177014,
+    "seen": 1793780211.1701581,
+    "ast_hash": "731a3e570cddbf7e06c27d00a6f210e9",
+    "semantic_hash": "731a3e570cddbf7e06c27d00a6f210e9"
+  },
+  "poltergeist/packages/core/src/spec/index.ts": {
+    "mtime": 1793595938.7177014,
+    "seen": 1793780211.1701589,
+    "ast_hash": "740bf3e69a36fa5c2c9eb529ae6b5434",
+    "semantic_hash": "740bf3e69a36fa5c2c9eb529ae6b5434"
+  },
+  "poltergeist/packages/core/src/spec/parse.ts": {
+    "mtime": 1793595938.7177014,
+    "seen": 1793780211.1701596,
+    "ast_hash": "b234abc8d88f973cc64ea9ce5900a7cb",
+    "semantic_hash": "b234abc8d88f973cc64ea9ce5900a7cb"
+  },
+  "poltergeist/packages/core/src/spec/read.ts": {
+    "mtime": 1793595938.7177014,
+    "seen": 1793780211.1701627,
+    "ast_hash": "01681325acbda17c20e2b9748532a9b1",
+    "semantic_hash": "01681325acbda17c20e2b9748532a9b1"
+  },
+  "poltergeist/packages/core/src/spec/types.ts": {
+    "mtime": 1793595938.7177014,
+    "seen": 1793780211.1701634,
+    "ast_hash": "6b25d8aa59848b5fa620fc8952d3d353",
+    "semantic_hash": "6b25d8aa59848b5fa620fc8952d3d353"
+  },
+  "poltergeist/packages/core/src/steering/apply.ts": {
+    "mtime": 1793703443.0701516,
+    "seen": 1793780211.1701655,
+    "ast_hash": "ed386fcae54ef82837b417285f1d3380",
+    "semantic_hash": "ed386fcae54ef82837b417285f1d3380"
+  },
+  "poltergeist/packages/core/src/steering/index.ts": {
+    "mtime": 1793703443.0712404,
+    "seen": 1793780211.1701663,
+    "ast_hash": "9c0854188427f33d8866aa940e32f65f",
+    "semantic_hash": "9c0854188427f33d8866aa940e32f65f"
+  },
+  "poltergeist/packages/core/src/steering/rules.ts": {
+    "mtime": 1793703443.0712404,
+    "seen": 1793780211.170167,
+    "ast_hash": "e6957ed4597ab9ff043bef261e90053b",
+    "semantic_hash": "e6957ed4597ab9ff043bef261e90053b"
+  },
+  "poltergeist/packages/core/src/summon/errors.ts": {
+    "mtime": 1793595938.7177014,
+    "seen": 1793780211.170168,
+    "ast_hash": "70a88e1782a2ef8c91e6b5d1693b1ff6",
+    "semantic_hash": "70a88e1782a2ef8c91e6b5d1693b1ff6"
+  },
+  "poltergeist/packages/core/src/summon/index.ts": {
+    "mtime": 1793595938.7179046,
+    "seen": 1793780211.1701684,
+    "ast_hash": "787e6a7c8a7af2de1e017235611eb8b0",
+    "semantic_hash": "787e6a7c8a7af2de1e017235611eb8b0"
+  },
+  "poltergeist/packages/core/src/summon/run-id.ts": {
+    "mtime": 1793595938.7179046,
+    "seen": 1793780211.170169,
+    "ast_hash": "c97249bc5fdd5c7ac864102423869727",
+    "semantic_hash": "c97249bc5fdd5c7ac864102423869727"
+  },
+  "poltergeist/packages/core/src/summon/summon.ts": {
+    "mtime": 1793703443.0712404,
+    "seen": 1793780211.1701698,
+    "ast_hash": "5b3bbd200ffa599d69e93eb49bfb0c63",
+    "semantic_hash": "5b3bbd200ffa599d69e93eb49bfb0c63"
+  },
+  "poltergeist/packages/core/src/summon/types.ts": {
+    "mtime": 1793703443.0712404,
+    "seen": 1793780211.1701703,
+    "ast_hash": "f2d73a3d2262165fe2e705ddb8f22ec2",
+    "semantic_hash": "f2d73a3d2262165fe2e705ddb8f22ec2"
+  },
+  "poltergeist/packages/core/src/verdicts/compute.ts": {
+    "mtime": 1793595938.7179046,
+    "seen": 1793780211.170171,
+    "ast_hash": "ca1054ca2e4caa9d31a2be4f4c8a0a63",
+    "semantic_hash": "ca1054ca2e4caa9d31a2be4f4c8a0a63"
+  },
+  "poltergeist/packages/core/src/verdicts/index.ts": {
+    "mtime": 1793595938.7180314,
+    "seen": 1793780211.170172,
+    "ast_hash": "253d15129e5e4f7f2e240076e31bba86",
+    "semantic_hash": "253d15129e5e4f7f2e240076e31bba86"
+  },
+  "poltergeist/packages/core/src/verdicts/pair.ts": {
+    "mtime": 1793595938.7180314,
+    "seen": 1793780211.1701725,
+    "ast_hash": "cd3aec14386969d4eb3cf5e443bb0aac",
+    "semantic_hash": "cd3aec14386969d4eb3cf5e443bb0aac"
+  },
+  "poltergeist/packages/core/src/verdicts/types.ts": {
+    "mtime": 1793595938.7180314,
+    "seen": 1793780211.1701732,
+    "ast_hash": "29a4e8c4d2335fc5ddafc42a9a5dfd4d",
+    "semantic_hash": "29a4e8c4d2335fc5ddafc42a9a5dfd4d"
+  },
+  "poltergeist/packages/core/test/compiler/cache.test.ts": {
+    "mtime": 1793703443.0712404,
+    "seen": 1793780211.170174,
+    "ast_hash": "0eae36fc1545f40460ce62c7ea341262",
+    "semantic_hash": "0eae36fc1545f40460ce62c7ea341262"
+  },
+  "poltergeist/packages/core/test/compiler/compile.test.ts": {
+    "mtime": 1793703443.0712404,
+    "seen": 1793780211.1701744,
+    "ast_hash": "867bfd2aad5cce17b6c5348fe1192b11",
+    "semantic_hash": "867bfd2aad5cce17b6c5348fe1192b11"
+  },
+  "poltergeist/packages/core/test/compiler/criteria.ts": {
+    "mtime": 1793595938.718137,
+    "seen": 1793780211.1701753,
+    "ast_hash": "07004a41c842d9367576abb66cbb8a53",
+    "semantic_hash": "07004a41c842d9367576abb66cbb8a53"
+  },
+  "poltergeist/packages/core/test/compiler/done-when.test.ts": {
+    "mtime": 1793703443.0712404,
+    "seen": 1793780211.170176,
+    "ast_hash": "49cd968eb920d1363dd2c1b8b7cb1be4",
+    "semantic_hash": "49cd968eb920d1363dd2c1b8b7cb1be4"
+  },
+  "poltergeist/packages/core/test/compiler/dsl.test.ts": {
+    "mtime": 1793703443.0712404,
+    "seen": 1793780211.1701765,
+    "ast_hash": "498f9c37d91d5977390b455342edb624",
+    "semantic_hash": "498f9c37d91d5977390b455342edb624"
+  },
+  "poltergeist/packages/core/test/compiler/fake-llm.ts": {
+    "mtime": 1793703443.0712404,
+    "seen": 1793780211.1701772,
+    "ast_hash": "5ee5869745c9baf465ae31df4cdb962e",
+    "semantic_hash": "5ee5869745c9baf465ae31df4cdb962e"
+  },
+  "poltergeist/packages/core/test/compiler/llm.test.ts": {
+    "mtime": 1793703443.0712404,
+    "seen": 1793780211.170178,
+    "ast_hash": "136159ccd641cb64144555ab77bdb3c1",
+    "semantic_hash": "136159ccd641cb64144555ab77bdb3c1"
+  },
+  "poltergeist/packages/core/test/compiler/prompt.test.ts": {
+    "mtime": 1793703443.0712404,
+    "seen": 1793780211.170179,
+    "ast_hash": "ccb7a39a86504adacd2c041b61383ba9",
+    "semantic_hash": "ccb7a39a86504adacd2c041b61383ba9"
+  },
+  "poltergeist/packages/core/test/compiler/routes.test.ts": {
+    "mtime": 1793595938.718137,
+    "seen": 1793780211.1701794,
+    "ast_hash": "80803222cf27df70349304d607514afc",
+    "semantic_hash": "80803222cf27df70349304d607514afc"
+  },
+  "poltergeist/packages/core/test/compiler/scout-fixtures.ts": {
+    "mtime": 1793595938.718137,
+    "seen": 1793780211.17018,
+    "ast_hash": "e40f528c95e17f375cc017647abd7476",
+    "semantic_hash": "e40f528c95e17f375cc017647abd7476"
+  },
+  "poltergeist/packages/core/test/compiler/validate.test.ts": {
+    "mtime": 1793703443.0712404,
+    "seen": 1793780211.1701808,
+    "ast_hash": "9dc6873a02a14d43c848907854321df0",
+    "semantic_hash": "9dc6873a02a14d43c848907854321df0"
+  },
+  "poltergeist/packages/core/test/config/load.test.ts": {
+    "mtime": 1793595938.718137,
+    "seen": 1793780211.1701815,
+    "ast_hash": "db1fabc895d2cf873d94cbfc07dd2f87",
+    "semantic_hash": "db1fabc895d2cf873d94cbfc07dd2f87"
+  },
+  "poltergeist/packages/core/test/config/redact.test.ts": {
+    "mtime": 1793595938.7184074,
+    "seen": 1793780211.1701822,
+    "ast_hash": "396305571ac6f7818cbe9e155654a6cf",
+    "semantic_hash": "396305571ac6f7818cbe9e155654a6cf"
+  },
+  "poltergeist/packages/core/test/config/reset.test.ts": {
+    "mtime": 1793703443.0712404,
+    "seen": 1793780211.170183,
+    "ast_hash": "bd0079a08f402751d548bc017a2c647c",
+    "semantic_hash": "bd0079a08f402751d548bc017a2c647c"
+  },
+  "poltergeist/packages/core/test/config/schema.test.ts": {
+    "mtime": 1793703443.0721517,
+    "seen": 1793780211.1701837,
+    "ast_hash": "3947d67428fc6d36bb13750df5459c1d",
+    "semantic_hash": "3947d67428fc6d36bb13750df5459c1d"
+  },
+  "poltergeist/packages/core/test/helpers/theme-words.ts": {
+    "mtime": 1793595938.7186363,
+    "seen": 1793780211.1701844,
+    "ast_hash": "645ac4108feb79436f46619b344aa5bc",
+    "semantic_hash": "645ac4108feb79436f46619b344aa5bc"
+  },
+  "poltergeist/packages/core/test/live/reduce.test.ts": {
+    "mtime": 1793642793.253531,
+    "seen": 1793780211.1701849,
+    "ast_hash": "a59f1a2430b1f0fa898c97f8ed1e4142",
+    "semantic_hash": "a59f1a2430b1f0fa898c97f8ed1e4142"
+  },
+  "poltergeist/packages/core/test/live/timeline.test.ts": {
+    "mtime": 1793642793.253531,
+    "seen": 1793780211.1701858,
+    "ast_hash": "94a00b737d8bdc5f5e389594a7e2b79a",
+    "semantic_hash": "94a00b737d8bdc5f5e389594a7e2b79a"
+  },
+  "poltergeist/packages/core/test/personas/determinism.test.ts": {
+    "mtime": 1793703443.0721517,
+    "seen": 1793780211.1701877,
+    "ast_hash": "0d39adb733114d6193df127384103e01",
+    "semantic_hash": "0d39adb733114d6193df127384103e01"
+  },
+  "poltergeist/packages/core/test/personas/fastcheck.test.ts": {
+    "mtime": 1793595938.7187126,
+    "seen": 1793780211.1701884,
+    "ast_hash": "5a41017610030ccdaede0d03c49a6a24",
+    "semantic_hash": "5a41017610030ccdaede0d03c49a6a24"
+  },
+  "poltergeist/packages/core/test/personas/generators.test.ts": {
+    "mtime": 1793595938.7187126,
+    "seen": 1793780211.1701894,
+    "ast_hash": "beb5953b115b2d48267d68aa443bb65c",
+    "semantic_hash": "beb5953b115b2d48267d68aa443bb65c"
+  },
+  "poltergeist/packages/core/test/personas/naughty.test.ts": {
+    "mtime": 1793595938.7187126,
+    "seen": 1793780211.1701899,
+    "ast_hash": "2a6d496d011f57604597e138eaee82c2",
+    "semantic_hash": "2a6d496d011f57604597e138eaee82c2"
+  },
+  "poltergeist/packages/core/test/personas/registry.test.ts": {
+    "mtime": 1793703443.0721517,
+    "seen": 1793780211.1701906,
+    "ast_hash": "1c6901a9a7e7bd6dcae0c934e8b3b000",
+    "semantic_hash": "1c6901a9a7e7bd6dcae0c934e8b3b000"
+  },
+  "poltergeist/packages/core/test/recording/export.test.ts": {
+    "mtime": 1793642793.253531,
+    "seen": 1793780211.1701913,
+    "ast_hash": "0955fd4ef6e15acb4d38ba062af99919",
+    "semantic_hash": "0955fd4ef6e15acb4d38ba062af99919"
+  },
+  "poltergeist/packages/core/test/recording/load.test.ts": {
+    "mtime": 1793642793.2538235,
+    "seen": 1793780211.1701922,
+    "ast_hash": "078460dab5c87ef217affdefccbb8161",
+    "semantic_hash": "078460dab5c87ef217affdefccbb8161"
+  },
+  "poltergeist/packages/core/test/recording/run-dir.ts": {
+    "mtime": 1793642793.2538235,
+    "seen": 1793780211.170193,
+    "ast_hash": "3471b4afbba35ce283c5c8d684315ba1",
+    "semantic_hash": "3471b4afbba35ce283c5c8d684315ba1"
+  },
+  "poltergeist/packages/core/test/report/builders.ts": {
+    "mtime": 1793617807.1374826,
+    "seen": 1793780211.1701934,
+    "ast_hash": "35b4115f1a68decc0c0b1b38da05e303",
+    "semantic_hash": "35b4115f1a68decc0c0b1b38da05e303"
+  },
+  "poltergeist/packages/core/test/report/done-when.test.ts": {
+    "mtime": 1793595938.7187126,
+    "seen": 1793780211.1701941,
+    "ast_hash": "39773569c258992324e5d6af26d640c0",
+    "semantic_hash": "39773569c258992324e5d6af26d640c0"
+  },
+  "poltergeist/packages/core/test/report/merge.test.ts": {
+    "mtime": 1793703443.0721517,
+    "seen": 1793780211.1701949,
+    "ast_hash": "ece9dc17c971a8c46e24860b0b303380",
+    "semantic_hash": "ece9dc17c971a8c46e24860b0b303380"
+  },
+  "poltergeist/packages/core/test/report/render.test.ts": {
+    "mtime": 1793703443.0721517,
+    "seen": 1793780211.1701958,
+    "ast_hash": "39cb14f438cb4183100b10606c5615d3",
+    "semantic_hash": "39cb14f438cb4183100b10606c5615d3"
+  },
+  "poltergeist/packages/core/test/report/text.test.ts": {
+    "mtime": 1793595938.718928,
+    "seen": 1793780211.1701963,
+    "ast_hash": "29f8409bf4d1df41c775127ebc9c3e85",
+    "semantic_hash": "29f8409bf4d1df41c775127ebc9c3e85"
+  },
+  "poltergeist/packages/core/test/report/write.test.ts": {
+    "mtime": 1793595938.718928,
+    "seen": 1793780211.170197,
+    "ast_hash": "c674d8868af91093c399f3293c2a4d27",
+    "semantic_hash": "c674d8868af91093c399f3293c2a4d27"
+  },
+  "poltergeist/packages/core/test/runner/actor.test.ts": {
+    "mtime": 1793680301.3487492,
+    "seen": 1793780211.1701977,
+    "ast_hash": "5beacaa0c7d17b70e787f6ff69fcc07b",
+    "semantic_hash": "5beacaa0c7d17b70e787f6ff69fcc07b"
+  },
+  "poltergeist/packages/core/test/runner/assertions.test.ts": {
+    "mtime": 1793595938.7190702,
+    "seen": 1793780211.1701984,
+    "ast_hash": "261875833de4d129a014084732d0d929",
+    "semantic_hash": "261875833de4d129a014084732d0d929"
+  },
+  "poltergeist/packages/core/test/runner/barrier.test.ts": {
+    "mtime": 1793595938.7190702,
+    "seen": 1793780211.1701994,
+    "ast_hash": "74d0f05ef67568b5dcca68561353d78e",
+    "semantic_hash": "74d0f05ef67568b5dcca68561353d78e"
+  },
+  "poltergeist/packages/core/test/runner/claims-fixture.ts": {
+    "mtime": 1793703443.0721517,
+    "seen": 1793780211.1701999,
+    "ast_hash": "425f81c6301e8be9dd8bff210d0ea7ec",
+    "semantic_hash": "425f81c6301e8be9dd8bff210d0ea7ec"
+  },
+  "poltergeist/packages/core/test/runner/device.test.ts": {
+    "mtime": 1793680301.3502874,
+    "seen": 1793780211.1702006,
+    "ast_hash": "6e4acd1d0994ccfe1ba21daf678e5e85",
+    "semantic_hash": "6e4acd1d0994ccfe1ba21daf678e5e85"
+  },
+  "poltergeist/packages/core/test/runner/done-when.test.ts": {
+    "mtime": 1793703443.0731518,
+    "seen": 1793780211.170202,
+    "ast_hash": "1c52087379123e4c8b61e22ef3f9e07a",
+    "semantic_hash": "1c52087379123e4c8b61e22ef3f9e07a"
+  },
+  "poltergeist/packages/core/test/runner/events.test.ts": {
+    "mtime": 1793642793.2538235,
+    "seen": 1793780211.170203,
+    "ast_hash": "be304a2eaddc467ed67af9915e4d28d2",
+    "semantic_hash": "be304a2eaddc467ed67af9915e4d28d2"
+  },
+  "poltergeist/packages/core/test/runner/focus.test.ts": {
+    "mtime": 1793703443.0731518,
+    "seen": 1793780211.1702034,
+    "ast_hash": "a4dcd739c0c68b79d17bce0bb84b49c9",
+    "semantic_hash": "a4dcd739c0c68b79d17bce0bb84b49c9"
+  },
+  "poltergeist/packages/core/test/runner/match.test.ts": {
+    "mtime": 1793595938.7190702,
+    "seen": 1793780211.1702042,
+    "ast_hash": "7f5826944b761b6551925ac488d63dc0",
+    "semantic_hash": "7f5826944b761b6551925ac488d63dc0"
+  },
+  "poltergeist/packages/core/test/runner/page.test.ts": {
+    "mtime": 1793595938.7190702,
+    "seen": 1793780211.1702049,
+    "ast_hash": "ae0a36935ea5ac8e203c1629fefc139f",
+    "semantic_hash": "ae0a36935ea5ac8e203c1629fefc139f"
+  },
+  "poltergeist/packages/core/test/runner/run-helpers.ts": {
+    "mtime": 1793595938.7190702,
+    "seen": 1793780211.1702054,
+    "ast_hash": "c5a7062d819ed7d6f650e2fcf6be18d0",
+    "semantic_hash": "c5a7062d819ed7d6f650e2fcf6be18d0"
+  },
+  "poltergeist/packages/core/test/runner/run-leak.test.ts": {
+    "mtime": 1793595938.7190702,
+    "seen": 1793780211.1702063,
+    "ast_hash": "8037a84c4894858710924c2f9ad62c10",
+    "semantic_hash": "8037a84c4894858710924c2f9ad62c10"
+  },
+  "poltergeist/packages/core/test/runner/run.test.ts": {
+    "mtime": 1793703443.0731518,
+    "seen": 1793780211.170207,
+    "ast_hash": "353c010a96edcd1eaf15996df893adbf",
+    "semantic_hash": "353c010a96edcd1eaf15996df893adbf"
+  },
+  "poltergeist/packages/core/test/runner/schedule.test.ts": {
+    "mtime": 1793595938.7190702,
+    "seen": 1793780211.1702075,
+    "ast_hash": "f9f6076dac050e890307864987901bee",
+    "semantic_hash": "f9f6076dac050e890307864987901bee"
+  },
+  "poltergeist/packages/core/test/safety/allowlist.test.ts": {
+    "mtime": 1793595938.7190702,
+    "seen": 1793780211.1702082,
+    "ast_hash": "48ac2630c560fb09ef30d5abb74bfe22",
+    "semantic_hash": "48ac2630c560fb09ef30d5abb74bfe22"
+  },
+  "poltergeist/packages/core/test/safety/classify.test.ts": {
+    "mtime": 1793595938.7193785,
+    "seen": 1793780211.170209,
+    "ast_hash": "29118551a786bdb780c51519c8ffb511",
+    "semantic_hash": "29118551a786bdb780c51519c8ffb511"
+  },
+  "poltergeist/packages/core/test/safety/fixture-server.ts": {
+    "mtime": 1793595938.7193785,
+    "seen": 1793780211.1702096,
+    "ast_hash": "60b9f1b6f6a0bcd5594735175274e58e",
+    "semantic_hash": "60b9f1b6f6a0bcd5594735175274e58e"
+  },
+  "poltergeist/packages/core/test/safety/forbidden.test.ts": {
+    "mtime": 1793595938.7193785,
+    "seen": 1793780211.1702104,
+    "ast_hash": "160c796068763a1c20f17a4af3c872ee",
+    "semantic_hash": "160c796068763a1c20f17a4af3c872ee"
+  },
+  "poltergeist/packages/core/test/safety/guard.test.ts": {
+    "mtime": 1793703443.0731518,
+    "seen": 1793780211.170211,
+    "ast_hash": "0fbf93fbae3f44915306941c46f44221",
+    "semantic_hash": "0fbf93fbae3f44915306941c46f44221"
+  },
+  "poltergeist/packages/core/test/safety/limiter.test.ts": {
+    "mtime": 1793595938.7193785,
+    "seen": 1793780211.1702118,
+    "ast_hash": "d39d3e2ca4dd4c6b721e2c562bd1a38a",
+    "semantic_hash": "d39d3e2ca4dd4c6b721e2c562bd1a38a"
+  },
+  "poltergeist/packages/core/test/scout/aria.test.ts": {
+    "mtime": 1793595938.7193785,
+    "seen": 1793780211.1702123,
+    "ast_hash": "f275695aa065f4546ec5a36b6f94cfe3",
+    "semantic_hash": "f275695aa065f4546ec5a36b6f94cfe3"
+  },
+  "poltergeist/packages/core/test/scout/candy-fixture.ts": {
+    "mtime": 1793595938.719522,
+    "seen": 1793780211.1702132,
+    "ast_hash": "6070bbb233cdf56fb4490a052a04b1a2",
+    "semantic_hash": "6070bbb233cdf56fb4490a052a04b1a2"
+  },
+  "poltergeist/packages/core/test/scout/capture.test.ts": {
+    "mtime": 1793595938.719522,
+    "seen": 1793780211.1702137,
+    "ast_hash": "8ae7d014880d390f40179bac970c17dc",
+    "semantic_hash": "8ae7d014880d390f40179bac970c17dc"
+  },
+  "poltergeist/packages/core/test/scout/hash.test.ts": {
+    "mtime": 1793595938.719522,
+    "seen": 1793780211.1702144,
+    "ast_hash": "11a00bc97ccd54cc261808f097f26276",
+    "semantic_hash": "11a00bc97ccd54cc261808f097f26276"
+  },
+  "poltergeist/packages/core/test/scout/login.test.ts": {
+    "mtime": 1793595938.719522,
+    "seen": 1793780211.1702151,
+    "ast_hash": "bf650c71116d82adc386b96188ab647a",
+    "semantic_hash": "bf650c71116d82adc386b96188ab647a"
+  },
+  "poltergeist/packages/core/test/scout/scout.test.ts": {
+    "mtime": 1793595938.719522,
+    "seen": 1793780211.1702158,
+    "ast_hash": "e967f0944611ca53311212542fbccc40",
+    "semantic_hash": "e967f0944611ca53311212542fbccc40"
+  },
+  "poltergeist/packages/core/test/scout/slug.test.ts": {
+    "mtime": 1793595938.719522,
+    "seen": 1793780211.1702166,
+    "ast_hash": "4040b5e8856ecc5ff19f689f77d88e86",
+    "semantic_hash": "4040b5e8856ecc5ff19f689f77d88e86"
+  },
+  "poltergeist/packages/core/test/scout/trim.test.ts": {
+    "mtime": 1793595938.719522,
+    "seen": 1793780211.1702173,
+    "ast_hash": "f814846870d4e2bc3d070b11f99bf00f",
+    "semantic_hash": "f814846870d4e2bc3d070b11f99bf00f"
+  },
+  "poltergeist/packages/core/test/smoke.test.ts": {
+    "mtime": 1793595938.719522,
+    "seen": 1793780211.170218,
+    "ast_hash": "bb5ddb868999f8f09a53682580e9513e",
+    "semantic_hash": "bb5ddb868999f8f09a53682580e9513e"
+  },
+  "poltergeist/packages/core/test/spec/ears.test.ts": {
+    "mtime": 1793595938.719522,
+    "seen": 1793780211.1702185,
+    "ast_hash": "6e9808d2f211c93f0e0034c094a6938d",
+    "semantic_hash": "6e9808d2f211c93f0e0034c094a6938d"
+  },
+  "poltergeist/packages/core/test/spec/fixtures.test.ts": {
+    "mtime": 1793595938.7197616,
+    "seen": 1793780211.1702192,
+    "ast_hash": "a5b5ff62491f102ffcbca36a58b5bf0d",
+    "semantic_hash": "a5b5ff62491f102ffcbca36a58b5bf0d"
+  },
+  "poltergeist/packages/core/test/spec/hash.test.ts": {
+    "mtime": 1793595938.7197616,
+    "seen": 1793780211.1702197,
+    "ast_hash": "73a1f0ee2a3666d5ba2cd16265388910",
+    "semantic_hash": "73a1f0ee2a3666d5ba2cd16265388910"
+  },
+  "poltergeist/packages/core/test/spec/parse.test.ts": {
+    "mtime": 1793595938.7197616,
+    "seen": 1793780211.1702206,
+    "ast_hash": "ea986e7548000e5ac3b9ef84445aa1dc",
+    "semantic_hash": "ea986e7548000e5ac3b9ef84445aa1dc"
+  },
+  "poltergeist/packages/core/test/spec/read.test.ts": {
+    "mtime": 1793595938.7197616,
+    "seen": 1793780211.1702213,
+    "ast_hash": "266ad59577c310173fa92b52305b57d9",
+    "semantic_hash": "266ad59577c310173fa92b52305b57d9"
+  },
+  "poltergeist/packages/core/test/steering/apply.test.ts": {
+    "mtime": 1793703443.0731518,
+    "seen": 1793780211.1702218,
+    "ast_hash": "ab4af752cb139566aff1c037ea0b4652",
+    "semantic_hash": "ab4af752cb139566aff1c037ea0b4652"
+  },
+  "poltergeist/packages/core/test/steering/rules.test.ts": {
+    "mtime": 1793703443.074169,
+    "seen": 1793780211.1702225,
+    "ast_hash": "32212cd2549b9bddb15ee84596200624",
+    "semantic_hash": "32212cd2549b9bddb15ee84596200624"
+  },
+  "poltergeist/packages/core/test/summon/launch.test.ts": {
+    "mtime": 1793595938.7197616,
+    "seen": 1793780211.1702235,
+    "ast_hash": "60fff91eb32e7ecd1dd31ccdbd9ad486",
+    "semantic_hash": "60fff91eb32e7ecd1dd31ccdbd9ad486"
+  },
+  "poltergeist/packages/core/test/summon/project-fixture.ts": {
+    "mtime": 1793595938.71989,
+    "seen": 1793780211.170224,
+    "ast_hash": "a6e64cd528590338f95bf2a2987d2779",
+    "semantic_hash": "a6e64cd528590338f95bf2a2987d2779"
+  },
+  "poltergeist/packages/core/test/summon/run-id.test.ts": {
+    "mtime": 1793595938.71989,
+    "seen": 1793780211.1702247,
+    "ast_hash": "0e0b9d61761f3a9263ea0780a3e8ef7c",
+    "semantic_hash": "0e0b9d61761f3a9263ea0780a3e8ef7c"
+  },
+  "poltergeist/packages/core/test/summon/summon.test.ts": {
+    "mtime": 1793703443.074169,
+    "seen": 1793780211.1702254,
+    "ast_hash": "bc68825e6fe47b1e6d344cfdc99af6a5",
+    "semantic_hash": "bc68825e6fe47b1e6d344cfdc99af6a5"
+  },
+  "poltergeist/packages/core/test/verdicts/compute.test.ts": {
+    "mtime": 1793595938.71989,
+    "seen": 1793780211.170226,
+    "ast_hash": "bf82041f019302821b28477b22670aea",
+    "semantic_hash": "bf82041f019302821b28477b22670aea"
+  },
+  "poltergeist/packages/core/test/verdicts/pair.test.ts": {
+    "mtime": 1793595938.7200358,
+    "seen": 1793780211.1702266,
+    "ast_hash": "9f8d8c2bcc8772d4c45c9d0d0a744122",
+    "semantic_hash": "9f8d8c2bcc8772d4c45c9d0d0a744122"
+  },
+  "poltergeist/packages/core/test/verdicts/properties.test.ts": {
+    "mtime": 1793595938.7200358,
+    "seen": 1793780211.1702275,
+    "ast_hash": "a537d5c47c8659333b4c1efef83610d6",
+    "semantic_hash": "a537d5c47c8659333b4c1efef83610d6"
+  },
+  "poltergeist/packages/mcp/bin/poltergeist-mcp.js": {
+    "mtime": 1793595938.7201266,
+    "seen": 1793780211.1702282,
+    "ast_hash": "2aaa39a0a827e7d9700cd8123d71e3c0",
+    "semantic_hash": "2aaa39a0a827e7d9700cd8123d71e3c0"
+  },
+  "poltergeist/packages/mcp/package.json": {
+    "mtime": 1793595938.7201266,
+    "seen": 1793780211.1702287,
+    "ast_hash": "2ba4d3ea9ab1935eafb02051676ccc24",
+    "semantic_hash": "2ba4d3ea9ab1935eafb02051676ccc24"
+  },
+  "poltergeist/packages/mcp/src/format.ts": {
+    "mtime": 1793703443.074169,
+    "seen": 1793780211.1702294,
+    "ast_hash": "2c9c87d59db18f2064ff790e3565deaf",
+    "semantic_hash": "2c9c87d59db18f2064ff790e3565deaf"
+  },
+  "poltergeist/packages/mcp/src/index.ts": {
+    "mtime": 1793703443.074169,
+    "seen": 1793780211.1702304,
+    "ast_hash": "bbc29cf0fa53e2a3dbbbbb7c424fba4f",
+    "semantic_hash": "bbc29cf0fa53e2a3dbbbbb7c424fba4f"
+  },
+  "poltergeist/packages/mcp/src/main.ts": {
+    "mtime": 1793703443.074169,
+    "seen": 1793780211.1702309,
+    "ast_hash": "a1273f73e02c4637ef28aba543bbd22a",
+    "semantic_hash": "a1273f73e02c4637ef28aba543bbd22a"
+  },
+  "poltergeist/packages/mcp/src/paths.ts": {
+    "mtime": 1793703443.074169,
+    "seen": 1793780211.1702316,
+    "ast_hash": "7c7646bd5736d69ccd3730f567c5a8f0",
+    "semantic_hash": "7c7646bd5736d69ccd3730f567c5a8f0"
+  },
+  "poltergeist/packages/mcp/src/report.ts": {
+    "mtime": 1793617807.1379771,
+    "seen": 1793780211.1702323,
+    "ast_hash": "226c581048cf0260ce0e4e13b400a032",
+    "semantic_hash": "226c581048cf0260ce0e4e13b400a032"
+  },
+  "poltergeist/packages/mcp/src/runs.ts": {
+    "mtime": 1793703443.074169,
+    "seen": 1793780211.170233,
+    "ast_hash": "a0c5a2713c4365c01e8853a8e11e32bb",
+    "semantic_hash": "a0c5a2713c4365c01e8853a8e11e32bb"
+  },
+  "poltergeist/packages/mcp/src/server.ts": {
+    "mtime": 1793703443.074169,
+    "seen": 1793780211.170234,
+    "ast_hash": "c43b92d753455446e6e8a3b4e16f8138",
+    "semantic_hash": "c43b92d753455446e6e8a3b4e16f8138"
+  },
+  "poltergeist/packages/mcp/test/bin.test.ts": {
+    "mtime": 1793703443.074169,
+    "seen": 1793780211.1702344,
+    "ast_hash": "c023f7113a69d8cd14d3f66766b42180",
+    "semantic_hash": "c023f7113a69d8cd14d3f66766b42180"
+  },
+  "poltergeist/packages/mcp/test/done-when.test.ts": {
+    "mtime": 1793617807.1379771,
+    "seen": 1793780211.1702352,
+    "ast_hash": "e895caf985d28dad8b227522bd369865",
+    "semantic_hash": "e895caf985d28dad8b227522bd369865"
+  },
+  "poltergeist/packages/mcp/test/format.test.ts": {
+    "mtime": 1793617807.1382062,
+    "seen": 1793780211.1702359,
+    "ast_hash": "b32923e2c976e14e6b8b28315a4344eb",
+    "semantic_hash": "b32923e2c976e14e6b8b28315a4344eb"
+  },
+  "poltergeist/packages/mcp/test/paths.test.ts": {
+    "mtime": 1793703443.074169,
+    "seen": 1793780211.1702366,
+    "ast_hash": "e4df5e9983d300abeca671f8b55f69c8",
+    "semantic_hash": "e4df5e9983d300abeca671f8b55f69c8"
+  },
+  "poltergeist/packages/mcp/test/report.test.ts": {
+    "mtime": 1793595938.7205248,
+    "seen": 1793780211.1702375,
+    "ast_hash": "0e050c55b5ef5cba3c4ec774168fc51f",
+    "semantic_hash": "0e050c55b5ef5cba3c4ec774168fc51f"
+  },
+  "poltergeist/packages/mcp/test/runs.test.ts": {
+    "mtime": 1793703443.074169,
+    "seen": 1793780211.170238,
+    "ast_hash": "76b8c8f88200a5433d875903424a5bf7",
+    "semantic_hash": "76b8c8f88200a5433d875903424a5bf7"
+  },
+  "poltergeist/packages/mcp/test/server.test.ts": {
+    "mtime": 1793703443.074169,
+    "seen": 1793780211.1702387,
+    "ast_hash": "6825ee02cddac388fd6cd760d0edb816",
+    "semantic_hash": "6825ee02cddac388fd6cd760d0edb816"
+  },
+  "poltergeist/packages/mcp/test/template.test.ts": {
+    "mtime": 1793595938.7205248,
+    "seen": 1793780211.1702392,
+    "ast_hash": "3373a807349536f7589fd4bdd7f04707",
+    "semantic_hash": "3373a807349536f7589fd4bdd7f04707"
+  },
+  "poltergeist/scripts/candy-check/check.test.ts": {
+    "mtime": 1793595938.720764,
+    "seen": 1793780211.17024,
+    "ast_hash": "7f24cdbcffc3fadbec3f4a55ec8cbd41",
+    "semantic_hash": "7f24cdbcffc3fadbec3f4a55ec8cbd41"
+  },
+  "poltergeist/scripts/candy-check/check.ts": {
+    "mtime": 1793595938.7208073,
+    "seen": 1793780211.1702409,
+    "ast_hash": "c08a1e6d8bab9d9cdfc1e8fccb015614",
+    "semantic_hash": "c08a1e6d8bab9d9cdfc1e8fccb015614"
+  },
+  "poltergeist/scripts/candy-check/main.ts": {
+    "mtime": 1793595938.7208073,
+    "seen": 1793780211.1702416,
+    "ast_hash": "21ea09cafcbb80804c689108801cc15b",
+    "semantic_hash": "21ea09cafcbb80804c689108801cc15b"
+  },
+  "poltergeist/scripts/candy-check/run.test.ts": {
+    "mtime": 1793595938.7208073,
+    "seen": 1793780211.170242,
+    "ast_hash": "1f6565d80b69775745da0c65e727a483",
+    "semantic_hash": "1f6565d80b69775745da0c65e727a483"
+  },
+  "poltergeist/scripts/candy-check/run.ts": {
+    "mtime": 1793595938.7208073,
+    "seen": 1793780211.1702428,
+    "ast_hash": "34402daf4fa66da4b182024a83338ef5",
+    "semantic_hash": "34402daf4fa66da4b182024a83338ef5"
+  },
+  "poltergeist/tsconfig.base.json": {
+    "mtime": 1793595938.7208073,
+    "seen": 1793780211.1702435,
+    "ast_hash": "90b46d7dea230b3f0adae230319da777",
+    "semantic_hash": "90b46d7dea230b3f0adae230319da777"
+  },
+  "poltergeist/tsconfig.json": {
+    "mtime": 1793595938.7208073,
+    "seen": 1793780211.1702445,
+    "ast_hash": "1479156d6e37e4f85c06dc0bbba9baec",
+    "semantic_hash": "1479156d6e37e4f85c06dc0bbba9baec"
+  },
+  "poltergeist/vitest.config.ts": {
+    "mtime": 1793704770.7095459,
+    "seen": 1793780211.170245,
+    "ast_hash": "a658da43f52352c141abaecb7401dfcf",
+    "semantic_hash": "a658da43f52352c141abaecb7401dfcf"
+  },
+  "reanimator/eslint.config.js": {
+    "mtime": 1793616434.0152965,
+    "seen": 1793780211.1702456,
+    "ast_hash": "67b15fea14da8dc9a6baa0e9e389e85b",
+    "semantic_hash": "67b15fea14da8dc9a6baa0e9e389e85b"
+  },
+  "reanimator/package.json": {
+    "mtime": 1793616434.015395,
+    "seen": 1793780211.1702464,
+    "ast_hash": "ddee31fc81a1a569d12fd069cac16223",
+    "semantic_hash": "ddee31fc81a1a569d12fd069cac16223"
+  },
+  "reanimator/server/app.test.ts": {
+    "mtime": 1793616434.015395,
+    "seen": 1793780211.170247,
+    "ast_hash": "87aec9657b105224b714704cdcb786d8",
+    "semantic_hash": "87aec9657b105224b714704cdcb786d8"
+  },
+  "reanimator/server/app.ts": {
+    "mtime": 1793616434.0156133,
+    "seen": 1793780211.1702478,
+    "ast_hash": "7641838d18ef1987286e91fea78a2919",
+    "semantic_hash": "7641838d18ef1987286e91fea78a2919"
+  },
+  "reanimator/server/main.ts": {
+    "mtime": 1793616434.0156133,
+    "seen": 1793780211.1702485,
+    "ast_hash": "a9be80f12a860798adbe97a6b088216e",
+    "semantic_hash": "a9be80f12a860798adbe97a6b088216e"
+  },
+  "reanimator/server/port.test.ts": {
+    "mtime": 1793616434.0156133,
+    "seen": 1793780211.1702492,
+    "ast_hash": "9251f086bfc6ee3ccbf7d7acbc707daf",
+    "semantic_hash": "9251f086bfc6ee3ccbf7d7acbc707daf"
+  },
+  "reanimator/server/port.ts": {
+    "mtime": 1793616434.0156133,
+    "seen": 1793780211.1702497,
+    "ast_hash": "0cf24f414c1c35830da2a6e209b98128",
+    "semantic_hash": "0cf24f414c1c35830da2a6e209b98128"
+  },
+  "reanimator/src/App.test.tsx": {
+    "mtime": 1793616434.0156133,
+    "seen": 1793780211.1702504,
+    "ast_hash": "9f4b2369837e772b41b176ae049cef16",
+    "semantic_hash": "9f4b2369837e772b41b176ae049cef16"
+  },
+  "reanimator/src/App.tsx": {
+    "mtime": 1793616434.0157688,
+    "seen": 1793780211.1702514,
+    "ast_hash": "849e79cff066eb5dcbdc03d53088d8de",
+    "semantic_hash": "849e79cff066eb5dcbdc03d53088d8de"
+  },
+  "reanimator/src/canvas.test.ts": {
+    "mtime": 1793616434.0157688,
+    "seen": 1793780211.170252,
+    "ast_hash": "93ad6d3479cc836911a88b17431a687b",
+    "semantic_hash": "93ad6d3479cc836911a88b17431a687b"
+  },
+  "reanimator/src/canvas.ts": {
+    "mtime": 1793616434.0157688,
+    "seen": 1793780211.1702526,
+    "ast_hash": "1b39c74d4b10b4fdd4fa19bab45ce036",
+    "semantic_hash": "1b39c74d4b10b4fdd4fa19bab45ce036"
+  },
+  "reanimator/src/main.tsx": {
+    "mtime": 1793616434.0157688,
+    "seen": 1793780211.1702533,
+    "ast_hash": "8c880a50d387fdce33f21c590b8fe723",
+    "semantic_hash": "8c880a50d387fdce33f21c590b8fe723"
+  },
+  "reanimator/tsconfig.app.json": {
+    "mtime": 1793616434.0157688,
+    "seen": 1793780211.170254,
+    "ast_hash": "038892c70386c56beef081d233073d49",
+    "semantic_hash": "038892c70386c56beef081d233073d49"
+  },
+  "reanimator/tsconfig.base.json": {
+    "mtime": 1793616434.0157688,
+    "seen": 1793780211.1702547,
+    "ast_hash": "a3a88ad5b96d6e4b285d1fd7f8b63fca",
+    "semantic_hash": "a3a88ad5b96d6e4b285d1fd7f8b63fca"
+  },
+  "reanimator/tsconfig.json": {
+    "mtime": 1793616434.0157688,
+    "seen": 1793780211.1702554,
+    "ast_hash": "cebcd0aef9a53b9c724ac53266f03437",
+    "semantic_hash": "cebcd0aef9a53b9c724ac53266f03437"
+  },
+  "reanimator/tsconfig.node.json": {
+    "mtime": 1793616434.0157688,
+    "seen": 1793780211.1702561,
+    "ast_hash": "a7a4cc6da82fb8999b9a08c3ede77a8a",
+    "semantic_hash": "a7a4cc6da82fb8999b9a08c3ede77a8a"
+  },
+  "reanimator/vite.config.ts": {
+    "mtime": 1793616434.0157688,
+    "seen": 1793780211.1702583,
+    "ast_hash": "639cbcaf79dd301dc324b6e10b97377b",
+    "semantic_hash": "639cbcaf79dd301dc324b6e10b97377b"
+  },
+  "reanimator/vitest.config.ts": {
+    "mtime": 1793616434.0157688,
+    "seen": 1793780211.170259,
+    "ast_hash": "830fdc89840394a514a9e5164db81e57",
+    "semantic_hash": "830fdc89840394a514a9e5164db81e57"
+  },
+  ".claude/skills/grill-me/SKILL.md": {
+    "mtime": 1793434167.6840696,
+    "seen": 1793780211.1702597,
+    "ast_hash": "51ba9306293963bb76680d5e41525aea",
+    "semantic_hash": "51ba9306293963bb76680d5e41525aea"
+  },
+  ".claude/skills/grilling/SKILL.md": {
+    "mtime": 1793434167.684153,
+    "seen": 1793780211.1702602,
+    "ast_hash": "431eb49c22103e8bb3978eb45dfeb427",
+    "semantic_hash": "431eb49c22103e8bb3978eb45dfeb427"
+  },
+  "AGENTS.md": {
+    "mtime": 1793616434.0146105,
+    "seen": 1793780211.170261,
+    "ast_hash": "3c6a18cf21f1d70a6d734087c1c835c3",
+    "semantic_hash": "3c6a18cf21f1d70a6d734087c1c835c3"
+  },
+  "CLAUDE.md": {
+    "mtime": 1793533162.5830112,
+    "seen": 1793780211.1702619,
+    "ast_hash": "5c27369b226fcf2be8a6cfe52224e767",
+    "semantic_hash": "5c27369b226fcf2be8a6cfe52224e767"
+  },
+  "poltergeist/.kiro/specs/poltergeist/design.md": {
+    "mtime": 1793704770.7074268,
+    "seen": 1793780211.1702623,
+    "ast_hash": "26ce5e7c30d17c73a9b0a57270273349",
+    "semantic_hash": "26ce5e7c30d17c73a9b0a57270273349"
+  },
+  "poltergeist/.kiro/specs/poltergeist/requirements.md": {
+    "mtime": 1793704770.7074268,
+    "seen": 1793780211.170263,
+    "ast_hash": "f92cccb82546299b91e294a327e6a84b",
+    "semantic_hash": "f92cccb82546299b91e294a327e6a84b"
+  },
+  "poltergeist/.kiro/specs/poltergeist/tasks.md": {
+    "mtime": 1793704770.7074268,
+    "seen": 1793780211.1702635,
+    "ast_hash": "9d6a2785af1015b886ac2d5de99459c3",
+    "semantic_hash": "9d6a2785af1015b886ac2d5de99459c3"
+  },
+  "poltergeist/.kiro/steering/product.md": {
+    "mtime": 1793595938.7129447,
+    "seen": 1793780211.1702642,
+    "ast_hash": "4dc5dae0b837ba9b22bdc683094c2941",
+    "semantic_hash": "4dc5dae0b837ba9b22bdc683094c2941"
+  },
+  "poltergeist/.kiro/steering/structure.md": {
+    "mtime": 1793595938.7130437,
+    "seen": 1793780211.1702652,
+    "ast_hash": "8156148b91bc2752950c3817b780d0e0",
+    "semantic_hash": "8156148b91bc2752950c3817b780d0e0"
+  },
+  "poltergeist/.kiro/steering/tech.md": {
+    "mtime": 1793595938.7130437,
+    "seen": 1793780211.170266,
+    "ast_hash": "3022e583fa429804bdea6dbd9fbb907d",
+    "semantic_hash": "3022e583fa429804bdea6dbd9fbb907d"
+  },
+  "poltergeist/AGENTS.md": {
+    "mtime": 1793704770.7074268,
+    "seen": 1793780211.1702664,
+    "ast_hash": "4ae493c8067d1904d265fd492369c347",
+    "semantic_hash": "4ae493c8067d1904d265fd492369c347"
+  },
+  "poltergeist/CLAUDE.md": {
+    "mtime": 1793595938.7130437,
+    "seen": 1793780211.170267,
+    "ast_hash": "5c27369b226fcf2be8a6cfe52224e767",
+    "semantic_hash": "5c27369b226fcf2be8a6cfe52224e767"
+  },
+  "poltergeist/README.md": {
+    "mtime": 1793595938.7130437,
+    "seen": 1793780211.1702678,
+    "ast_hash": "9bd12a7f0bef1879aa9f3633b3a1a5ab",
+    "semantic_hash": "9bd12a7f0bef1879aa9f3633b3a1a5ab"
+  },
+  "poltergeist/docs/DECISIONS.md": {
+    "mtime": 1793704770.7074268,
+    "seen": 1793780211.1702688,
+    "ast_hash": "8834137df63405fb12622a4b9c289dec",
+    "semantic_hash": "8834137df63405fb12622a4b9c289dec"
+  },
+  "poltergeist/docs/KNOWN_ISSUES.md": {
+    "mtime": 1793704770.7086675,
+    "seen": 1793780211.1702695,
+    "ast_hash": "1864f3f2f4ed984834a53841bb21bfa2",
+    "semantic_hash": "1864f3f2f4ed984834a53841bb21bfa2"
+  },
+  "poltergeist/docs/LESSONS.md": {
+    "mtime": 1793595938.713393,
+    "seen": 1793780211.1702702,
+    "ast_hash": "2a054f89b576131172bf84774bf820b5",
+    "semantic_hash": "2a054f89b576131172bf84774bf820b5"
+  },
+  "poltergeist/docs/PRD.md": {
+    "mtime": 1793704770.7086675,
+    "seen": 1793780211.1702707,
+    "ast_hash": "d73c80493084202b5311d52d78b14917",
+    "semantic_hash": "d73c80493084202b5311d52d78b14917"
+  },
+  "poltergeist/docs/STACK.md": {
+    "mtime": 1793704770.7086675,
+    "seen": 1793780211.1702714,
+    "ast_hash": "6de719734039b25a4dc9289c539f7d37",
+    "semantic_hash": "6de719734039b25a4dc9289c539f7d37"
+  },
+  "poltergeist/docs/THEME.md": {
+    "mtime": 1793595938.713554,
+    "seen": 1793780211.1702724,
+    "ast_hash": "a17082e8cc036ce219b9ff328fd303c7",
+    "semantic_hash": "a17082e8cc036ce219b9ff328fd303c7"
+  },
+  "poltergeist/docs/kiro-notes.md": {
+    "mtime": 1793703443.0641515,
+    "seen": 1793780211.1702728,
+    "ast_hash": "255bed69285360bbb30fd7e3fc643d58",
+    "semantic_hash": "255bed69285360bbb30fd7e3fc643d58"
+  },
+  "poltergeist/docs/plans/2026-10-31-F01-spec-reader.md": {
+    "mtime": 1793595938.7141998,
+    "seen": 1793780211.1702735,
+    "ast_hash": "fa0c9f4707149e051b6667cbe754eda9",
+    "semantic_hash": "fa0c9f4707149e051b6667cbe754eda9"
+  },
+  "poltergeist/docs/plans/2026-10-31-F02-config-safety.md": {
+    "mtime": 1793595938.7141998,
+    "seen": 1793780211.1702743,
+    "ast_hash": "905d4c2d86b3aa37b0b0a16a526b7731",
+    "semantic_hash": "905d4c2d86b3aa37b0b0a16a526b7731"
+  },
+  "poltergeist/docs/plans/2026-10-31-F03-route-scout.md": {
+    "mtime": 1793595938.7141998,
+    "seen": 1793780211.1702747,
+    "ast_hash": "db9c57b98ce44171c43d80b9cafea9e3",
+    "semantic_hash": "db9c57b98ce44171c43d80b9cafea9e3"
+  },
+  "poltergeist/docs/plans/2026-10-31-F04-personas-generators.md": {
+    "mtime": 1793595938.7141998,
+    "seen": 1793780211.1702757,
+    "ast_hash": "9f12cb4cbdb406378498816c20686a3c",
+    "semantic_hash": "9f12cb4cbdb406378498816c20686a3c"
+  },
+  "poltergeist/docs/plans/2026-10-31-F05-ghost-compiler.md": {
+    "mtime": 1793595938.7141998,
+    "seen": 1793780211.1702764,
+    "ast_hash": "cd6c04b4e63a12f47d34b6279d27a0a4",
+    "semantic_hash": "cd6c04b4e63a12f47d34b6279d27a0a4"
+  },
+  "poltergeist/docs/plans/2026-11-01-F06-ghost-runner.md": {
+    "mtime": 1793595938.7141998,
+    "seen": 1793780211.1702769,
+    "ast_hash": "828cd2e622c829c60f7bfbbb088ff39d",
+    "semantic_hash": "828cd2e622c829c60f7bfbbb088ff39d"
+  },
+  "poltergeist/docs/plans/2026-11-01-F07-verdicts.md": {
+    "mtime": 1793595938.7141998,
+    "seen": 1793780211.1702776,
+    "ast_hash": "f65678f2963d56a722b49ed6974816ed",
+    "semantic_hash": "f65678f2963d56a722b49ed6974816ed"
+  },
+  "poltergeist/docs/plans/2026-11-01-F08-haunting-report.md": {
+    "mtime": 1793595938.7141998,
+    "seen": 1793780211.1702797,
+    "ast_hash": "c5f7daee8b5f4c0fd2f8e1d327a21068",
+    "semantic_hash": "c5f7daee8b5f4c0fd2f8e1d327a21068"
+  },
+  "poltergeist/docs/plans/2026-11-01-F09-cli-summon.md": {
+    "mtime": 1793595938.7141998,
+    "seen": 1793780211.1702802,
+    "ast_hash": "1640689f4804cfec857f5405031813fe",
+    "semantic_hash": "1640689f4804cfec857f5405031813fe"
+  },
+  "poltergeist/docs/plans/2026-11-01-F10-candy-swap-prep.md": {
+    "mtime": 1793595938.7141998,
+    "seen": 1793780211.170281,
+    "ast_hash": "52cf8ba49838c8bfc2da3cfb4dc67fb8",
+    "semantic_hash": "52cf8ba49838c8bfc2da3cfb4dc67fb8"
+  },
+  "poltergeist/docs/plans/2026-11-01-F10-kiro-brief.md": {
+    "mtime": 1793595938.7141998,
+    "seen": 1793780211.1702816,
+    "ast_hash": "d40f3ab49d2741f917900848f9b29ada",
+    "semantic_hash": "d40f3ab49d2741f917900848f9b29ada"
+  },
+  "poltergeist/docs/plans/2026-11-01-F11-kiro-mcp-server.md": {
+    "mtime": 1793595938.7141998,
+    "seen": 1793780211.1702826,
+    "ast_hash": "97b993d4242750415a87b9255ecc394d",
+    "semantic_hash": "97b993d4242750415a87b9255ecc394d"
+  },
+  "poltergeist/docs/plans/2026-11-02-F12-live-feed.md": {
+    "mtime": 1793597395.0788035,
+    "seen": 1793780211.170283,
+    "ast_hash": "23af9ede11a233b209ba84535239225d",
+    "semantic_hash": "23af9ede11a233b209ba84535239225d"
+  },
+  "poltergeist/docs/plans/2026-11-02-F13-kiro-installer.md": {
+    "mtime": 1793613589.465385,
+    "seen": 1793780211.1702838,
+    "ast_hash": "0e4ce46ecc6cff789cfd95ce1cee93c0",
+    "semantic_hash": "0e4ce46ecc6cff789cfd95ce1cee93c0"
+  },
+  "poltergeist/docs/plans/2026-11-02-F14-rehaunt-diff.md": {
+    "mtime": 1793617807.1370378,
+    "seen": 1793780211.1702845,
+    "ast_hash": "2bfb8a2461136fded8fce3a6b7a96c04",
+    "semantic_hash": "2bfb8a2461136fded8fce3a6b7a96c04"
+  },
+  "poltergeist/docs/plans/2026-11-02-F15-recording.md": {
+    "mtime": 1793642793.2510183,
+    "seen": 1793780211.1702852,
+    "ast_hash": "26df1e99730138a6f3ad5818554b3627",
+    "semantic_hash": "26df1e99730138a6f3ad5818554b3627"
+  },
+  "poltergeist/docs/plans/2026-11-02-F16-lich-revenant.md": {
+    "mtime": 1793680301.3473299,
+    "seen": 1793780211.1702862,
+    "ast_hash": "ce8cf36363f4db5b675113a67434292b",
+    "semantic_hash": "ce8cf36363f4db5b675113a67434292b"
+  },
+  "poltergeist/docs/plans/2026-11-03-F17-house-rules.md": {
+    "mtime": 1793703443.0641515,
+    "seen": 1793780211.1702867,
+    "ast_hash": "a9820a6422e9ceef374bdbc7dcdfcae2",
+    "semantic_hash": "a9820a6422e9ceef374bdbc7dcdfcae2"
+  },
+  "poltergeist/docs/plans/2026-11-03-F18-kiro-power.md": {
+    "mtime": 1793703443.0641515,
+    "seen": 1793780211.1702874,
+    "ast_hash": "9f92db2e86040dd1cce32caa93a4f12a",
+    "semantic_hash": "9f92db2e86040dd1cce32caa93a4f12a"
+  },
+  "poltergeist/docs/plans/2026-11-03-F19-bedrock-provider.md": {
+    "mtime": 1793703443.0641515,
+    "seen": 1793780211.170288,
+    "ast_hash": "ea3b4840ab7c3584b87cd84cf403e76c",
+    "semantic_hash": "ea3b4840ab7c3584b87cd84cf403e76c"
+  },
+  "poltergeist/docs/plans/2026-11-03-F20-changeling.md": {
+    "mtime": 1793703443.0651515,
+    "seen": 1793780211.1702888,
+    "ast_hash": "3b817c819ac3fb70ae74940ae6af4187",
+    "semantic_hash": "3b817c819ac3fb70ae74940ae6af4187"
+  },
+  "poltergeist/integrations/kiro/README.md": {
+    "mtime": 1793703443.0651515,
+    "seen": 1793780211.1702895,
+    "ast_hash": "1a0d3a412e84fb23f6f2bf302696f7c6",
+    "semantic_hash": "1a0d3a412e84fb23f6f2bf302696f7c6"
+  },
+  "poltergeist/integrations/kiro/power/skills/poltergeist/SKILL.md": {
+    "mtime": 1793703443.0662072,
+    "seen": 1793780211.1702902,
+    "ast_hash": "c72cf2d57e4b1ac991f78f9d864b5eba",
+    "semantic_hash": "c72cf2d57e4b1ac991f78f9d864b5eba"
+  },
+  "poltergeist/integrations/kiro/steering/poltergeist.md": {
+    "mtime": 1793703443.0662072,
+    "seen": 1793780211.170291,
+    "ast_hash": "13e35864eb53b274b5c2376e2a64b6d9",
+    "semantic_hash": "13e35864eb53b274b5c2376e2a64b6d9"
+  },
+  "poltergeist/packages/core/src/personas/generators/data/blns.txt": {
+    "mtime": 1793595938.7162793,
+    "seen": 1793780211.1702917,
+    "ast_hash": "8f1a393d59af0b3fff0c2dbb52264298",
+    "semantic_hash": "8f1a393d59af0b3fff0c2dbb52264298"
+  },
+  "poltergeist/packages/core/test/fixtures/spec/candy-fixture/requirements.md": {
+    "mtime": 1793595938.7184982,
+    "seen": 1793780211.1702921,
+    "ast_hash": "c43d123f02ca362aa12874786b72c258",
+    "semantic_hash": "c43d123f02ca362aa12874786b72c258"
+  },
+  "poltergeist/packages/core/test/fixtures/spec/candy-swap-draft/requirements.md": {
+    "mtime": 1793595938.7184982,
+    "seen": 1793780211.170293,
+    "ast_hash": "2fc1f96ef94c41a608a4e606ddfcae4d",
+    "semantic_hash": "2fc1f96ef94c41a608a4e606ddfcae4d"
+  },
+  "poltergeist/packages/core/test/fixtures/spec/messy/requirements.md": {
+    "mtime": 1793595938.7184982,
+    "seen": 1793780211.1702938,
+    "ast_hash": "ae568caf6c11ce0095272aa136fd9728",
+    "semantic_hash": "ae568caf6c11ce0095272aa136fd9728"
+  },
+  "poltergeist/packages/core/test/fixtures/spec/reanimator/requirements.md": {
+    "mtime": 1793595938.7186363,
+    "seen": 1793780211.1702945,
+    "ast_hash": "cf83100c2118eedf3baafc7c995cc70d",
+    "semantic_hash": "cf83100c2118eedf3baafc7c995cc70d"
+  },
+  "reanimator/.kiro/specs/reanimator/design.md": {
+    "mtime": 1793595938.721038,
+    "seen": 1793780211.170295,
+    "ast_hash": "965a36202517c5efd0ae96e9d56e69a6",
+    "semantic_hash": "965a36202517c5efd0ae96e9d56e69a6"
+  },
+  "reanimator/.kiro/specs/reanimator/requirements.md": {
+    "mtime": 1793595938.7210975,
+    "seen": 1793780211.1702957,
+    "ast_hash": "470eef8731e016c903b09482782b369f",
+    "semantic_hash": "470eef8731e016c903b09482782b369f"
+  },
+  "reanimator/.kiro/specs/reanimator/tasks.md": {
+    "mtime": 1793616434.0149415,
+    "seen": 1793780211.1702967,
+    "ast_hash": "1191d1797c65cac4d67891fb0cb7a1a4",
+    "semantic_hash": "1191d1797c65cac4d67891fb0cb7a1a4"
+  },
+  "reanimator/.kiro/steering/product.md": {
+    "mtime": 1793595938.7210975,
+    "seen": 1793780211.1702974,
+    "ast_hash": "5a5e2ec83db6370e84c1dd8277bb4ece",
+    "semantic_hash": "5a5e2ec83db6370e84c1dd8277bb4ece"
+  },
+  "reanimator/.kiro/steering/structure.md": {
+    "mtime": 1793595938.7211995,
+    "seen": 1793780211.1702979,
+    "ast_hash": "3aa2a97028715792986b6a8a379dadf3",
+    "semantic_hash": "3aa2a97028715792986b6a8a379dadf3"
+  },
+  "reanimator/.kiro/steering/tech.md": {
+    "mtime": 1793595938.7211995,
+    "seen": 1793780211.1702986,
+    "ast_hash": "ed277f1e6f2d8a6bbd12c501c99f0f31",
+    "semantic_hash": "ed277f1e6f2d8a6bbd12c501c99f0f31"
+  },
+  "reanimator/AGENTS.md": {
+    "mtime": 1793616434.0149415,
+    "seen": 1793780211.1702993,
+    "ast_hash": "b2d4830e1060ba973b2b0b25795846da",
+    "semantic_hash": "b2d4830e1060ba973b2b0b25795846da"
+  },
+  "reanimator/CLAUDE.md": {
+    "mtime": 1793595938.7211995,
+    "seen": 1793780211.1703002,
+    "ast_hash": "5c27369b226fcf2be8a6cfe52224e767",
+    "semantic_hash": "5c27369b226fcf2be8a6cfe52224e767"
+  },
+  "reanimator/README.md": {
+    "mtime": 1793595938.7211995,
+    "seen": 1793780211.1703007,
+    "ast_hash": "8ed66501586b4918431a78b0eb4b156e",
+    "semantic_hash": "8ed66501586b4918431a78b0eb4b156e"
+  },
+  "reanimator/docs/DECISIONS.md": {
+    "mtime": 1793616434.0150776,
+    "seen": 1793780211.1703014,
+    "ast_hash": "a7ced857344f44c0fce89705fd1ab65f",
+    "semantic_hash": "a7ced857344f44c0fce89705fd1ab65f"
+  },
+  "reanimator/docs/KNOWN_ISSUES.md": {
+    "mtime": 1793616434.0150776,
+    "seen": 1793780211.1703022,
+    "ast_hash": "d033f070eccf2809c58d040d61e9ddaf",
+    "semantic_hash": "d033f070eccf2809c58d040d61e9ddaf"
+  },
+  "reanimator/docs/PRD.md": {
+    "mtime": 1793616434.0150776,
+    "seen": 1793780211.1703029,
+    "ast_hash": "85edb1f981b76f6b70ae32f389dcd7ed",
+    "semantic_hash": "85edb1f981b76f6b70ae32f389dcd7ed"
+  },
+  "reanimator/docs/STACK.md": {
+    "mtime": 1793616434.0152562,
+    "seen": 1793780211.1703036,
+    "ast_hash": "d463e81af0d1fe3fce5dc373bd54ce83",
+    "semantic_hash": "d463e81af0d1fe3fce5dc373bd54ce83"
+  },
+  "reanimator/docs/STORY.md": {
+    "mtime": 1793595938.7214167,
+    "seen": 1793780211.1703043,
+    "ast_hash": "60b13aa99c64914410d540d33ab9bf29",
+    "semantic_hash": "60b13aa99c64914410d540d33ab9bf29"
+  },
+  "reanimator/docs/THEME.md": {
+    "mtime": 1793595938.7214167,
+    "seen": 1793780211.170305,
+    "ast_hash": "62614c7a6d8113dfc28b054250ed7a6c",
+    "semantic_hash": "62614c7a6d8113dfc28b054250ed7a6c"
+  },
+  "reanimator/docs/plans/2026-11-02-R0-scaffold.md": {
+    "mtime": 1793616434.0152965,
+    "seen": 1793780211.1703057,
+    "ast_hash": "6d031c53112bef1d703de10ffa9685e6",
+    "semantic_hash": "6d031c53112bef1d703de10ffa9685e6"
+  },
+  "reanimator/index.html": {
+    "mtime": 1793616434.0152965,
+    "seen": 1793780211.1703062,
+    "ast_hash": "f31dc808c08cc102a74a42c9bd318d37",
+    "semantic_hash": "f31dc808c08cc102a74a42c9bd318d37"
+  }
+}
