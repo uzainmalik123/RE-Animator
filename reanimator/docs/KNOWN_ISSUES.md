@@ -16,7 +16,7 @@
 | KI-R9 | Scene scope: four scenes is a lot for a vibe-coder; which are essential | Minor | R4, R6, R7 | Open |
 | KI-R10 | `npm audit`: moderate `minimatch` advisory in the ESLint dev chain | Minor | none (dev-only) | Accepted |
 | KI-R11 | Canvas sizing: CSS `100vw/100vh` vs `innerWidth/innerHeight`, and a DPR-only change isn't redrawn | Minor | R1 | Resolved |
-| KI-R12 | The backend has no Origin/Host check yet; needed once routes run commands | Major | R2, R3 | Open |
+| KI-R12 | The backend has no Origin/Host check yet; needed once routes run commands | Major | R2, R3 | Resolved |
 | KI-R13 | R1 demo-page polish from review: void flash on pitch/mode click, resize jank, late web font, breath jump, no OffscreenCanvas fallback, fractional-DPR cell seams | Minor | R4 (seams) | Open |
 
 ---
@@ -25,6 +25,7 @@
 - **Why it matters:** the whole demo hangs on one repo that reliably goes dead → revived → attacked → healed.
 - **What it needs to be:** small; an OSI licence; genuinely fails to install/build/run on Node 22 (e.g. a ~2014–2017 jQuery/Backbone/AngularJS app with Bower/Grunt/Gulp 3/node-sass); quick to revive; and with at least one real, demoable flaw Death can find (a form with no validation, a naive action with a race).
 - **Next action:** shortlist 3 candidates, revive each by hand once, pick the most reliable and the most demoable. Keep its before/after in `fixtures/`.
+- **Update (2026-11-04, R2):** the raise machinery is built and runs on our practice corpse (D-R14). The real repo drops in as `fixtures/<name>/` with `manifest.json` (`name`, `diedIn`, `licence`, `serve` argv), `corpse/` and `remedy/`. Its corpse must fail at least one vital or the ritual refuses it as "not dead" (D-R15). Prefer one whose install works offline-ish and quickly: install has a 120 s budget.
 
 ### KI-R2: Art quality without the original author · Major · Investigating
 - **Problem:** the look is the costume angle, the original artist left, and we can't copy their files (D-R2). The teammate is vibe-coding.
@@ -83,6 +84,7 @@
 ### KI-R12: Backend request origin checks · Major · Open
 - **Problem (R0 review):** the backend binds 127.0.0.1 only (D-R12), but a web page in the user's browser could still send requests to it (CSRF / DNS rebinding). Harmless with only `/api/health`; not harmless once R2/R3 add routes that install, build or attack.
 - **Next action:** R2's plan adds Host/Origin validation (allow only the Vite origin and loopback hosts), with tests, before any command-running route.
+- **Resolved (2026-11-04, R2):** `server/guard.ts` `loopbackGuard()` on every `/api/*` route: `Host` must be `127.0.0.1`, `localhost` or `[::1]`, and `Origin`, when present, must be a loopback http(s) origin (`null` is refused). Tests in `server/guard.test.ts` and `server/app.test.ts`.
 
 ### KI-R13: R1 renderer polish (from the R1 code review) · Minor · Open
 - **Findings (2026-11-04, none blocking):**
@@ -93,3 +95,4 @@
   5. **Breath jump:** the first animated frame jumps from breath(0) to `breath(performance.now())`. Offset by the first rAF timestamp.
   6. **No OffscreenCanvas fallback** (Safari before 16.4 throws, and the error is swallowed, leaving a blank stage). Fall back to `document.createElement('canvas')`.
 - **Next action:** fix 1 in R4. Fold 2–6 into the first scene that reuses the App's layout code (R2).
+- **Update (2026-11-04, R2):** R2 didn't reuse the R1 demo's layout (the demo moved to `?renderer` unchanged; the raise draws procedural luminance through its own `useDotCanvas`), so 2, 4, 5 and 6 stay with the demo. Item 3 (un-coalesced ResizeObserver layouts) also applies to `useDotCanvas`; fix both together.

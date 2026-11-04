@@ -18,6 +18,8 @@
 | D-R11 | Nothing is faked for the camera: a pulse = real vitals, a wound = a real finding, a heal = a real fix + re-run | Accepted |
 | D-R12 | Stack confirmed and pinned in R0: one standalone package, Vite 8 + React 19 UI, Hono backend on 127.0.0.1:7070, own CI workflow | Accepted |
 | D-R13 | The R1 renderer: a pure dither core plus thin canvas painters in `src/render/`, with a cached `DotRenderer` for animation | Accepted |
+| D-R14 | R2 is built repo-agnostic and proven on our own **practice corpse**; the real demo repo (KI-R1) is a drop-in fixture | Accepted |
+| D-R15 | The ritual protocol: a real flatline from the untouched corpse, "not dead" refused, vitals stop at the first failure, SSE with resume, one ritual at a time | Accepted |
 
 ---
 
@@ -91,3 +93,21 @@
   - The palette is one ink per draw call, so `--magic` and `--death` can't mix on one element. `readPalette` reads the CSS tokens.
   - Images are fitted with **contain** (`containRect`) so the art never stretches.
 - **Consequences:** R2/R4 scenes compose a source image (or build a luminance grid directly) and hand it to `DotRenderer`. Real text stays in HTML over the canvas.
+
+### D-R14: R2 runs on a practice corpse until the demo repo is picked
+- **Context:** R2's grill (2026-11-04). KI-R1 (the real demo repo) is still open, and picking it needs a shortlist, a hand-revive of each and the team's taste. R2's machinery doesn't depend on which repo it is.
+- **Decision:**
+  - The raise is **repo-agnostic**. A fixture is `fixtures/<name>/` with `manifest.json` (`name`, `diedIn`, `licence`, `serve` argv), `corpse/` (the untouched dead repo) and `remedy/` (files laid over a copy of the corpse to revive it). No patch tooling.
+  - v1 ships **`fixtures/practice-corpse`** (`guestbook-2016`), which we wrote inside the window under MIT. It is a dependency-free 2016-style `http` guestbook that genuinely dies on Node 22 in two ways: `engines: node 0.10.x` + `engine-strict` (npm `EBADENGINE`) and `util.puts` (removed). The remedy is a modern `engines` field and `console.log`. No other bugs are planted.
+  - It is a **practice** corpse: honest about being ours, and it's what the tests and the dev loop run. The demo's "died 2016" headstone belongs to the real repo once KI-R1 picks it.
+- **Consequences:** swapping in the real demo repo means adding a fixture folder and pointing `server/main.ts` at it (R6 will make that a choice). R2's Done-when ("the demo repo goes from failing to served") is met on the practice corpse; the real repo's run stays on KI-R1.
+
+### D-R15: The ritual protocol
+- **Context:** R2's grill (2026-11-04). D-R11 says nothing is faked; the flatline has to be as real as the pulse.
+- **Decision:**
+  - **Vitals** (`server/vitals.ts`) run in order and stop at the first failure: `install` (`npm install --no-audit --no-fund`, 120 s), `build` (`npm run build --if-present`, 120 s), `serve` (the manifest's argv on a free 127.0.0.1 port with `PORT`/`HOST`, polled until HTTP 2xx, 15 s, failing fast if the process exits), `render` (headless Chromium via `playwright-core` 1.64.1 with non-loopback requests aborted; passes with no page errors and some body text, 20 s). Commands are argv arrays, never a shell. Each runs in its own process group so a timeout kills everything it spawned. Output is kept to the last 4 KB.
+  - **The ritual** (`server/ritual.ts`): copy the corpse to a fresh temp dir and run the vitals: that failure is the flatline. **If the corpse passes every vital, the ritual refuses: "not dead".** Otherwise copy again, overlay the remedy, and run the vitals: all pass = `risen` with the origin; any failure = `failed` with `<vital>: <first line>`.
+  - **One ritual at a time** (`409`). The revived app keeps running for Death (R3) until the next ritual starts (which stops it first) or the backend gets SIGINT/SIGTERM (`Rituals.dispose()`); work dirs are removed with it.
+  - **Transport:** `POST /api/rituals` → `202 {id}`; `GET /api/rituals/:id/events` is SSE with `id: <index>`, which honours `Last-Event-ID` so a reconnect never double-counts a vital. One pure `reduceRitual` in `shared/ritual.ts` folds events on both sides.
+  - **The scene** (`src/raise/`): a spell circle (`--magic`) whose brightness is `beats/4` (floor 25% once started) and a heart monitor that is a `--death` flatline until the first revived vital passes, then a `--magic` pulse; one ink per canvas. Facts are real text in the panel; the revived app shows in an iframe. Reduced motion draws still frames. The R1 demo moved to `?renderer`.
+- **Consequences:** R3 attacks `state.origin` from the risen ritual. The revived app's port is chosen at random, not 7100+ (STACK updated). The backend now needs Chromium (CI installs it).

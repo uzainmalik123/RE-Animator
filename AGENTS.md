@@ -40,4 +40,4 @@ Reanimator revives a dead repo and serves it on localhost. Then it runs **Polter
 ## State (2026-11-04)
 
 - `poltergeist/`: engine built through its F09 (spec reader, config/safety, scout, personas, compiler, runner, verdicts, report, CLI); tests green. Now consumed by Reanimator (its standalone Séance/Costume work is deprioritised — see `poltergeist/docs/DECISIONS.md`).
-- `reanimator/`: R0 scaffold and R1 dot-matrix renderer done (`src/render/`: Bayer dither, `drawDots`/`drawGlyphs`, a cached `DotRenderer`, and a demo page on our own sample art). The team still has to approve the look (KI-R2). Next: pick the demo repo (KI-R1), then R2.
+- `reanimator/`: R0 scaffold and R1 dot-matrix renderer done (`src/render/`). **R2 the raise is built** on our own practice corpse (D-R14): a real flatline, the remedy, four real vitals (install/build/serve/render), SSE to a spell-circle + heart-monitor scene, and a loopback guard on the backend (KI-R12). The team still has to approve the look (KI-R2). Next: pick the demo repo (KI-R1) and drop it in as a fixture, then R3.

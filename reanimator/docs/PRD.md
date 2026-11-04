@@ -35,7 +35,7 @@
 |---|---|---|---|---|
 | 0 | R0 | Scaffold (Vite + React + TS, canvas, health gate, CI) | High | Done |
 | 1 | R1 | Dot-matrix renderer (the art engine) | High | Done |
-| 2 | R2 | The Raise: revive one prepared dead repo, prove it with vitals | High | TBD |
+| 2 | R2 | The Raise: revive one prepared dead repo, prove it with vitals | High | Built (practice corpse); demo repo pending KI-R1 |
 | 3 | R3 | Death's attack: wire in the Poltergeist engine | High | TBD |
 | 4 | R4 | The attack scene: draw Death + minions over the running app | High | TBD |
 | 5 | R5 | Wounds + heal loop: show findings, fix with Kiro, re-attack | High | TBD |
@@ -78,7 +78,7 @@
 - **Done when:** a demo page renders a sample image as purple-on-void dots, a snapshot test pins the output, and switching `pitch` changes density. Put a picture of it in front of the team to approve the look.
 - **Built (2026-11-04, D-R13):** `src/render/` (`dither.ts` pure core, `draw.ts` painters, `renderer.ts` `DotRenderer`, `viewport.ts`). The demo is `npm run dev`. Screenshots: `docs/img/r1-renderer-{dots,glyphs}.png`. The team's look approval is still open on KI-R2.
 
-### R2: The Raise · High · TBD
+### R2: The Raise · High · Built (practice corpse); demo repo pending KI-R1
 **Owns:** reviving **one prepared dead repo** (bundled in `fixtures/`), and proving it with deterministic **vitals** (install, build, serve, render), plus the raise scene (spell circle + heart monitor flatline → pulse). The backend runs the commands in a temp dir and streams status to the UI.
 **Not this feature:** Death (R3/R4) · picking the repo (R6) · arbitrary URLs (R9).
 - **User story:** As the necromancer, I raise a dead project and watch its heart start beating, for real.
@@ -92,6 +92,7 @@
   - Vitals are real checks, not animations faked on a timer (STORY § Tone).
   - The revived app must end up served at a URL Poltergeist can point at (R3 needs this).
 - **Done when:** on the demo machine, the demo repo goes from failing to served-and-rendering, and the pulse scene reflects the real vital results.
+- **Built (2026-11-04, D-R14, D-R15):** `shared/ritual.ts` (protocol + reducer), `server/{exec,fixtures,vitals,render-check,ritual,guard}.ts`, `POST /api/rituals` + SSE events, and the raise scene in `src/raise/`. Proven end to end on `fixtures/practice-corpse` (a real `EBADENGINE` flatline → 4 real vitals → the guestbook served on 127.0.0.1 and shown; `server/ritual.integration.test.ts`). Screenshots: `docs/img/r2-raise-{idle,risen}.png`. The real demo repo's run waits on KI-R1.
 
 ### R3: Death's attack (wire in Poltergeist) · High · TBD
 **Owns:** calling the Poltergeist engine against the revived app and getting findings back: write a `poltergeist.config.json` pointing at the revived app's origin, provide/author a spec (the "chart") of the revived app, run Poltergeist (its CLI `summon` or MCP), and parse `haunting-report.json`.
@@ -187,3 +188,4 @@
 - 2026-11-01: PRD created for the merged entry. Reanimator is the product; Poltergeist is its red-team engine (Death). Frankenstein category.
 - 2026-11-02: R0 Done. Vite + React canvas page, Hono backend (`/api/health`, 127.0.0.1:7070), `npm run health` green, CI `reanimator-ci.yml` (D-R12, plan `docs/plans/2026-11-02-R0-scaffold.md`).
 - 2026-11-04: R1 Done. Dot-matrix renderer in `src/render/` (Bayer 4x4, empty-darkest, dots and glyphs, a per-cell cached `DotRenderer`, ~3 ms/frame at 1080p) and a demo page on our own SVG sample art. Fixes KI-R11 (D-R13, plan `docs/plans/2026-11-04-R1-renderer.md`). Look approval stays open on KI-R2.
+- 2026-11-04: R2 Built on a practice corpse (D-R14, D-R15, plan `docs/plans/2026-11-04-R2-raise.md`): the repo-agnostic ritual (real flatline, remedy, 4 vitals incl. headless-Chromium render), SSE with resume, one ritual at a time, and the raise scene (spell circle + heart monitor). Resolves KI-R12 (loopback guard). The demo repo itself is still KI-R1.
