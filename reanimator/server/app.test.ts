@@ -75,6 +75,15 @@ describe('createApp', () => {
     expect(body).toContain('id: 2');
   });
 
+  it('treats a negative Last-Event-ID as a fresh start', async () => {
+    const res = await createApp({ rituals: fakeRituals() }).request(`${BASE}/api/rituals/r1/events`, {
+      headers: { 'last-event-id': '-5' },
+    });
+    const body = await res.text();
+    expect(body.match(/^id: (-?\d+)$/m)?.[1]).toBe('0');
+    expect(body).not.toContain('id: -');
+  });
+
   it('streams live events until the ritual ends', async () => {
     let push: ((e: RitualEvent, i: number) => void) | null = null;
     const rituals: RitualsApi = {
