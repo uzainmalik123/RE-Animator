@@ -2,11 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { App } from './App';
 
-describe('App', () => {
-  it('renders one labelled canvas and nothing else', () => {
-    const html = renderToStaticMarkup(<App />);
-    expect(html).toMatch(
-      /^<canvas[^>]*class="stage"[^>]*aria-label="Reanimator: an empty, dark stage"[^>]*><\/canvas>$/,
-    );
+describe('App (R1 renderer demo)', () => {
+  const html = renderToStaticMarkup(<App />);
+
+  it('renders the stage canvas with a text alternative', () => {
+    expect(html).toMatch(/<canvas[^>]*class="stage"[^>]*aria-label="[^"]*dot-matrix[^"]*"/);
+  });
+
+  it('offers real-text pitch and mode controls', () => {
+    for (const label of ['auto', '2', '3', '4', '6', 'dots', 'glyphs']) {
+      expect(html).toContain(`>${label}</button>`);
+    }
   });
 });
