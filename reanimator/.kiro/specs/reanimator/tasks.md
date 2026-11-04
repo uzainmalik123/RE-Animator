@@ -18,9 +18,13 @@ Work one PRD feature at a time, through the grill → plan → implement → rev
   - _Requirements: 2.4, 4.2_
 - [ ] 6. R5 Wounds + heal loop (Kiro fix, re-run, close wound, PR text)
   - _Requirements: 3.1–3.4_
-- [ ] 7. R6 Graveyard (pick a repo)
-  - _Requirements: 5.1, 5.3_
-- [ ] 8. R7 Grimoire (agent surface)
+- [ ] 7. R7 Grimoire (agent surface)
   - _Requirements: 5.2_
-- [ ] 9. R8 Autopsy; R11 hosted replay; then Low (R9, R10)
+- [ ] 8. R11 hosted replay; then R9 (arbitrary URLs)
+  - _Requirements: as per PRD_
+- [ ] 9. 🔒 Built in Kiro (D-R18): R6 Graveyard (pick a repo)
+  - _Requirements: 5.1, 5.3_
+- [ ] 10. 🔒 Built in Kiro (D-R18): R8 Autopsy (why it died)
+  - _Requirements: as per PRD_
+- [ ] 11. 🔒 Built in Kiro (D-R18): R10 Sound & atmosphere
   - _Requirements: as per PRD_
