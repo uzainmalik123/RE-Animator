@@ -12,6 +12,8 @@ export interface Fixture {
   dir: string;
   corpseDir: string;
   remedyDir: string;
+  // chart/ (requirements.md + routes.json): the spec Death tests the revived app against (D-R8, R3).
+  chartDir: string | null;
 }
 
 // Our own practice corpse; the real demo repo (KI-R1) drops in beside it.
@@ -35,5 +37,7 @@ export async function loadFixture(dir: string): Promise<Fixture> {
   const remedyDir = join(dir, 'remedy');
   if (!(await isDir(corpseDir))) throw new Error(`fixture ${dir}: missing corpse/ folder`);
   if (!(await isDir(remedyDir))) throw new Error(`fixture ${dir}: missing remedy/ folder`);
-  return { name: m.name, diedIn: m.diedIn, licence: m.licence, serve: m.serve as string[], dir, corpseDir, remedyDir };
+  const chartDir = join(dir, 'chart');
+  const hasChart = await stat(join(chartDir, 'requirements.md')).then((s) => s.isFile(), () => false);
+  return { name: m.name, diedIn: m.diedIn, licence: m.licence, serve: m.serve as string[], dir, corpseDir, remedyDir, chartDir: hasChart ? chartDir : null };
 }
