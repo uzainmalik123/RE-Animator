@@ -41,10 +41,10 @@ async function settle(r: Rituals, id: string): Promise<RitualEvent[]> {
   throw new Error('ritual never finished');
 }
 
-const make = async (o: { corpseDies?: boolean } = {}) => {
+const make = async (o: { corpseDies?: boolean; onRelease?: () => Promise<void> } = {}) => {
   const { deps, apps } = fakeDeps(o);
   const workRoot = await mkdtemp(join(tmpdir(), 'rituals-'));
-  return { r: new Rituals({ fixture: () => loadFixture(PRACTICE_CORPSE), deps, workRoot }), apps, workRoot, deps };
+  return { r: new Rituals({ fixture: () => loadFixture(PRACTICE_CORPSE), deps, workRoot, onRelease: o.onRelease }), apps, workRoot, deps };
 };
 
 const start = (r: Rituals) => {
@@ -82,6 +82,37 @@ describe('Rituals', () => {
     const stopped = vi.mocked(apps[0]!.stop).mock.invocationCallOrder[0]!;
     const nextStart = vi.mocked(deps.startApp).mock.invocationCallOrder[1]!;
     expect(stopped).toBeLessThan(nextStart);
+    await r.dispose();
+  });
+
+  it('names the risen ritual\'s origin, revived repo and fixture, and nothing else', async () => {
+    const { r } = await make();
+    const id = start(r);
+    expect(r.risen(id)).toBeNull();
+    await settle(r, id);
+    const risen = r.risen(id)!;
+    expect(risen.origin).toBe('http://127.0.0.1:5001');
+    expect(existsSync(join(risen.revivedDir, 'server.js'))).toBe(true);
+    expect(risen.fixture.name).toBe('guestbook-2016');
+    expect(r.risen('nope')).toBeNull();
+    await r.dispose();
+  });
+
+  it('awaits onRelease (Death stopping) before the old app stops', async () => {
+    const order: string[] = [];
+    const { r, apps } = await make({
+      onRelease: async () => {
+        await new Promise((res) => setTimeout(res, 20));
+        order.push('released');
+      },
+    });
+    const id = start(r);
+    await settle(r, id);
+    vi.mocked(apps[0]!.stop).mockImplementation(async () => {
+      order.push('stopped');
+    });
+    await settle(r, start(r));
+    expect(order.slice(0, 2)).toEqual(['released', 'stopped']);
     await r.dispose();
   });
 

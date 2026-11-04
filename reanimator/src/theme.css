@@ -175,3 +175,13 @@ body,
     border-top: 1px solid var(--dim);
   }
 }
+
+/* R3: Death's attack, as real text. Red is Death's and the wounds' only. */
+.attack-panel .wound b,
+.attack-panel .wound {
+  color: var(--death);
+}
+.attack-panel .wounds {
+  list-style: none;
+  padding: 0;
+}

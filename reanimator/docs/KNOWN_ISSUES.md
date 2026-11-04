@@ -8,8 +8,8 @@
 | KI-R1 | We haven't chosen the one demo repo (must be small, permissively licensed, genuinely dead on Node 22, quick to revive) | Blocker | R2, demo | Open |
 | KI-R2 | Art quality: the original author left, the teammate is vibe-coding, and we can't copy the prototype | Major | R4, costume | Investigating |
 | KI-R3 | Dot-matrix render performance (many dots, live frames) | Minor | R4 | Investigating |
-| KI-R4 | How exactly Reanimator calls Poltergeist (CLI vs MCP; monorepo wiring) | Major | R3 | Open |
-| KI-R5 | The revived app needs a spec ("chart") for Poltergeist to test against | Major | R3 | Open |
+| KI-R4 | How exactly Reanimator calls Poltergeist (CLI vs MCP; monorepo wiring) | Major | R3 | Resolved |
+| KI-R5 | The revived app needs a spec ("chart") for Poltergeist to test against | Major | R3 | Resolved (practice corpse; the demo repo needs its own) |
 | KI-R6 | Eligibility: the idea was prototyped before the window; present the rebuild honestly | Major | submission | Open |
 | KI-R7 | Running revive + attack live for a judge may be too heavy; may need a recorded replay | Major | R11 | Open |
 | KI-R8 | Reviving arbitrary cloned repos runs untrusted code | Major | R9 | Open (deferred to R9) |
@@ -17,7 +17,9 @@
 | KI-R10 | `npm audit`: moderate `minimatch` advisory in the ESLint dev chain | Minor | none (dev-only) | Accepted |
 | KI-R11 | Canvas sizing: CSS `100vw/100vh` vs `innerWidth/innerHeight`, and a DPR-only change isn't redrawn | Minor | R1 | Resolved |
 | KI-R12 | Backend Origin/Host check before routes run commands | Major | R2, R3 | Resolved |
-| KI-R14 | R2 review minors: grandchild-kill test, negative Last-Event-ID, `close` vs `exit`, inherited env, render-check port scope, error-line pick, freePort race, uncancellable serve/render waits | Minor | R3 (env), R9 (env) | Open |
+| KI-R14 | R2 review minors: grandchild-kill test, negative Last-Event-ID, `close` vs `exit`, inherited env, render-check port scope, error-line pick, freePort race, uncancellable serve/render waits | Minor | none (#2, #4 fixed in R3) | Open |
+| KI-R16 | R3 review minors: shared engine home between `attack:check` and the server, unbounded `runs/`, UTF-8 split across reads, no Bedrock selection, a lost stream's message shown twice, an abort during prepare still spawns the engine, the integration test's skip check | Minor | none | Open |
+| KI-R15 | R3's live run (a real key, a real report with a reproduced wound) hasn't been run; whether the guestbook really yields a wound is unproven | Major | R3 Done-when, R4 | Open |
 | KI-R13 | R1 demo-page polish from review: void flash on pitch/mode click, resize jank, late web font, breath jump, no OffscreenCanvas fallback, fractional-DPR cell seams | Minor | R4 (seams) | Open |
 
 ---
@@ -46,11 +48,13 @@
 - **Problem:** Poltergeist is a sibling package with a CLI (`summon`) and an MCP server. We need to decide how Reanimator invokes it and gets the report.
 - **Options:** (a) shell out to the Poltergeist CLI and read `haunting-report.json`; (b) use its MCP server; (c) import its core package directly if the monorepo allows.
 - **Next action:** read `../poltergeist/README.md` and `../poltergeist/docs/` during R3 grilling; pick the simplest that returns a report. (a) is likely simplest for a vibe-coder.
+- **Resolved (2026-11-04, R3, D-R16):** (a), the CLI `summon` as a subprocess in its own process group, with progress tailed from the run's `events.ndjson` and results read from `haunting-report.json`.
 
 ### KI-R5: The revived app needs a chart · Major · Open
 - **Problem:** Poltergeist tests against a spec (`requirements.md`). The revived repo won't have one.
 - **Plan (D-R8):** hand-write a small chart for the demo repo for v1; later an agent can generate it (the original Reanimator's "Archivist" idea).
 - **Next action:** write the demo repo's chart as part of R3.
+- **Resolved for the practice corpse (2026-11-04, R3, D-R16):** `fixtures/practice-corpse/chart/` (six EARS criteria + `routes.json`). The real demo repo (KI-R1) needs its own `chart/` folder.
 
 ### KI-R6: Eligibility of a prototyped idea · Major · Open
 - **Context:** both earlier projects predate the window; this repo doesn't. Code is all fresh (D-R2).
@@ -109,3 +113,21 @@
   7. **`freePort` race:** the port is released before the app binds it. Fine locally.
   8. **The serve (15 s) and render (20 s) waits ignore the abort signal**, so stopping mid-serve can take that long. Install and build (the long ones) do abort.
 - **Next action:** fix 4 at the start of R3; fold 1–3 and 5–8 into R3's work on the backend.
+- **Update (2026-11-04, R3):** #4 fixed (`server/env.ts`: an allowlisted env for every child; only the engine gets the LLM credentials, D-R16). #2 fixed (`server/sse.ts` clamps with `Math.max(-1, id)`). 1, 3 and 5–8 stay open (none block R4).
+
+### KI-R15: R3's live run is unproven · Major · Open
+- **Problem:** R3's Done-when needs a real compile (an LLM key), so CI and this session only proved the wiring: the real CLI scouts the risen guestbook and stops at the compiler without a key (`server/attack.integration.test.ts`). Whether the practice corpse's chart really yields a reproduced wound (we expect 1.2 double-submit and 1.3 empty name) is not yet known.
+- **Next action:** `cd reanimator && doppler run -- npm run attack:check` (exits 0 with at least one wound; the first run compiles ~36 plans, later runs hit the plan cache in `.reanimator/`). If it finds nothing, tighten the chart's wording, not the app. Then repeat on the real demo repo once KI-R1 picks it.
+
+### KI-R16: R3 review minors (from the R3 code review) · Minor · Open
+- **Findings (2026-11-04, none blocking):**
+  1. **Shared engine home** (`server/chart.ts`, `server/engine.ts`): `attack:check` and a running backend share `.reanimator/<fixture>/`, so running both at once lets one rewrite the other's config `target`, and the tailer may pick up the other's run (the runId check then fails it honestly). Fix: a per-attack config file name.
+  2. **`.reanimator/<fixture>/.poltergeist/runs/` grows without limit.** Prune old runs (keep the plan cache).
+  3. **UTF-8 split across reads** (`server/engine.ts` tailer): `buf.toString` before line splitting can turn a split multibyte character into U+FFFD. Use a `StringDecoder`.
+  4. **No Bedrock selection:** `AWS_*` reaches the engine, but the written config never sets `provider: "bedrock"`. Add a `REANIMATOR_PROVIDER` passthrough when needed.
+  5. **A lost stream shows twice** in `AttackPanel` (as `live.error` and as "Death faltered: …"). Set only one.
+  6. **An abort during `prepareAttack` still spawns the engine** (killed at once). Check `signal.aborted` before calling it.
+  7. **`it.skipIf(!existsSync(DEFAULT_CLI))`** never skips (the bin is tracked); without `poltergeist/node_modules` the test fails, now with the real "Cannot find package" line. Check for the engine's `node_modules` instead.
+  8. **Proxy/CA vars** (`HTTPS_PROXY`, `NODE_EXTRA_CA_CERTS`) are dropped by the child env allowlist, including for `npm install`. Fine locally; add them if a demo machine needs a proxy.
+- **Next action:** fold into R4/R5's backend work.
+

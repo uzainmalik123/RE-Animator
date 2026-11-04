@@ -13,6 +13,7 @@ Work one PRD feature at a time, through the grill → plan → implement → rev
   - _Built on the practice corpse (D-R14); tick once the demo repo (task 2) runs through it._
 - [ ] 4. R3 Death's attack: wire in Poltergeist, get findings
   - _Requirements: 2.1, 2.2, 2.3_
+  - _Built (D-R16, D-R17); tick once `doppler run -- npm run attack:check` finds a real wound (KI-R15)._
 - [ ] 5. R4 The attack scene: Death + minions + wounds over the app
   - _Requirements: 2.4, 4.2_
 - [ ] 6. R5 Wounds + heal loop (Kiro fix, re-run, close wound, PR text)

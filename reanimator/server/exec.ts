@@ -3,6 +3,7 @@
 // (npm forks node, node may fork more).
 import { spawn, type ChildProcess } from 'node:child_process';
 import { createServer } from 'node:net';
+import { childEnv } from './env.js';
 
 export const TAIL_BYTES = 4096;
 const KILL_GRACE_MS = 2000;
@@ -57,7 +58,7 @@ export async function runCommand(
   o: { cwd: string; timeoutMs: number; env?: NodeJS.ProcessEnv; signal?: AbortSignal },
 ): Promise<CommandResult> {
   const t0 = Date.now();
-  const { child, exited } = launch(argv, o.cwd, o.env ?? process.env);
+  const { child, exited } = launch(argv, o.cwd, o.env ?? childEnv(process.env));
   const output = tail(child);
   let timedOut = false;
   const timer = setTimeout(() => {
@@ -92,7 +93,7 @@ export interface RunningApp {
 
 // Start the revived app on 127.0.0.1:<port> (PORT and HOST in its env, D-R7) and leave it running.
 export function startApp(argv: string[], o: { cwd: string; port: number }): RunningApp {
-  const { child, exited } = launch(argv, o.cwd, { ...process.env, PORT: String(o.port), HOST: '127.0.0.1' });
+  const { child, exited } = launch(argv, o.cwd, childEnv(process.env, { PORT: String(o.port), HOST: '127.0.0.1' }));
   const output = tail(child);
   return {
     origin: `http://127.0.0.1:${o.port}`,

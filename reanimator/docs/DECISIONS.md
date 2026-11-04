@@ -20,6 +20,8 @@
 | D-R13 | The R1 renderer: a pure dither core plus thin canvas painters in `src/render/`, with a cached `DotRenderer` for animation | Accepted |
 | D-R14 | R2 is built repo-agnostic and proven on our own **practice corpse**; the real demo repo (KI-R1) is a drop-in fixture | Accepted |
 | D-R15 | The ritual protocol: a real flatline from the untouched corpse, "not dead" refused, vitals stop at the first failure, SSE with resume, one ritual at a time | Accepted |
+| D-R16 | Calling Death: the Poltergeist CLI as a subprocess, the fixture's chart copied into the revived repo, a persistent per-fixture engine home, an allowlisted env | Accepted |
+| D-R17 | The attack protocol: `POST /api/rituals/:id/attack` + SSE, a wound = a haunted pair, one attack at a time, a new ritual stops it first | Accepted |
 
 ---
 
@@ -112,3 +114,24 @@
   - **The scene** (`src/raise/`): a spell circle (`--magic`) whose brightness is `beats/4` (floor 25% once started) and a heart monitor that is a `--death` flatline until the first revived vital passes, then a `--magic` pulse; one ink per canvas. Facts are real text in the panel; the revived app shows in an iframe. Reduced motion draws still frames. The R1 demo moved to `?renderer`.
 - **Added after review (2026-11-04):** each ritual has an `AbortController`. A new ritual or `dispose()` aborts the running one (its npm command's group is killed, later vitals are skipped, and any started app is stopped) instead of waiting for it to finish. A check that throws (e.g. Chromium missing) is a failed vital, never an orphaned app. A `409` carries the running ritual's id so a reloaded page rejoins it, and a stream the browser gives up on frees the UI with "lost the ritual".
 - **Consequences:** R3 attacks `state.origin` from the risen ritual. The revived app's port is chosen at random, not 7100+ (STACK updated). The backend now needs Chromium (CI installs it).
+
+### D-R16: Calling Death (the Poltergeist engine)
+- **Context:** R3's grill (2026-11-04), resolving KI-R4 (how to call it) and KI-R5 (the chart).
+- **Decision:**
+  - **CLI subprocess.** The backend runs `node ../poltergeist/packages/cli/bin/poltergeist.js summon --spec <dir> --config <file> [--only ids]` (`REANIMATOR_POLTERGEIST` overrides the path) through `runCommand`, so it has its own process group, a 15-minute timeout and an abort. We don't import `@poltergeist/core`: tsc would typecheck the engine's sources, and an engine hang would hang the backend. Exit 0/1 with a new run dir = a report, read only if its `runId` is that run's (a crash also exits 1, and an earlier run's report may still sit beside the spec); anything else = failed with the CLI's `error:` line or last words.
+  - **The chart** is hand-written per fixture in `fixtures/<name>/chart/` (`requirements.md` in Kiro's EARS format + `routes.json`). It states what any such app should do; the app is never changed to fit it (no planted bugs, D-R14). The practice corpse's has six criteria (signing once, refusing an empty name, showing text as written, keyboard-only, small slow phone).
+  - **Where files live:** the chart is copied into the revived repo at `.kiro/specs/chart/` (once per ritual, so re-runs merge into its report, Poltergeist F14, and Kiro sees it in R5). The config and the engine's `.poltergeist/` (plan cache, runs) live in `reanimator/.reanimator/<fixture>/` (gitignored), with the config rewritten each attack: `{ target: <risen origin>, routes, concurrency: 6, reps: 3 }`. The plan cache key has no origin in it, so cached plans survive a new ritual's random port.
+  - **Env:** every child gets an allowlist (`childEnv`: `PATH HOME TMPDIR TEMP LANG LC_ALL TERM USER SHELL npm_config_*`); only the engine also gets `ANTHROPIC_*`, `AWS_*`, `PLAYWRIGHT_BROWSERS_PATH`, `XDG_CACHE_HOME` and `NO_COLOR=1` (`engineEnv`). Fixes KI-R14 #4.
+  - **Progress** is the run's own redacted `events.ndjson`, tailed every 250 ms (whole lines only); Reanimator keeps four event types (`run.started`, `scout.route`, `plan.compiled`, `verdict.criterion`).
+- **Consequences:** CI installs `poltergeist/` too and runs the real CLI with no key (it must stop at the compiler). A real report needs a key: `doppler run -- npm run attack:check` (KI-R15). R4 draws from these events and wounds; R5 re-runs with `only`.
+
+### D-R17: The attack protocol
+- **Context:** R3's grill (2026-11-04).
+- **Decision:**
+  - `POST /api/rituals/:id/attack` (optional JSON `{ only: string[] }`) → `202 {id}`; `409 {error:'Death is already attacking', id}` (rejoin); `409 {error:'the ritual has not risen'}`; `400` for a bad `only`. `GET /api/attacks/:id/events` is SSE with the ritual's resume semantics (`server/sse.ts`, shared).
+  - Events (`shared/attack.ts`): `summoned` → `engine` (the four engine events) → `finished {counts, wounds}` or `failed {reason}`, folded by one `reduceAttack`.
+  - **A wound is a haunted pair** from the real report (it reproduced, Poltergeist D-06). Flaky, inconclusive and clean pairs only reach the counts.
+  - **One attack at a time**, on the current risen ritual. A new ritual or shutdown stops it first (`Rituals` `onRelease` → `Attacks.stop()`, which kills the engine's group) and it ends `failed: stopped: a new ritual began`.
+  - **The R3 panel** is real text only (a **Summon Death** button, progress, the wounds in `--death`); the attack art is R4's.
+- **Consequences:** R4 folds the same stream into the scene; R5 posts `{only}` for a re-run.
+

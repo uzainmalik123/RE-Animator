@@ -88,6 +88,7 @@ Before you hand back, if anything changed:
 - `npm run server` → the backend at http://127.0.0.1:7070 (`/api/health`, `POST /api/rituals`). The UI proxies `/api` to it. Ctrl-C also stops the revived app.
 - `npx playwright-core install chromium` once per machine: the render vital and its integration test need it.
 - `npm run health` → typecheck + lint + test.
+- `doppler run -- npm run attack:check` → raise the practice corpse and let Death (the real Poltergeist engine, needs an LLM key) attack it; prints the wounds (R3, KI-R15). The backend's **Summon Death** button does the same from the UI. `../poltergeist` must be installed (`npm ci` there).
 
 ## Health check (after every implementation)
 
@@ -95,7 +96,7 @@ Run **`npm run health`** (typecheck + lint + test) before reporting back, commit
 
 ## How to call Poltergeist (feature R3)
 
-Death's attack is the sibling engine. When you reach R3:
+Death's attack is the sibling engine. **Built in R3 (D-R16, D-R17):** `server/engine.ts` runs its CLI; `server/chart.ts` writes the config; `server/report.ts` reads the wounds. The original notes:
 - Read `../poltergeist/README.md` and `../poltergeist/docs/` (PRD, DECISIONS) first.
 - The app Reanimator revives must be served on **localhost** (Poltergeist only attacks localhost).
 - Poltergeist tests against a **spec** of the app (a "chart"). For the demo repo, hand-write a small one (D-R8, KI-R5).
@@ -117,8 +118,9 @@ Death's attack is the sibling engine. When you reach R3:
 
 1. Read `docs/STORY.md`, `docs/THEME.md`, `docs/PRD.md`.
 2. ~~R0 scaffold, R1 renderer~~ (done). **Approve the look:** run `npm run dev` + `npm run server`, press **Begin the ritual** on the raise, and try the renderer at `?renderer`; sign off or ask for changes (KI-R2; screenshots in `docs/img/`).
-3. ~~R2 machinery~~ (built on the practice corpse, D-R14). Shortlist and pick the one demo repo (KI-R1) and drop it in as a fixture. Then R3.
-4. Read the 2026 rules (KI-R6 / Poltergeist KI-05).
+3. ~~R2 machinery~~ (built on the practice corpse, D-R14). Shortlist and pick the one demo repo (KI-R1) and drop it in as a fixture (with a `chart/`).
+4. ~~R3 wiring~~ (built, D-R16/D-R17). Run `doppler run -- npm run attack:check` once with a key (KI-R15). Then R4.
+5. Read the 2026 rules (KI-R6 / Poltergeist KI-05).
 
 ## Tools available
 

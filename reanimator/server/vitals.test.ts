@@ -12,6 +12,7 @@ const fixture: Fixture = {
   dir: '/f',
   corpseDir: '/f/corpse',
   remedyDir: '/f/remedy',
+  chartDir: null,
 };
 const done = (over: Partial<CommandResult> = {}): CommandResult => ({ code: 0, output: '', timedOut: false, ms: 1, ...over });
 

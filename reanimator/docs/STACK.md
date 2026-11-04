@@ -25,7 +25,7 @@ React UI (canvas scenes) ──HTTP/WebSocket──> Node backend
                                               ├─ revive: run install/build/serve in a temp dir → vitals
                                               ├─ serve the revived app at http://localhost:<port>
                                               └─ attack: run Poltergeist against that origin → haunting-report.json
-                                                        (Poltergeist = ../poltergeist, CLI or MCP)
+                                                        (Poltergeist = ../poltergeist, its CLI `summon` as a subprocess, D-R16)
 UI reads vitals + report and draws the raise, Death's attack, and the wounds.
 ```
 

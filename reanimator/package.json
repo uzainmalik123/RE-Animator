@@ -9,6 +9,7 @@
     "dev": "vite",
     "build": "vite build",
     "server": "tsx server/main.ts",
+    "attack:check": "tsx server/attack-check.ts",
     "typecheck": "tsc -p tsconfig.app.json && tsc -p tsconfig.node.json",
     "lint": "eslint .",
     "test": "vitest run",
