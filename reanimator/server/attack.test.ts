@@ -16,7 +16,7 @@ async function make(engine: Engine, o: { risen?: boolean } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'r3-attacks-'));
   const fixture = await loadFixture(PRACTICE_CORPSE);
   const rituals = { risen: (id: string) => (o.risen !== false && id === 'r1' ? { origin: 'http://127.0.0.1:5001', revivedDir: root, fixture } : null) };
-  const read = vi.fn(async () => ({ counts: COUNTS, wounds: [WOUND] }));
+  const read = vi.fn(async () => ({ counts: COUNTS, wounds: [WOUND], pairs: {} }));
   return { a: new Attacks({ rituals, homeRoot: join(root, 'home'), cli: '/cli.js', env: { PATH: '/bin', ANTHROPIC_API_KEY: 'k', DOPPLER_TOKEN: 'd' }, engine, read }), read };
 }
 

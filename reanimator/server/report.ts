@@ -2,7 +2,7 @@
 // is a wound: it reproduced (Poltergeist D-06). Flaky and inconclusive pairs only reach the counts.
 // Validated by hand for the fields we read; the engine itself validates the whole file with zod.
 import { readFile } from 'node:fs/promises';
-import type { Counts, Wound } from '../shared/attack.js';
+import { woundKey, type Counts, type Wound } from '../shared/attack.js';
 
 const UNREADABLE = 'the engine wrote no readable report';
 const COUNT_KEYS = ['haunted', 'flaky', 'inconclusive', 'clean', 'notApplicable', 'notRun'] as const;
@@ -28,12 +28,15 @@ function wound(criterion: Obj, pair: Obj): Wound {
     expected: strings(pair.expected),
     failing: (Array.isArray(pair.failing) ? pair.failing : []).map(failingLine).filter((l): l is string => l !== null),
     artifacts: strings(pair.artifacts),
-    carried: false,
+    carried: pair.carriedFrom !== undefined,
   };
 }
 
+export type PairVerdicts = Record<string, { verdict: string; carried: boolean }>;
+
 // `runId`, when given, must be the report's own: a stale report from an earlier run is never read as new.
-export async function readWounds(jsonPath: string, runId?: string): Promise<{ counts: Counts; wounds: Wound[] }> {
+// `pairs` holds every pair's verdict by woundKey, so a heal can see whether its pair really ran (R5).
+export async function readWounds(jsonPath: string, runId?: string): Promise<{ counts: Counts; wounds: Wound[]; pairs: PairVerdicts }> {
   let raw: unknown;
   try {
     raw = JSON.parse(await readFile(jsonPath, 'utf8'));
@@ -45,9 +48,19 @@ export async function readWounds(jsonPath: string, runId?: string): Promise<{ co
   const c = isObj(raw.counts) ? raw.counts : {};
   const counts = Object.fromEntries(COUNT_KEYS.map((k) => [k, typeof c[k] === 'number' ? c[k] : 0])) as Counts;
   const wounds: Wound[] = [];
+  const pairs: PairVerdicts = {};
   for (const criterion of raw.criteria) {
     if (!isObj(criterion) || !Array.isArray(criterion.pairs)) continue;
-    for (const pair of criterion.pairs) if (isObj(pair) && pair.verdict === 'haunted') wounds.push(wound(criterion, pair));
+    for (const pair of criterion.pairs) {
+      if (!isObj(pair)) continue;
+      pairs[woundKey({ criterion: str(criterion.id), persona: str(pair.persona) })] = { verdict: str(pair.verdict), carried: pair.carriedFrom !== undefined };
+      if (pair.verdict === 'haunted') wounds.push(wound(criterion, pair));
+    }
   }
-  return { counts, wounds };
+  return { counts, wounds, pairs };
+}
+
+// The wounds open before a run (R5): the haunted pairs of whatever report is there, none without one.
+export async function openWounds(jsonPath: string): Promise<Wound[]> {
+  return readWounds(jsonPath).then((r) => r.wounds, () => []);
 }

@@ -2,7 +2,7 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { readWounds } from './report.js';
+import { openWounds, readWounds } from './report.js';
 
 const COUNTS = { haunted: 1, flaky: 0, inconclusive: 0, clean: 1, notApplicable: 0, notRun: 0 };
 
@@ -49,7 +49,7 @@ describe('readWounds', () => {
     const p = await write(JSON.stringify(report([
       { id: '1.1', requirement: 'Signing', text: 't', line: 8, verdict: 'flaky', pairs: [pair('wraith', 'flaky'), pair('lich', 'clean')] },
     ], counts)));
-    expect(await readWounds(p)).toEqual({ counts, wounds: [] });
+    expect(await readWounds(p)).toMatchObject({ counts, wounds: [] });
   });
 
   it('refuses a report from another run (a stale one left beside the spec)', async () => {
@@ -62,5 +62,28 @@ describe('readWounds', () => {
     await expect(readWounds('/nonexistent/haunting-report.json')).rejects.toThrow('the engine wrote no readable report');
     await expect(readWounds(await write('not json'))).rejects.toThrow('the engine wrote no readable report');
     await expect(readWounds(await write(JSON.stringify({ version: 2, criteria: [] })))).rejects.toThrow('the engine wrote no readable report');
+  });
+
+  it('marks a carried wound and keys every pair by criterion and persona', async () => {
+    const p = await write(JSON.stringify(report([
+      { id: '1.2', requirement: 'Signing', text: 't', line: 9, verdict: 'haunted', pairs: [pair('wraith', 'haunted', { carriedFrom: 'run-0' }), pair('lich', 'clean')] },
+    ])));
+    const r = await readWounds(p);
+    expect(r.wounds[0]!.carried).toBe(true);
+    expect(r.pairs['1.2::lich']).toEqual({ verdict: 'clean', carried: false });
+    expect(r.pairs['1.2::wraith']).toEqual({ verdict: 'haunted', carried: true });
+  });
+});
+
+describe('openWounds', () => {
+  it('is empty when there is no report yet', async () => {
+    expect(await openWounds('/nonexistent/haunting-report.json')).toEqual([]);
+  });
+
+  it('reads the haunted pairs of whatever run is there', async () => {
+    const p = await write(JSON.stringify(report([
+      { id: '1.2', requirement: 'Signing', text: 't', line: 9, verdict: 'haunted', pairs: [pair('wraith', 'haunted')] },
+    ])));
+    expect((await openWounds(p)).map((w) => w.persona)).toEqual(['wraith']);
   });
 });

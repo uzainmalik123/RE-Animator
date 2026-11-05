@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { prepareAttack } from './chart.js';
+import { chartDir, prepareAttack } from './chart.js';
 import { PRACTICE_CORPSE, loadFixture } from './fixtures.js';
 
 async function setup() {
@@ -38,5 +38,9 @@ describe('prepareAttack', () => {
   it('refuses a fixture with no chart', async () => {
     const { revivedDir, homeRoot, fixture } = await setup();
     await expect(prepareAttack({ fixture: { ...fixture, chartDir: null }, revivedDir, origin: 'http://127.0.0.1:1', homeRoot })).rejects.toThrow('fixture guestbook-2016 has no chart');
+  });
+
+  it('names the chart folder inside the revived repo', () => {
+    expect(chartDir('/r')).toBe(join('/r', '.kiro', 'specs', 'chart'));
   });
 });
