@@ -18,7 +18,8 @@ export interface VitalResult {
 export type RitualEvent =
   | { type: 'started'; repo: string; diedIn: number }
   | { type: 'vital'; phase: Phase; result: VitalResult }
-  | { type: 'remedy'; files: number }
+  // rites: the fixed cures a grave's remedy applied (R9); absent for a prepared remedy.
+  | { type: 'remedy'; files: number; rites?: string[] }
   | { type: 'risen'; origin: string }
   | { type: 'failed'; phase: Phase; reason: string };
 
@@ -30,6 +31,7 @@ export interface RitualState {
   diedIn: number | null;
   corpse: VitalResult[];
   revived: VitalResult[];
+  rites: string[];
   origin: string | null;
   failure: string | null;
 }
@@ -40,6 +42,7 @@ export const IDLE: RitualState = {
   diedIn: null,
   corpse: [],
   revived: [],
+  rites: [],
   origin: null,
   failure: null,
 };
@@ -51,7 +54,7 @@ export function reduceRitual(s: RitualState, e: RitualEvent): RitualState {
     case 'vital':
       return e.phase === 'corpse' ? { ...s, corpse: [...s.corpse, e.result] } : { ...s, revived: [...s.revived, e.result] };
     case 'remedy':
-      return { ...s, status: 'raising' };
+      return { ...s, status: 'raising', rites: e.rites ?? [] };
     case 'risen':
       return { ...s, status: 'risen', origin: e.origin };
     case 'failed':

@@ -66,4 +66,9 @@ describe('reduceRitual', () => {
     ).not.toThrow();
     expect(frozenCorpse).toHaveLength(0);
   });
+  it('keeps the rites the remedy applied', () => {
+    expect(fold([started]).rites).toEqual([]);
+    expect(fold([started, { type: 'remedy', files: 2, rites: ['engines', 'openssl'] }]).rites).toEqual(['engines', 'openssl']);
+    expect(fold([started, { type: 'remedy', files: 2 }]).rites).toEqual([]);
+  });
 });

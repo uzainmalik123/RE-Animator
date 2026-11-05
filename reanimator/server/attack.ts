@@ -63,11 +63,13 @@ export class Attacks {
     this.o = o;
   }
 
-  start(ritualId: string, o: { only?: string[]; heal?: HealTarget } = {}): { id: string } | { busy: true; id: string } | { notRisen: true } | { casting: true } {
+  start(ritualId: string, o: { only?: string[]; heal?: HealTarget } = {}): { id: string } | { busy: true; id: string } | { notRisen: true } | { casting: true } | { noChart: true } {
     if (this.busy()) return { busy: true, id: this.current!.id };
     if (this.o.casting?.()) return { casting: true };
     const body = this.o.rituals.body(ritualId);
     if (!body) return { notRisen: true };
+    // R9: a grave nobody charted gives Death nothing to test it against.
+    if (!body.fixture.chartDir) return { noChart: true };
     if (this.memory?.ritual !== ritualId) this.memory = { ritual: ritualId, attacks: 0, healed: new Map(), unproven: new Map() };
     const memory = this.memory;
     const again = memory.attacks++ > 0 || body.origin === null || this.o.edited?.(ritualId) === true;

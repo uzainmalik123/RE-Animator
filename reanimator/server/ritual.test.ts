@@ -1,12 +1,13 @@
 import { existsSync } from 'node:fs';
-import { mkdtemp, readFile } from 'node:fs/promises';
+import { cp, mkdtemp, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import type { RitualEvent } from '../shared/ritual.js';
 import type { CommandResult, RunningApp } from './exec.js';
-import { PRACTICE_CORPSE, loadFixture } from './fixtures.js';
-import { Rituals } from './ritual.js';
+import { PRACTICE_CORPSE, loadFixture, type Fixture } from './fixtures.js';
+import { GraveError } from './grave.js';
+import { Rituals, type RitualRequest } from './ritual.js';
 import type { VitalDeps } from './vitals.js';
 
 const done = (code: number, output = ''): CommandResult => ({ code, output, timedOut: false, ms: 1 });
@@ -226,5 +227,69 @@ describe('Rituals', () => {
       expect(r.body('nope')).toBeNull();
       expect(await r.reraise('nope', () => {})).toEqual({ failed: 'the ritual has not risen' });
     });
+  });
+});
+
+describe('Rituals on a grave (R9)', () => {
+  const grave = async (o: { remedy?: Fixture['remedy'] } = {}) => {
+    const { deps } = fakeDeps();
+    const workRoot = await mkdtemp(join(tmpdir(), 'rituals-'));
+    const factory = vi.fn<(req: RitualRequest, workdir: string, signal: AbortSignal) => Promise<Fixture>>(async () => ({ ...(await loadFixture(PRACTICE_CORPSE)), remedy: o.remedy }));
+    return { r: new Rituals({ fixture: factory, deps, workRoot }), factory, workRoot };
+  };
+
+  it('passes the request, its work dir and an abort signal to the fixture', async () => {
+    const { r, factory, workRoot } = await grave();
+    const s = r.start({ repo: 'https://github.com/a/b.git' });
+    if ('busy' in s) throw new Error('busy');
+    await settle(r, s.id);
+    expect(factory).toHaveBeenCalledWith({ repo: 'https://github.com/a/b.git' }, expect.stringContaining(workRoot), expect.any(AbortSignal));
+    await r.dispose();
+  });
+
+  it('names the rites its remedy applied', async () => {
+    const { r } = await grave({
+      remedy: async (dir) => {
+        await cp(join(PRACTICE_CORPSE, 'remedy'), dir, { recursive: true, force: true });
+        return { files: 1, rites: ['engines'] };
+      },
+    });
+    const log = await settle(r, start(r));
+    expect(log.find((e) => e.type === 'remedy')).toEqual({ type: 'remedy', files: 1, rites: ['engines'] });
+    expect(log.at(-1)?.type).toBe('risen');
+    await r.dispose();
+  });
+
+  it('stops honestly when no rite fits the death', async () => {
+    const { r } = await grave({ remedy: async () => ({ files: 0, rites: [] }) });
+    const log = await settle(r, start(r));
+    expect(log.at(-1)).toEqual({ type: 'failed', phase: 'revived', reason: 'no rite fits this death' });
+    expect(log.some((e) => e.type === 'vital' && e.phase === 'revived')).toBe(false);
+    await r.dispose();
+  });
+
+  it('fails in the corpse phase when the grave cannot be opened', async () => {
+    const { deps } = fakeDeps();
+    const r = new Rituals({ fixture: async () => { throw new GraveError('clone: fatal: repository not found'); }, deps, workRoot: await mkdtemp(join(tmpdir(), 'rituals-')) });
+    const log = await settle(r, start(r));
+    expect(log).toEqual([{ type: 'failed', phase: 'corpse', reason: 'clone: fatal: repository not found' }]);
+    await r.dispose();
+  });
+
+  it('aborts a clone still running when the ritual is let go', async () => {
+    const { deps } = fakeDeps();
+    let seen: AbortSignal | null = null;
+    const r = new Rituals({
+      fixture: (_req, _w, signal) => {
+        seen = signal;
+        return new Promise((_, reject) => signal.addEventListener('abort', () => reject(new GraveError('clone: stopped'))));
+      },
+      deps,
+      workRoot: await mkdtemp(join(tmpdir(), 'rituals-')),
+    });
+    start(r);
+    await new Promise((res) => setTimeout(res, 20));
+    await r.dispose();
+    expect(seen!.aborted).toBe(true);
   });
 });

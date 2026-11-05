@@ -2,21 +2,20 @@ import type { RitualEvent } from '../../shared/ritual';
 
 // The browser side of the ritual transport (D-R15), kept free of React so it can be tested.
 
-export type FetchLike = (url: string, init: { method: string }) => Promise<Response>;
+export type FetchLike = (url: string, init: { method: string; headers?: Record<string, string>; body?: string }) => Promise<Response>;
 
 // Start a ritual, or attach to the one already running (409 carries its id, so a reload mid-ritual
-// rejoins it instead of being locked out).
-export async function requestRitual(fetchFn: FetchLike): Promise<{ id: string } | { error: string }> {
+// rejoins it instead of being locked out). `repo` names a grave on GitHub (R9).
+export async function requestRitual(fetchFn: FetchLike, repo?: string): Promise<{ id: string } | { error: string }> {
   let res: Response;
   try {
-    res = await fetchFn('/api/rituals', { method: 'POST' });
+    res = await fetchFn('/api/rituals', repo === undefined ? { method: 'POST' } : { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ repo }) });
   } catch {
     return { error: 'the backend is not answering (npm run server)' };
   }
-  if (res.status === 202 || res.status === 409) {
-    const body = (await res.json().catch(() => ({}))) as { id?: unknown };
-    if (typeof body.id === 'string') return { id: body.id };
-  }
+  const body = (await res.json().catch(() => ({}))) as { id?: unknown; error?: unknown };
+  if ((res.status === 202 || res.status === 409) && typeof body.id === 'string') return { id: body.id };
+  if (res.status === 400 && typeof body.error === 'string') return { error: body.error };
   return { error: `the backend refused the ritual (HTTP ${res.status})` };
 }
 

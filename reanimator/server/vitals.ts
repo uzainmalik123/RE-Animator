@@ -4,6 +4,7 @@ import { VITALS, type Phase, type RitualEvent, type VitalName, type VitalResult 
 import type { RunningApp, freePort, runCommand, startApp, waitForHttp } from './exec.js';
 import type { Fixture } from './fixtures.js';
 import type { renderCheck } from './render-check.js';
+import { inferServe } from './serve.js';
 
 export interface VitalDeps {
   runCommand: typeof runCommand;
@@ -20,6 +21,8 @@ const COMMANDS = {
   build: ['npm', 'run', 'build', '--if-present'],
 } as const;
 
+export const NO_SERVE = 'no way to serve it: no start script and no index.html';
+
 const timedOut = (v: VitalName) => `timed out after ${TIMEOUTS[v] / 1000}s`;
 
 export async function runVitals(
@@ -32,6 +35,7 @@ export async function runVitals(
   port?: number,
 ): Promise<{ ok: boolean; app: RunningApp | null; failed: VitalName | null }> {
   let app: RunningApp | null = null;
+  const sb = fixture.sandbox;
   for (const vital of VITALS) {
     const t0 = Date.now();
     let ok = false;
@@ -40,12 +44,16 @@ export async function runVitals(
       if (signal?.aborted) {
         detail = 'stopped: the ritual was stopped';
       } else if (vital === 'install' || vital === 'build') {
-        const r = await deps.runCommand([...COMMANDS[vital]], { cwd: workdir, timeoutMs: TIMEOUTS[vital], signal });
+        const argv = [...COMMANDS[vital]];
+        const r = await deps.runCommand(sb ? sb.argv(argv, workdir) : argv, { cwd: workdir, timeoutMs: TIMEOUTS[vital], signal, ...(sb && { env: sb.env() }) });
         ok = r.code === 0;
         detail = r.timedOut ? timedOut(vital) : r.output.trim();
       } else if (vital === 'serve') {
         // `port` re-raises a body where it stood (R5): the engine merges its reports per target.
-        app = deps.startApp(fixture.serve, { cwd: workdir, port: port ?? (await deps.freePort()) });
+        const argv = fixture.serve ?? (await inferServe(workdir));
+        if (!argv) throw new Error(NO_SERVE);
+        const at = port ?? (await deps.freePort());
+        app = deps.startApp(sb ? sb.argv(argv, workdir) : argv, { cwd: workdir, port: at, ...(sb && { env: sb.env({ PORT: String(at), HOST: '127.0.0.1' }) }) });
         const up = await deps.waitForHttp(app.origin, { timeoutMs: TIMEOUTS.serve, exited: app.exited });
         ok = up.ok;
         detail = up.ok ? `${app.origin} answered ${up.detail}` : `${up.detail}\n${app.output().trim()}`.trim();

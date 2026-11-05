@@ -1,17 +1,24 @@
-// A prepared dead repo (D-R6, D-R14): fixtures/<name>/ holds manifest.json, corpse/ (the untouched
-// dead repo) and remedy/ (files laid over a copy of the corpse to revive it).
+// A dead repo to raise. Prepared (D-R6, D-R14): fixtures/<name>/ holds manifest.json, corpse/ (the
+// untouched dead repo) and remedy/ (files laid over a copy of the corpse to revive it). A grave
+// (R9, D-R23) is cloned instead, its remedy is the rites, and it runs in a sandbox.
 import { stat, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { Sandbox } from './sandbox.js';
 
 export interface Fixture {
   name: string;
   diedIn: number;
   licence: string;
-  serve: string[];
+  // The serve argv; null = infer it from the body (serve.ts).
+  serve: string[] | null;
   dir: string;
   corpseDir: string;
-  remedyDir: string;
+  remedyDir?: string;
+  // Revives a copy of the corpse in place; without it, remedyDir is laid over the copy.
+  remedy?: (revivedDir: string) => Promise<{ files: number; rites?: string[] }>;
+  // Every command of the body runs in it (a stranger's repo); none for our own fixtures.
+  sandbox?: Sandbox;
   // chart/ (requirements.md + routes.json): the spec Death tests the revived app against (D-R8, R3).
   chartDir: string | null;
 }

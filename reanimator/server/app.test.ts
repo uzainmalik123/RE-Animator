@@ -53,6 +53,37 @@ describe('createApp', () => {
     expect(await second.json()).toEqual({ error: 'a ritual is already running', id: 'r1' });
   });
 
+  describe('naming a grave (R9)', () => {
+    const recording = () => {
+      const calls: unknown[] = [];
+      const rituals: RitualsApi = { ...fakeRituals(), start: (req) => (calls.push(req), { id: 'r1' }) };
+      return { app: createApp({ rituals }), calls };
+    };
+    const post = (app: ReturnType<typeof createApp>, body?: unknown) =>
+      app.request(`${BASE}/api/rituals`, body === undefined ? { method: 'POST' } : { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+
+    it('starts the ritual on the grave, its URL made canonical', async () => {
+      const { app, calls } = recording();
+      expect((await post(app, { repo: 'https://github.com/a/b' })).status).toBe(202);
+      expect(calls).toEqual([{ repo: 'https://github.com/a/b.git' }]);
+    });
+
+    it('raises our own corpse when no repo is named', async () => {
+      const { app, calls } = recording();
+      await post(app);
+      await post(app, {});
+      expect(calls).toEqual([{}, {}]);
+    });
+
+    it.each([{ repo: 'http://github.com/a/b' }, { repo: 'https://gitlab.com/a/b' }, { repo: 7 }, { repo: '' }])('refuses %o', async (body) => {
+      const { app, calls } = recording();
+      const res = await post(app, body);
+      expect(res.status).toBe(400);
+      expect(await res.json()).toEqual({ error: 'repo must be https://github.com/<owner>/<repo>' });
+      expect(calls).toEqual([]);
+    });
+  });
+
   it('404s events for an unknown ritual', async () => {
     const res = await createApp({ rituals: fakeRituals() }).request(`${BASE}/api/rituals/nope/events`);
     expect(res.status).toBe(404);
@@ -173,6 +204,13 @@ describe('createApp', () => {
       expect(await res.json()).toEqual({ error: 'Kiro is still casting; wait for the seal' });
     });
 
+    it('409s a grave with no chart (R9)', async () => {
+      const { attacks } = fakeAttacks({ noChart: true });
+      const res = await post(createApp({ rituals: fakeRituals(), attacks }));
+      expect(res.status).toBe(409);
+      expect(await res.json()).toEqual({ error: 'this grave has no chart: Death needs one to attack' });
+    });
+
     it('409s a ritual that has not risen', async () => {
       const { attacks } = fakeAttacks({ notRisen: true });
       const res = await post(createApp({ rituals: fakeRituals(), attacks }));
@@ -261,6 +299,7 @@ describe('createApp', () => {
       const cases: Array<[ReturnType<GrimoireApi['start']>, unknown]> = [
         [{ notRisen: true }, { error: 'the ritual has not risen' }],
         [{ attacking: true }, { error: 'Death is attacking; wait for him' }],
+        [{ stranger: true }, { error: "Kiro won't cast on a stranger's grave: its files could steer him outside the sandbox" }],
         [{ busy: true, id: 's1' }, { error: 'Kiro is already casting', id: 's1' }],
       ];
       for (const [answer, body] of cases) {
