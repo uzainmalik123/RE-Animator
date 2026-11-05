@@ -7,7 +7,7 @@ import type { Rituals } from './ritual.js';
 import { streamLog } from './sse.js';
 
 export type RitualsApi = Pick<Rituals, 'start' | 'events' | 'subscribe'>;
-export type AttacksApi = Pick<Attacks, 'start' | 'events' | 'subscribe'>;
+export type AttacksApi = Pick<Attacks, 'start' | 'events' | 'subscribe' | 'frame'>;
 
 const terminal = (e: RitualEvent) => e.type === 'risen' || e.type === 'failed';
 
@@ -45,6 +45,13 @@ export function createApp(o: { rituals?: RitualsApi; attacks?: AttacksApi } = {}
   });
 
   app.get('/api/attacks/:id/events', (c) => streamLog(c, attacks, c.req.param('id'), attackOver, 'no such attack'));
+
+  // R4: the engine's own frames of the app under attack, drawn as the body in the attack scene.
+  app.get('/api/attacks/:id/frames/:ghostId/:seq', async (c) => {
+    const jpeg = await attacks.frame(c.req.param('id'), c.req.param('ghostId'), Number(c.req.param('seq')));
+    if (!jpeg) return c.json({ error: 'no such frame' }, 404);
+    return c.body(new Uint8Array(jpeg), 200, { 'content-type': 'image/jpeg', 'cache-control': 'no-store' });
+  });
 
   return app;
 }

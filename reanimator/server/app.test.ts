@@ -121,6 +121,7 @@ describe('createApp', () => {
         },
         events: (id, after = -1) => (id === 'a1' ? { log: ATTACK_LOG.slice(after + 1), done: true } : null),
         subscribe: () => () => {},
+        frame: async (id, ghostId, seq) => (id === 'a1' && ghostId === 'g1' && seq === 2 ? Buffer.from('jpeg') : null),
       };
       return { attacks, calls };
     }
@@ -169,6 +170,18 @@ describe('createApp', () => {
       expect(body).toContain('id: 1');
       expect(body).toContain('"reason":"boom"');
       expect((await app.request(`${BASE}/api/attacks/nope/events`)).status).toBe(404);
+    });
+
+    it('serves a frame as a jpeg, and 404s anything else', async () => {
+      const { attacks } = fakeAttacks({ id: 'a1' });
+      const app = createApp({ rituals: fakeRituals(), attacks });
+      const res = await app.request(`${BASE}/api/attacks/a1/frames/g1/2`);
+      expect(res.status).toBe(200);
+      expect(res.headers.get('content-type')).toBe('image/jpeg');
+      expect(res.headers.get('cache-control')).toBe('no-store');
+      expect(await res.text()).toBe('jpeg');
+      expect((await app.request(`${BASE}/api/attacks/a1/frames/g1/x`)).status).toBe(404);
+      expect((await app.request(`${BASE}/api/attacks/a1/frames/..%2Fx/2`)).status).toBe(404);
     });
   });
 });

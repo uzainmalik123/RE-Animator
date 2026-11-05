@@ -2,6 +2,8 @@
 // chart and config, runs the real Poltergeist engine, forwards its progress, and reads its report.
 // A new ritual (or shutdown) stops it first, through Rituals' onRelease.
 import { randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { attackOver, type AttackEvent } from '../shared/attack.js';
 import { prepareAttack } from './chart.js';
 import { runEngine } from './engine.js';
@@ -17,7 +19,11 @@ interface Current {
   log: EventLog<AttackEvent>;
   abort: AbortController;
   finished: Promise<void>;
+  runDir: string | null;
 }
+
+// A ghost id as the engine writes it (`<criterion>__<persona>__r<rep>__<actor>`): one path segment.
+const GHOST_ID = /^[A-Za-z0-9._-]+$/;
 
 export class Attacks {
   private current: Current | null = null;
@@ -38,7 +44,7 @@ export class Attacks {
     if (this.current && !this.current.log.done) return { busy: true, id: this.current.id };
     const risen = this.o.rituals.risen(ritualId);
     if (!risen) return { notRisen: true };
-    const cur: Current = { id: randomUUID(), log: new EventLog(attackOver), abort: new AbortController(), finished: Promise.resolve() };
+    const cur: Current = { id: randomUUID(), log: new EventLog(attackOver), abort: new AbortController(), finished: Promise.resolve(), runDir: null };
     this.current = cur;
     const emit = (e: AttackEvent) => cur.log.push(e);
     const { signal } = cur.abort;
@@ -55,6 +61,7 @@ export class Attacks {
           only,
           signal,
           onEvent: (event) => emit({ type: 'engine', event }),
+          onRun: (runDir) => (cur.runDir = runDir),
         });
         if (signal.aborted) return emit({ type: 'failed', reason: STOPPED });
         if (r.code !== 0 && r.code !== 1) return emit({ type: 'failed', reason: r.error ?? 'the engine failed' });
@@ -76,6 +83,14 @@ export class Attacks {
   subscribe(id: string, fn: (e: AttackEvent, index: number) => void): () => void {
     const cur = this.current;
     return cur && cur.id === id ? cur.log.subscribe(fn) : () => {};
+  }
+
+  // R4: one jpeg the engine captured of the app under attack, from the current attack's run dir only.
+  async frame(id: string, ghostId: string, seq: number): Promise<Buffer | null> {
+    const cur = this.current;
+    if (!cur || cur.id !== id || !cur.runDir) return null;
+    if (!GHOST_ID.test(ghostId) || ghostId === '.' || ghostId === '..' || !Number.isSafeInteger(seq) || seq < 0) return null;
+    return readFile(join(cur.runDir, 'frames', ghostId, `${String(seq).padStart(5, '0')}.jpg`)).catch(() => null);
   }
 
   // Abort the running attack (its engine's process group is killed) and wait for it to end.
