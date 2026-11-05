@@ -215,3 +215,22 @@
     - `.github/workflows/reanimator-pages.yml` deploys `dist/` to GitHub Pages, **by hand only** (`workflow_dispatch`). Nothing is published until someone enables Pages and runs it.
   - **Poltergeist's F15 export isn't used:** the Reanimator recording already carries the engine events and frames the UI showed.
 - **Consequences:** R11 is built, but the hosted page shows "No recording yet" until the real hero run is recorded and committed to `public/recording/` (KI-R23, blocked on KI-R1, KI-R15 and the Kiro session). A recording is a snapshot: it shows what the UI showed then, not a re-run.
+
+### D-R23: Any grave: a GitHub URL, cloned, sandboxed, raised by fixed rites (R9)
+- **Context:** R9's grill (2026-11-05), run with the recommended answers. R9 asks for any dead JS repo by URL, with a real revive, and the clone and install are untrusted code (KI-R8). Kiro tokens are saved for the demo, so the remedy can't be Kiro.
+- **Decision:**
+  - **One plain field** on the raise panel: "Name a grave (GitHub URL)". Empty raises the practice corpse as before. No graveyard and no curated list: that's R6, built in Kiro (D-R18).
+  - **Only `https://github.com/<owner>/<repo>`** (an optional `.git` or `/`), checked by `parseGraveUrl` before anything runs; anything else is `400`. The clone is `git -c core.hooksPath=/dev/null clone --depth 1 --no-recurse-submodules --single-branch`, with no password prompt, a 60 s timeout, and a 100 MB cap (`.git` excluded). The headstone is `owner/repo`, the last commit's year and `package.json`'s licence (shown, not a gate).
+  - **The sandbox is bubblewrap** (`server/sandbox.ts`). Every install, build and serve of a grave runs in `bwrap`: `/usr` and the system files read-only, the ritual's work dir the only writable bind, its own `/tmp`, `--unshare-all --share-net --die-with-parent`, and an env of only `PATH=/usr/local/bin:/usr/bin:/bin`, `HOME=<workdir>/home`, `LANG` (+ `PORT`/`HOST` to serve). The network stays shared: install needs the registry, and Chromium and Death reach the app on 127.0.0.1. No working `bwrap` means no grave: the ritual fails with "no sandbox: install bubblewrap (bwrap) to raise a stranger's repo". Our own fixtures run as before.
+  - **The remedy is four fixed rites** (`server/rites.ts`), each applied only when its symptom is in the files and each named in the `remedy` event (`rites: string[]`) and the panel:
+    1. `engines`: strict engines (`engineStrict` or `engine-strict=true`) → drop the Node pin and the strictness.
+    2. `node-sass` → `sass@^1.77.0`.
+    3. `openssl`: webpack or react-scripts below 5 → `.npmrc` `node-options=--openssl-legacy-provider`.
+    4. `lockfile`: a v1 (or versionless) `package-lock.json` → dropped, with `legacy-peer-deps=true`.
+
+    No rite fits → "no rite fits this death", and the raise isn't attempted (D-R11). Code-level rot is Kiro's work in the grimoire once a body stands.
+  - **Serving an unknown body** (`server/serve.ts`): its `start` script, else the first of `dist/`, `build/`, `public/`, `.` with an `index.html` via our own `server/static-serve.mjs`, else serve fails "no way to serve it".
+  - **Death needs a chart.** A grave has none, so Summon Death answers `409` "this grave has no chart: Death needs one to attack". The grimoire works on a grave as on any body.
+  - **Shape:** a ritual's fixture factory takes `(request, workdir, signal)`; `graveFixture` clones into `<workdir>/grave`. A `Fixture` may carry `remedy()` and `sandbox` (both absent for prepared fixtures), and `serve: null` means infer. A clone or sandbox failure is a `GraveError` and fails in the corpse phase. The D-R15 "not dead" refusal stands.
+- **Consequences:** resolves KI-R8. The R9 Done-when (an unprepared, permissively licensed repo raised live) is KI-R25; the sandbox's limits are KI-R26. A grave's Node is the system's (`/usr/bin/node`), not the user's shell Node.
+

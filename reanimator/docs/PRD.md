@@ -42,7 +42,7 @@
 | 5 | R5 | Wounds + heal loop: show findings, fix with Kiro, re-attack | High | Built; Kiro heal pending KI-R19 |
 | 6 | R7 | The grimoire: the agent/chat surface | Med | Built; live Kiro cast pending KI-R21 |
 | 7 | R11 | Hosted demo / replay | Med | Built (recording owed, KI-R23) |
-| 8 | R9 | Arbitrary GitHub URL + real clone & revive | Low | TBD |
+| 8 | R9 | Arbitrary GitHub URL + real clone & revive | Low | Built (live run owed, KI-R25) |
 | 9 | R6 | 🔒 **Built in Kiro.** The graveyard: pick a dead repo | Med | TBD (Kiro only, D-R18) |
 | 10 | R8 | 🔒 **Built in Kiro.** Autopsy: why it died | Med | TBD (Kiro only, D-R18) |
 | 11 | R10 | 🔒 **Built in Kiro.** Sound & atmosphere | Low | TBD (Kiro only, D-R18) |
@@ -174,10 +174,11 @@
 
 ## LOW
 
-### R9: Arbitrary GitHub URL + real clone & revive · Low · TBD
+### R9: Arbitrary GitHub URL + real clone & revive · Low · Built (live run owed, KI-R25)
 **Owns:** accepting any dead-JS-repo URL, cloning it, and attempting a real revive (not just the prepared one).
 - **Constraints:** sandbox the clone and the install (untrusted code). This is the hardest part of the original Reanimator; treat as a stretch goal.
 - **Done when:** at least one *unprepared* permissively licensed repo revives end to end.
+- **Built (2026-11-05, D-R23):** a "Name a grave" field; `server/grave.ts` (URL check, shallow clone, headstone), `server/sandbox.ts` (bubblewrap), `server/rites.ts` (four fixed Node 22 cures, named in the ritual), `server/serve.ts` + `static-serve.mjs` (serving an unknown body). Proven on a local git repo in the real sandbox (`server/grave.integration.test.ts`). A real GitHub repo is KI-R25. Death refuses a grave with no chart. Screenshot: `docs/img/r9-grave-field.png`.
 
 ---
 
@@ -221,3 +222,4 @@ These are built **in Kiro, not Claude Code**, so the entry really uses Kiro's sp
 - 2026-11-05: R5 Built (D-R20, plan `docs/plans/2026-11-05-R5-heal.md`): heal briefs for Kiro, Dare Death again (re-raise on real vitals + a one-wound re-run), the merged report as ledger, and a wound closes only on a clean pair that really ran; healed lines in magic and a dissolving gash. The Done-when waits on Kiro + a key (KI-R19, KI-R15).
 - 2026-11-05: R7 Built (D-R21, plan `docs/plans/2026-11-05-R7-grimoire.md`): the grimoire drives the real Kiro agent through `kiro-cli chat --output-format stream-json` (one turn per spell, fs tools only, never during Death), drawn as spell, quill, margin notes, ruled boxes, candle and seal. A wound can be cast from its brief, and a sealed heal dares Death again. Tested against a fake kiro-cli. The live cast is KI-R21.
 - 2026-11-05: R11 Built (D-R22, plan `docs/plans/2026-11-05-R11-replay.md`). The backend records a session (`REANIMATOR_RECORD`), and the real UI replays it from static files with a "RECORDED RUN" banner and locked controls. `npm run build:replay` plus a hand-run GitHub Pages workflow host it. Resolves KI-R7. The hero recording is KI-R23.
+- 2026-11-05: R9 Built (D-R23, plan `docs/plans/2026-11-05-R9-any-grave.md`). Name a GitHub grave; it's cloned shallow, proven dead and raised inside a bubblewrap sandbox, with four fixed rites as its remedy. Resolves KI-R8. The live run on a real repo is KI-R25; the sandbox's limits are KI-R26.
