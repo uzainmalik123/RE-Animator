@@ -43,8 +43,8 @@
 ## 4. Wounds and healing (R5)
 
 - Each finding → a wound: promise, persona, steps, expected vs actual, evidence.
-- `heal(finding)` hands the finding to Kiro, which edits the revived repo.
-- `recheck(id)` runs Poltergeist `--only <id>`; on a pass the wound closes (D-R11). On all-clean, Reanimator emits the branch/patch/PR text (D-R10).
+- `heal(finding)` hands the finding to Kiro, which edits the revived repo. Built (D-R20) as a copyable brief: the user pastes it into Kiro, opened on the revived dir.
+- `recheck(id)` runs Poltergeist `--only <criterion> --personas <persona>` after re-raising the body on real vitals (the app doesn't reload edits). The merged report is the ledger. The wound closes only if its pair ran clean in this run (D-R11). On all-clean, Reanimator emits the branch/patch/PR text (D-R10; not built yet, KI-R19).
 
 ## 5. The renderer (R1, the art)
 

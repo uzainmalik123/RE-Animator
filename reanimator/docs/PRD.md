@@ -39,7 +39,7 @@
 | 2 | R2 | The Raise: revive one prepared dead repo, prove it with vitals | High | Built (practice corpse); demo repo pending KI-R1 |
 | 3 | R3 | Death's attack: wire in the Poltergeist engine | High | Built; live run pending KI-R15 |
 | 4 | R4 | The attack scene: draw Death + minions over the running app | High | Built; filming pending KI-R15 |
-| 5 | R5 | Wounds + heal loop: show findings, fix with Kiro, re-attack | High | TBD |
+| 5 | R5 | Wounds + heal loop: show findings, fix with Kiro, re-attack | High | Built; Kiro heal pending KI-R19 |
 | 6 | R7 | The grimoire: the agent/chat surface | Med | TBD |
 | 7 | R11 | Hosted demo / replay | Med | TBD |
 | 8 | R9 | Arbitrary GitHub URL + real clone & revive | Low | TBD |
@@ -123,7 +123,7 @@
 - **Done when:** a real run on the demo repo plays as an attack with at least one visible wound, good enough to film.
 - **Built (2026-11-05, D-R19, plan `docs/plans/2026-11-05-R4-attack-scene.md`):** the live tail now carries ghosts, their real positions and frame marks (`shared/attack.ts`, `server/engine.ts`); `GET /api/attacks/:id/frames/:ghostId/:seq` serves the engine's own frames; `src/attack/scene.ts` (pure layout and luminance) and `AttackScene.tsx` draw the body in bone and Death, minions and wounds in red, with wound labels as real text. Seen in the browser with no key: Death arrives, then falters (`docs/img/r4-attack-arrival.png`). The filmed Done-when needs a key-backed run (KI-R15), then the demo repo (KI-R1).
 
-### R5: Wounds + heal loop · High · TBD
+### R5: Wounds + heal loop · High · Built; Kiro heal pending KI-R19
 **Owns:** the findings list ("wounds on the chart"), triggering a Kiro fix for a finding, re-running Poltergeist on just that finding, and showing the wound close.
 **Not this feature:** the attack visuals (R4) · the engine (sibling).
 - **User story:** As the necromancer, I heal what Death broke and dare him to try again.
@@ -136,6 +136,12 @@
   - The re-run is real (Poltergeist's `rehaunt` / `--only`).
   - A wound only closes on a genuine pass.
 - **Done when:** in the demo, one finding goes wound → healed after a real fix and re-run.
+- **Built (2026-11-05, D-R20, plan `docs/plans/2026-11-05-R5-heal.md`):**
+  - Each wound has a **Copy for Kiro** brief (`shared/heal.ts`) and **Dare Death again**, which posts `{heal}`.
+  - The backend re-raises the body on the four real vitals (`Rituals.reraise`, streamed as pulses), then runs `summon --only <criterion> --personas <persona>`.
+  - The wound closes only if that pair ran clean in this run. The merged report is the ledger.
+  - Healed lines turn magic, and the gash dissolves in the scene.
+  - A real re-raise serving an edited body is tested. The Done-when needs Kiro and a key (KI-R19, KI-R15).
 
 ---
 
@@ -201,3 +207,4 @@ These are built **in Kiro, not Claude Code**, so the entry really uses Kiro's sp
 - 2026-11-04: R3 Built (D-R16, D-R17, plan `docs/plans/2026-11-04-R3-death.md`): Death is the Poltergeist CLI run as a subprocess against the risen origin, from the fixture's chart; progress tailed from its `events.ndjson`, wounds read from `haunting-report.json` (haunted pairs only), over SSE to a real-text panel. Resolves KI-R4, KI-R5; fixes KI-R14 #2 and #4. The live run with a key is KI-R15.
 - 2026-11-04: R6 (graveyard), R8 (autopsy) and R10 (sound) are reserved for **Kiro** and moved to the end of the build order (D-R18). Claude Code sessions don't build them.
 - 2026-11-05: R4 Built (D-R19, plan `docs/plans/2026-11-05-R4-attack-scene.md`): the attack scene replaces the raise stage on Summon Death. The body is the engine's own frames, minions sit at the ghosts' real step positions, and wounds open where a haunted pair's ghost acted. Filming waits on KI-R15. Adds KI-R17.
+- 2026-11-05: R5 Built (D-R20, plan `docs/plans/2026-11-05-R5-heal.md`): heal briefs for Kiro, Dare Death again (re-raise on real vitals + a one-wound re-run), the merged report as ledger, and a wound closes only on a clean pair that really ran; healed lines in magic and a dissolving gash. The Done-when waits on Kiro + a key (KI-R19, KI-R15).

@@ -22,6 +22,7 @@
 | KI-R15 | R3's live run (a real key, a real report with a reproduced wound) hasn't been run; whether the guestbook really yields a wound is unproven | Major | R3 Done-when, R4 | Open |
 | KI-R17 | The attack scene restates the engine's viewports (Lich 360×640, else 1280×720); if Poltergeist changes them, minions and wounds land off-target | Minor | R4 accuracy | Open |
 | KI-R18 | R4 review minors: the frame throttle can drop a ghost's last (evidence) frame, a pre-spawn frame burns the first slot, labels and dots letterbox slightly differently, loose seq parsing, `lighten` blends red over bone, no test of minion placement in the canvas loop | Minor | none | Open |
+| KI-R19 | R5's Done-when (a real Kiro fix + a key-backed re-run closing a wound) hasn't been run; a heal lives only in the ritual's temp dir; the magic seal glow isn't drawn | Major | R5 Done-when, demo | Open |
 | KI-R13 | R1 demo-page polish from review: void flash on pitch/mode click, resize jank, late web font, breath jump, no OffscreenCanvas fallback, fractional-DPR cell seams | Minor | R4 (seams) | Open |
 
 ---
@@ -146,5 +147,12 @@
   4. **`Number(seq)` in the frame route accepts `0x2`, `2.0` and `1e0`** as seq 2. Harmless; `/^\d+$/` would be stricter.
   5. **`mix-blend-mode: lighten`** gives a per-channel max where red dots sit over bone dots, which is neither ink. Raise it at the look sign-off (KI-R2).
   6. **No test drives the canvas `lum` callbacks**, so minion placement, the idle slots and the 12-minion cap are tested only through the pure helpers.
-- **Next action:** fold #1 and #2 into R5's backend work; the rest when touched.
+- **Next action:** fold #1 and #2 into the next backend change (R5 kept to its scope and didn't take them, 2026-11-05); the rest when touched.
 
+### KI-R19: R5's heal loop is unproven end to end · Major · Open
+- **What (2026-11-05):** R5 is built (D-R20) and tested with a fake engine and fake vitals. A real re-raise is also tested, serving an edited body (`server/heal.integration.test.ts`). Still open:
+  1. **The Done-when itself:** a real wound (KI-R15, needs a key), fixed by Kiro from the brief, then **Dare Death again** closing it on a clean re-run. This needs the batched Kiro session (D-R18).
+  2. **A heal lives only in the ritual's temp dir.** A new ritual (or a backend restart) deletes the fix. Exporting it as a branch, patch or PR text (D-R10, the story's close) is not built.
+  3. **The magic seal glow** over a part whose wounds are all closed (THEME §6) isn't drawn. The gash dissolves, but there's no `--magic` on the canvas.
+  4. **`npm run -s health` fails the ritual integration test:** `npm_config_loglevel=silent` leaks into the corpse's `npm install`, which then prints nothing (the inherited env of KI-R14). Use `npm run health`.
+- **Next action:** #1 in the Kiro session after KI-R15; #2 with the "send it to the living" work; #3 at the look sign-off (KI-R2); #4 with KI-R14.
