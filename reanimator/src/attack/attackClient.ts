@@ -1,13 +1,15 @@
-import { attackOver, type AttackEvent } from '../../shared/attack';
+import { attackOver, type AttackEvent, type HealTarget } from '../../shared/attack';
 import type { EventSourceLike, FetchLike } from '../raise/ritualClient';
 
 // The browser side of Death's attack (D-R17), shaped like the ritual's transport.
 
-// Summon Death on a risen ritual, or rejoin the attack already running (409 with its id).
-export async function requestAttack(fetchFn: FetchLike, ritualId: string): Promise<{ id: string } | { error: string }> {
+// Summon Death on a risen ritual, or rejoin the attack already running (409 with its id). With
+// `heal`, Death returns for that one wound only (R5).
+export async function requestAttack(fetchFn: FetchLike, ritualId: string, heal?: HealTarget): Promise<{ id: string } | { error: string }> {
   let res: Response;
+  const init: { method: string; headers?: Record<string, string>; body?: string } = heal ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ heal }) } : { method: 'POST' };
   try {
-    res = await fetchFn(`/api/rituals/${encodeURIComponent(ritualId)}/attack`, { method: 'POST' });
+    res = await fetchFn(`/api/rituals/${encodeURIComponent(ritualId)}/attack`, init);
   } catch {
     return { error: 'the backend is not answering (npm run server)' };
   }

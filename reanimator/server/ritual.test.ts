@@ -180,4 +180,51 @@ describe('Rituals', () => {
     expect(deps.startApp).not.toHaveBeenCalled();
     expect((await (await import('node:fs/promises')).readdir(workRoot)).length).toBe(0);
   });
+
+  describe('reraise (R5)', () => {
+    it('raises the body again on the same port, so the engine keeps its ledger', async () => {
+      const { r, deps } = await make();
+      let next = 5001;
+      vi.mocked(deps.freePort).mockImplementation(async () => next++);
+      const id = start(r);
+      await settle(r, id);
+      expect(await r.reraise(id, () => {})).toEqual({ origin: 'http://127.0.0.1:5001' });
+      expect(await r.reraise(id, () => {})).toEqual({ origin: 'http://127.0.0.1:5001' });
+      expect(deps.freePort).toHaveBeenCalledTimes(1);
+      await r.dispose();
+    });
+
+    it('stops the old app and raises the same body again on the four vitals', async () => {
+      const { r, apps } = await make();
+      const id = start(r);
+      await settle(r, id);
+      const seen: string[] = [];
+      const out = await r.reraise(id, (v) => seen.push(`${v.vital}:${v.ok}`));
+      expect(out).toEqual({ origin: 'http://127.0.0.1:5001' });
+      expect(seen).toEqual(['install:true', 'build:true', 'serve:true', 'render:true']);
+      expect(apps).toHaveLength(2);
+      expect(apps[0]!.stop).toHaveBeenCalled();
+      expect(r.body(id)).toMatchObject({ origin: 'http://127.0.0.1:5001' });
+      expect(r.risen(id)).not.toBeNull();
+      await r.dispose();
+    });
+
+    it('leaves the body down, but still there, when a vital fails', async () => {
+      const { r, deps } = await make();
+      const id = start(r);
+      await settle(r, id);
+      vi.mocked(deps.runCommand).mockImplementation(async (argv) => (argv[1] === 'run' ? done(1, '\nSyntaxError: boom\nmore') : done(0)));
+      expect(await r.reraise(id, () => {})).toEqual({ failed: 'build: SyntaxError: boom' });
+      expect(r.risen(id)).toBeNull();
+      expect(r.body(id)).toMatchObject({ origin: null });
+      expect(r.body(id)!.revivedDir).toMatch(/revived$/);
+      await r.dispose();
+    });
+
+    it('knows no body for an unknown ritual', async () => {
+      const { r } = await make();
+      expect(r.body('nope')).toBeNull();
+      expect(await r.reraise('nope', () => {})).toEqual({ failed: 'the ritual has not risen' });
+    });
+  });
 });

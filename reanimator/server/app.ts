@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { attackOver } from '../shared/attack.js';
+import { attackOver, type HealTarget } from '../shared/attack.js';
 import type { RitualEvent } from '../shared/ritual.js';
 import type { Attacks } from './attack.js';
 import { loopbackGuard } from './guard.js';
@@ -8,6 +8,10 @@ import { streamLog } from './sse.js';
 
 export type RitualsApi = Pick<Rituals, 'start' | 'events' | 'subscribe'>;
 export type AttacksApi = Pick<Attacks, 'start' | 'events' | 'subscribe' | 'frame'>;
+
+const nonEmpty = (v: unknown): v is string => typeof v === 'string' && v !== '';
+const isHealTarget = (v: unknown): v is HealTarget =>
+  typeof v === 'object' && v !== null && nonEmpty((v as HealTarget).criterion) && nonEmpty((v as HealTarget).persona);
 
 const terminal = (e: RitualEvent) => e.type === 'risen' || e.type === 'failed';
 
@@ -34,11 +38,13 @@ export function createApp(o: { rituals?: RitualsApi; attacks?: AttacksApi } = {}
 
   app.post('/api/rituals/:id/attack', async (c) => {
     const body: unknown = await c.req.json().catch(() => ({}));
-    const only = typeof body === 'object' && body !== null ? (body as { only?: unknown }).only : undefined;
+    const { only, heal } = typeof body === 'object' && body !== null ? (body as { only?: unknown; heal?: unknown }) : {};
     if (only !== undefined && !(Array.isArray(only) && only.every((x) => typeof x === 'string' && x !== ''))) {
       return c.json({ error: 'only must be a list of criterion ids' }, 400);
     }
-    const s = attacks.start(c.req.param('id'), only as string[] | undefined);
+    // R5: a heal re-runs one wound (D-R20); Attacks itself checks that the wound is open.
+    if (heal !== undefined && !isHealTarget(heal)) return c.json({ error: 'heal must be {criterion, persona}' }, 400);
+    const s = attacks.start(c.req.param('id'), { only: only as string[] | undefined, heal: heal && { criterion: heal.criterion, persona: heal.persona } });
     if ('notRisen' in s) return c.json({ error: 'the ritual has not risen' }, 409);
     if ('busy' in s) return c.json({ error: 'Death is already attacking', id: s.id }, 409);
     return c.json({ id: s.id }, 202);

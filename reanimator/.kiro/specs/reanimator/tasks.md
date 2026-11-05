@@ -19,6 +19,7 @@ Work one PRD feature at a time, through the grill → plan → implement → rev
   - _Built (D-R19); tick once a key-backed run plays with a visible wound (KI-R15)._
 - [ ] 6. R5 Wounds + heal loop (Kiro fix, re-run, close wound, PR text)
   - _Requirements: 3.1–3.4_
+  - _Built (D-R20) without the PR text; tick once Kiro heals a real wound and the re-run closes it (KI-R19)._
 - [ ] 7. R7 Grimoire (agent surface)
   - _Requirements: 5.2_
 - [ ] 8. R11 hosted replay; then R9 (arbitrary URLs)

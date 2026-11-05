@@ -131,6 +131,7 @@ export async function runEngine(o: {
   home: string;
   env: NodeJS.ProcessEnv;
   only?: string[];
+  personas?: string[];
   signal?: AbortSignal;
   timeoutMs?: number;
   onEvent: (e: EngineEvent) => void;
@@ -145,6 +146,7 @@ export async function runEngine(o: {
   }, o.pollMs ?? 250);
   const argv = [process.execPath, o.cli, 'summon', '--spec', o.specDir, '--config', o.configPath];
   if (o.only && o.only.length > 0) argv.push('--only', o.only.join(','));
+  if (o.personas && o.personas.length > 0) argv.push('--personas', o.personas.join(','));
   let r;
   try {
     r = await runCommand(argv, { cwd: o.home, env: o.env, timeoutMs: o.timeoutMs ?? ENGINE_TIMEOUT_MS, signal: o.signal });

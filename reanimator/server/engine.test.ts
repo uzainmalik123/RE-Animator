@@ -75,6 +75,13 @@ describe('runEngine', () => {
     const argv = JSON.parse(await readFile(join(d.home, 'argv.json'), 'utf8')) as string[];
     expect(argv).toEqual(['summon', '--spec', d.specDir, '--config', d.configPath, '--only', '1.2,2.1']);
   });
+
+  it('passes --personas through after --only', async () => {
+    const d = await dirs();
+    await runEngine({ cli: STUB, ...d, env: { PATH: process.env.PATH }, only: ['1.2'], personas: ['wraith'], onEvent: () => {} });
+    const argv = JSON.parse(await readFile(join(d.home, 'argv.json'), 'utf8')) as string[];
+    expect(argv.slice(-4)).toEqual(['--only', '1.2', '--personas', 'wraith']);
+  });
 });
 
 describe('toEngineEvent', () => {

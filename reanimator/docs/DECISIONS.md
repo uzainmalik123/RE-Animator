@@ -24,6 +24,7 @@
 | D-R18 | R6, R8 and R10 are built in **Kiro** (spec-first), last; Claude Code never builds them | Accepted |
 | D-R17 | The attack protocol: `POST /api/rituals/:id/attack` + SSE, a wound = a haunted pair, one attack at a time, a new ritual stops it first | Accepted |
 | D-R19 | The R4 attack scene: live ghosts and the engine's own frames, Death + minions + wounds on a red layer over a bone body | Accepted |
+| D-R20 | The R5 heal loop: a brief per wound for Kiro (the user hands it over), a re-raise on real vitals before every attack but the first, a one-wound re-run, the merged report as ledger, and a wound closes only on a clean pair that really ran | Accepted |
 
 ---
 
@@ -157,3 +158,13 @@
   - `useAttack` now lives in `RaiseScene` and is tagged with its ritual, so the panel and the scene share one state. `useDotCanvas` moved to `src/render/` for both scenes.
 - **Consequences:** filming R4's Done-when needs a key-backed run (KI-R15). R5 draws the wound closing on the same `woundPoints`.
 
+### D-R20: The heal loop (R5)
+- **Context:** R5's grill (2026-11-05), run with the recommended answers.
+- **Decision:**
+  - **Reanimator doesn't drive Kiro.** Kiro has no stable headless API, and its tokens are kept for the demo. Each wound gets a **heal brief** (`shared/heal.ts`) in plain QA words, with no theme words (like Poltergeist D-09). It gives the criterion, the persona, the steps, the expected and failing checks, a pointer to `.kiro/specs/chart/haunting-report.md`, and "don't edit the chart". The panel shows **Copy for Kiro** and the revived repo's path to open in Kiro. Wiring Kiro in (MCP, `init`, the agent surface) is R7's.
+  - **Re-raise before every attack but the first** on a ritual, and whenever the app is down. The served app doesn't reload edits, so `Rituals.reraise` stops it and runs the four real vitals on the same revived dir. They stream as `pulse` events, then `reraised {origin}`. If a vital fails, the attack ends `failed: the heal broke the body: <vital>: <first line>` and the app stays down. The body (`Rituals.body`) stays, so the next Dare raises it again. **It always rises on its first port.** Poltergeist only carries an earlier report's rows for the same `target` (its `usableRow`), so a new origin would silently drop every other wound from the ledger (found in review). If the port was taken meanwhile, serve fails honestly.
+  - **A heal re-runs one wound:** `POST /api/rituals/:id/attack {heal:{criterion,persona}}` → `summon --only <criterion> --personas <persona>`, same reps. A malformed heal is a 400. A heal for a wound that isn't open fails in-stream (`that wound is not open`) without running the engine; the grill said 409, but whether it's open is only known after reading the report.
+  - **The merged report is the ledger** (Poltergeist F14). Open wounds are its haunted pairs, carried ones included (`carried: true`; they reproduced then). `summoned` carries the wounds open before the run (read from the existing report) and the revived dir (`body`), so a reload keeps both.
+  - **A wound closes only on a genuine pass (D-R11):** its pair is in this run's report (`runId`), not carried, with verdict `clean`. `finished.heal.verdict` is that verdict, or `notRun` for a carried or missing pair. `Attacks` remembers the ritual's healed wounds (`finished.healed`), and a later attack that breaks one again reopens it. A heal that comes back flaky or inconclusive replaces the haunted pair in the report but proves nothing. `Attacks` keeps that wound open (*unproven*, still listed and dareable) until a later run of its pair comes back clean (healed) or haunted.
+  - **The look:** healed lines turn `--magic` ("The wound closed: Death could not break 1.2 again."). A haunted result reads "Death broke it again." and anything else "Not proven healed (<verdict>)". In the scene, the healed wound's gash dissolves cell by cell over 1.2 s in a fixed order; with reduced motion it's simply gone. The `--magic` seal glow (THEME §6) is not drawn yet (KI-R19).
+- **Consequences:** R5's Done-when needs a real Kiro fix plus a key-backed re-run (KI-R19, KI-R15). Every re-attack pays for an `npm install` on the body. The heal lives only in the ritual's temp dir (KI-R19).

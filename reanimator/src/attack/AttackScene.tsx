@@ -4,7 +4,7 @@ import { sampleLuminance } from '../render';
 import { useDotCanvas } from '../render/useDotCanvas';
 import { containRect } from '../render/viewport';
 import { frameUrl } from './attackClient';
-import { arrival, bodyLuminance, bodyRect, deathLayer, deathRect, idleSpot, memoByKey, placeOnBody, sceneLabel, watchedGhost, woundPoints, type Minion, type Rect } from './scene';
+import { arrival, bodyLuminance, closingPoint, closingRemain, bodyRect, deathLayer, deathRect, idleSpot, memoByKey, placeOnBody, sceneLabel, watchedGhost, woundPoints, type Minion, type Rect } from './scene';
 import { useImage, useSize } from './useImage';
 
 const DEATH_ART = '/art/death.svg';
@@ -33,11 +33,14 @@ export function AttackScene({ state, attackId }: { state: AttackState; attackId:
   const [bodyMemo] = useState(() => memoByKey<Float32Array>());
   const [deathMemo] = useState(() => memoByKey<Float32Array>());
   const wounds = woundPoints(state);
+  const closing = closingPoint(state);
+  // When the healed wound (R5) began to close, in the loop's clock; one per attack and wound.
+  const closedAt = useRef<{ key: string; t: number } | null>(null);
   // The red layer's loop reads the latest state through a ref, so a ghost's step doesn't rebuild the
   // canvas; with reduced motion it must redraw its still on every change, so then state is a dep.
-  const latest = useRef({ state, wounds });
+  const latest = useRef({ state, wounds, closing });
   useLayoutEffect(() => {
-    latest.current = { state, wounds };
+    latest.current = { state, wounds, closing };
   });
   const still = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -53,7 +56,7 @@ export function AttackScene({ state, attackId }: { state: AttackState; attackId:
     deathRef,
     'death',
     (cols, rows, t, reduce) => {
-      const { state: s, wounds: ws } = latest.current;
+      const { state: s, wounds: ws, closing: cp } = latest.current;
       const body = bodyIn(frame, cols, rows);
       const dr = deathRect(cols, rows);
       const deathLum = death ? deathMemo(`${dr.w}x${dr.h}`, () => sampleLuminance(death, dr.w, dr.h)) : null;
@@ -63,9 +66,13 @@ export function AttackScene({ state, attackId }: { state: AttackState; attackId:
         const trail = reduce ? [] : m.trail.map((p) => placeOnBody(body, m.persona, p.x, p.y));
         return { ...placeOnBody(body, m.persona, m.x, m.y), persona: m.persona, trail };
       });
-      const cells = ws.map((w) => ({ col: body.x + Math.min(body.w - 1, Math.floor(w.fx * body.w)), row: body.y + Math.min(body.h - 1, Math.floor(w.fy * body.h)) }));
+      const at = (fx: number, fy: number) => ({ col: body.x + Math.min(body.w - 1, Math.floor(fx * body.w)), row: body.y + Math.min(body.h - 1, Math.floor(fy * body.h)) });
+      const cells = ws.map((w) => at(w.fx, w.fy));
       const strength = s.status === 'attacking' ? ARRIVED * arrival(t, summonedAt, reduce) : LINGER;
-      return deathLayer(cols, rows, { strength, minions, wounds: cells, death: deathLum, deathRect: deathLum ? dr : null });
+      const closeKey = cp ? `${attackId ?? ''} ${cp.key}` : null;
+      if (closeKey && closedAt.current?.key !== closeKey) closedAt.current = { key: closeKey, t };
+      const closing = cp && closedAt.current ? { cell: at(cp.fx, cp.fy), remain: closingRemain(t, closedAt.current.t, reduce) } : undefined;
+      return deathLayer(cols, rows, { strength, minions, wounds: cells, death: deathLum, deathRect: deathLum ? dr : null, closing });
     },
     [frame, death, still ? state : state.status],
   );

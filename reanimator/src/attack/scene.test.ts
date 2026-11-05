@@ -7,6 +7,8 @@ import {
   bodyRect,
   memoByKey,
   showsAttack,
+  closingPoint,
+  closingRemain,
   deathLayer,
   deathRect,
   idleSpot,
@@ -20,7 +22,7 @@ import {
 } from './scene';
 
 const ghost = (id: string, o: Partial<Ghost> = {}): Ghost => ({ ghostId: id, criterion: '1.2', persona: 'wraith', rep: 1, trail: [], done: false, ...o });
-const WOUND: Wound = { criterion: '1.2', text: 't', persona: 'wraith', reason: 'r', steps: [], expected: [], failing: [], artifacts: [] };
+const WOUND: Wound = { criterion: '1.2', text: 't', persona: 'wraith', reason: 'r', steps: [], expected: [], failing: [], artifacts: [], carried: false };
 const state = (o: Partial<AttackState>): AttackState => ({ ...QUIET, ...o });
 
 describe('sprites', () => {
@@ -164,5 +166,36 @@ describe('review fixes', () => {
     expect(memo('a', make)).toBe(1);
     expect(memo('a', make)).toBe(1);
     expect(memo('b', make)).toBe(2);
+  });
+});
+
+describe('the closing wound (R5)', () => {
+  const heal = { criterion: '1.2', persona: 'wraith' };
+  const closed = state({ status: 'finished', heal, healVerdict: 'clean', healed: [WOUND], ghosts: { g: ghost('g', { x: 640, y: 360 }) } });
+
+  it('closes only a wound a finished heal proved clean', () => {
+    expect(closingPoint(closed)).toMatchObject({ label: '1.2 · wraith', fx: 0.5, fy: 0.5 });
+    expect(closingPoint({ ...closed, healVerdict: 'haunted' })).toBeNull();
+    expect(closingPoint({ ...closed, status: 'attacking' })).toBeNull();
+    expect(closingPoint({ ...closed, heal: null })).toBeNull();
+  });
+
+  it('dissolves cell by cell', () => {
+    const lit = (a: Float32Array) => a.filter((v) => v > 0).length;
+    const base = { strength: 0, minions: [], death: null, deathRect: null };
+    const cell = { col: 10, row: 5 };
+    const open = lit(deathLayer(20, 10, { ...base, wounds: [cell] }));
+    expect(lit(deathLayer(20, 10, { ...base, wounds: [], closing: { cell, remain: 1 } }))).toBe(open);
+    expect(lit(deathLayer(20, 10, { ...base, wounds: [], closing: { cell, remain: 0 } }))).toBe(0);
+    const half = lit(deathLayer(20, 10, { ...base, wounds: [], closing: { cell, remain: 0.5 } }));
+    expect(half).toBeGreaterThan(0);
+    expect(half).toBeLessThan(open);
+  });
+
+  it('is gone at once with reduced motion, else over CLOSE_MS', () => {
+    expect(closingRemain(0, 0, true)).toBe(0);
+    expect(closingRemain(0, 0, false)).toBe(1);
+    expect(closingRemain(600, 0, false)).toBeCloseTo(0.5);
+    expect(closingRemain(5000, 0, false)).toBe(0);
   });
 });

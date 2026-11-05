@@ -11,10 +11,13 @@ import type { Fixture } from './fixtures.js';
 const CONCURRENCY = 6;
 const REPS = 3;
 
+// Where the chart (and the engine's report beside it) lives in a revived repo.
+export const chartDir = (revivedDir: string): string => join(revivedDir, '.kiro', 'specs', 'chart');
+
 export async function prepareAttack(o: { fixture: Fixture; revivedDir: string; origin: string; homeRoot: string }): Promise<{ specDir: string; configPath: string; home: string }> {
   const { fixture } = o;
   if (!fixture.chartDir) throw new Error(`fixture ${fixture.name} has no chart`);
-  const specDir = join(o.revivedDir, '.kiro', 'specs', 'chart');
+  const specDir = chartDir(o.revivedDir);
   await mkdir(specDir, { recursive: true });
   const spec = join(specDir, 'requirements.md');
   const present = await access(spec).then(() => true, () => false);
