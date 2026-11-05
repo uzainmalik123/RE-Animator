@@ -79,6 +79,7 @@
 | KI-68 | F20 Changeling not yet run on Candy Swap: real focus order, a keyboard-only claim/trade flow and the live compile of `focus` plans are unverified | Minor | F20 sign-off | Open |
 | KI-69 | F20 Changeling keys are Tab/Enter/Space only: no Escape or arrow keys, so radio groups, selects, menus and dialogs can't be operated from the keyboard | Minor | F20 | Accepted |
 | KI-70 | F21 sandbox not yet hosted: no container (Candy Swap + Chromium + `poltergeist sandbox` behind a proxy), no public URL, and the PRD's "survives 10 back-to-back public runs" is only proven on the fixture | Minor | F21 sign-off, R11 | Open |
+| KI-71 | Flaky CI test: F21's "ten back-to-back runs" (`packages/cli/test/sandbox-done-when.test.ts`) intermittently finds nothing haunted on one run, failing `npm run health` on an unrelated PR | Minor | CI trust (red checks on unrelated PRs) | Open |
 
 ---
 
@@ -704,3 +705,13 @@
   - Every sandbox run rewrites the spec's `haunting-report.md`/`.json` (F14 merge), and carried lines can link evidence in run folders the sandbox later evicts. Treat the sandbox's spec folder as disposable (a copy in the image), never the operator's working spec.
   - `args.ts` imports `SANDBOX_PORT` from the server module, so parsing arguments loads `ws`/`http` (cosmetic).
 - **Next action:** after the batched Candy Swap session, decide with R11 whether judges get a live sandbox or only the recorded replay. If live: build the image, run `poltergeist summon` once to warm the cache, start `poltergeist sandbox --host 0.0.0.0 --trust-proxy`, and fire ten runs at the public URL.
+
+### KI-71: F21's ten-run Done-when test is flaky in CI · Minor · Open
+- **Seen:** 2026-11-05, Poltergeist CI on Reanimator's R9 PR (#37, run 41996527158), which touched nothing under `poltergeist/`. Runs 1 and 2 were haunted on `3.2` as expected. Run 3 came back `{status: 'finished', haunted: [], cacheMisses: 0}`, so the assertion at `packages/cli/test/sandbox-done-when.test.ts:65` failed. Re-running the failed job, with no change, passed. The same code passed on `main` minutes earlier.
+- **What it means:** the run finished from the cached plan (0 misses), but the fixture's planted fault on `3.2` didn't reproduce that time. Likely causes are timing: a selector or wait in the cached plan racing the fixture app under CI load, or state left by the previous run that the sandbox's reset doesn't clear. Not yet investigated.
+- **Why it matters:** a red check on a PR that didn't touch the engine wastes a review round and teaches people to ignore red CI. It also means the "survives ten back-to-back runs" claim (D-49) holds only most of the time on CI, even on the fixture.
+- **Next action:**
+  1. Reproduce by looping the test locally under load: `npx vitest run packages/cli/test/sandbox-done-when.test.ts` several times, or with `stress` running.
+  2. On a failing run, keep the run folder and compare the clean run's evidence/frames with a haunted one: did the ghost reach the step, and did the fault fire?
+  3. Fix the cause (a wait in the plan or fixture, or the reset between runs). Don't loosen the assertion, and don't add a retry that hides it.
+
