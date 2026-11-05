@@ -334,3 +334,56 @@ body,
   margin: 0;
   min-width: 0;
 }
+
+/* R11: the replay. A plain bone banner (neither magic nor Death) says it is a recording. */
+.replay-banner {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 40px;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--dim);
+  background: var(--void);
+  font: 12px/1.4 'JetBrains Mono', ui-monospace, monospace;
+  color: var(--bone);
+}
+
+.replay-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.replay-controls button {
+  padding: 2px 8px;
+  border: 1px solid var(--dim);
+  background: transparent;
+  color: var(--bone);
+  font: inherit;
+  cursor: pointer;
+}
+
+.replay-controls button[aria-pressed='true'] {
+  border-color: var(--bone);
+}
+
+.replay-count {
+  color: var(--dim);
+}
+
+.replay .raise {
+  top: 64px;
+}
+
+.replay-notice {
+  max-width: 560px;
+  margin: 20vh auto 0;
+  padding: 0 16px;
+  font: 13px/1.5 'JetBrains Mono', ui-monospace, monospace;
+  color: var(--bone);
+}
