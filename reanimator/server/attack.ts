@@ -55,6 +55,8 @@ export class Attacks {
     read?: typeof readWounds;
     // R7: Kiro is editing the body (a spell is being cast); Death waits for the seal.
     casting?: () => boolean;
+    // R7: Kiro has edited this ritual's body, so even a first attack must raise it again.
+    edited?: (ritualId: string) => boolean;
   };
 
   constructor(o: Attacks['o']) {
@@ -68,7 +70,7 @@ export class Attacks {
     if (!body) return { notRisen: true };
     if (this.memory?.ritual !== ritualId) this.memory = { ritual: ritualId, attacks: 0, healed: new Map(), unproven: new Map() };
     const memory = this.memory;
-    const again = memory.attacks++ > 0 || body.origin === null;
+    const again = memory.attacks++ > 0 || body.origin === null || this.o.edited?.(ritualId) === true;
     const cur: Current = { id: randomUUID(), log: new EventLog(attackOver), abort: new AbortController(), finished: Promise.resolve(), runDir: null };
     this.current = cur;
     const emit = (e: AttackEvent) => cur.log.push(e);

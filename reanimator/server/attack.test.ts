@@ -14,7 +14,7 @@ const WOUND: Wound = { criterion: '1.2', text: 'record only one entry', persona:
 
 type Engine = typeof runEngine;
 
-async function make(engine: Engine, o: { risen?: boolean; read?: boolean; reraise?: Rituals['reraise']; casting?: () => boolean } = {}) {
+async function make(engine: Engine, o: { risen?: boolean; read?: boolean; reraise?: Rituals['reraise']; casting?: () => boolean; edited?: (ritualId: string) => boolean } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'r3-attacks-'));
   const fixture = await loadFixture(PRACTICE_CORPSE);
   let origin = 'http://127.0.0.1:5001';
@@ -25,7 +25,7 @@ async function make(engine: Engine, o: { risen?: boolean; read?: boolean; rerais
   }));
   const rituals = { body: (id: string) => (o.risen !== false && id === 'r1' ? { origin, revivedDir: root, fixture } : null), reraise };
   const read = vi.fn(async () => ({ counts: COUNTS, wounds: [WOUND], pairs: {} }));
-  const a = new Attacks({ rituals, homeRoot: join(root, 'home'), cli: '/cli.js', env: { PATH: '/bin', ANTHROPIC_API_KEY: 'k', DOPPLER_TOKEN: 'd' }, engine, casting: o.casting, ...(o.read === false ? {} : { read }) });
+  const a = new Attacks({ rituals, homeRoot: join(root, 'home'), cli: '/cli.js', env: { PATH: '/bin', ANTHROPIC_API_KEY: 'k', DOPPLER_TOKEN: 'd' }, engine, casting: o.casting, edited: o.edited, ...(o.read === false ? {} : { read }) });
   return { a, read, root, reraise };
 }
 
@@ -156,6 +156,13 @@ describe('Attacks: healing (R5)', () => {
       await writeFile(join(o.specDir, 'haunting-report.json'), reportOf(runId, pairs));
       return { code: 0, error: null, runId, reportPath: join(o.specDir, 'haunting-report.json') };
     });
+
+  it('raises the body again on the first attack if Kiro edited it (R7)', async () => {
+    const { a, reraise } = await make(engineWriting('run-1', []), { read: false, edited: (id) => id === 'r1' });
+    const first = await settle(a, begin(a));
+    expect(reraise).toHaveBeenCalledTimes(1);
+    expect(first).toContainEqual({ type: 'reraised', origin: 'http://127.0.0.1:5002' });
+  });
 
   it('raises the body again before every attack but the first', async () => {
     const { a, reraise } = await make(engineWriting('run-1', []), { read: false });

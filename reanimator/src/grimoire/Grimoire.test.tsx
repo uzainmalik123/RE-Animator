@@ -23,7 +23,7 @@ const WORKED = fold([
   { type: 'cast', text: 'Fix 1.2', heal: HEAL },
   { type: 'quill', text: 'Fixed it.' },
   { type: 'margin', id: 't1', title: 'Reading server.js', status: 'completed' },
-  { type: 'ruled', path: 'server.js', oldText: 'a\nb', newText: 'a\nB' },
+  { type: 'ruled', id: 't2', files: [{ path: 'server.js', oldText: 'a\nb', newText: 'a\nB' }] },
   { type: 'candle', used: 1200, size: 200000 },
 ]);
 
@@ -59,6 +59,10 @@ describe('Grimoire', () => {
     (button(tree, 'Dare Death again')!.props.onClick as () => void)();
     expect(p.dare).toHaveBeenCalledWith(HEAL);
     expect(button(Grimoire({ ...p, attacking: true }), 'Dare Death again')!.props.disabled).toBe(true);
+  });
+
+  it('dares Death after a turn that exited cleanly without a reason', () => {
+    expect(button(Grimoire(props(reduceGrimoire(WORKED, { type: 'sealed', stopReason: 'exited' }))), 'Dare Death again')).toBeDefined();
   });
 
   it('offers no dare for a spell that was not a heal, or did not end its turn', () => {

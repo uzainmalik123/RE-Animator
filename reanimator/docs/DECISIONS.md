@@ -181,5 +181,10 @@
   - **The candle burns only from a real number** (D-R11): an ACP `usage_update {used, size}`. Without one it reads "the candle is unlit: Kiro reported no context".
   - **The stream is read leniently**, because its live envelope is unverified (KI-R21): the update is at `params.update`, at `update`, or is the line itself. Thoughts, plans and unknown lines are ignored.
   - **The heal stays the user's to prove:** each wound has **Cast in the grimoire**, which pre-fills the spell with its heal brief (still plain QA words). A heal spell that ends its turn (`end_turn`) offers **Dare Death again** on that wound, but never dares by itself: every dare costs an LLM key's tokens and re-raises the body. **Copy for Kiro** stays as the fallback.
+  - **From the review (fixed before merge):**
+    - A body Kiro has edited is raised again even before the ritual's first attack (`Grimoire.edited` → `Attacks`). The running app never reloads edits, so Death would otherwise attack the pre-spell code.
+    - `--resume` is used only once a turn has reached Kiro (it sent an event or ended cleanly). A first spell that failed to start doesn't poison the next one.
+    - A tool call's diffs are one ruled box, keyed by its `toolCallId` and redrawn in place when the call sends them again.
+    - A clean exit with no stop reason seals as `exited`, never as an `end_turn` that Kiro didn't send. Either one offers the dare.
   - **No Poltergeist `init`/MCP in the body:** Reanimator stays the only caller of Death, so there's one ledger (D-R20).
 - **Consequences:** R7 is built and tested against a fake `kiro-cli` (`server/fixtures/fake-kiro.mjs`), with no Kiro tokens spent. The live cast and R7's Done-when wait on the batched Kiro session (KI-R21). The grimoire lives in the page's memory: a reload starts a blank book, though Kiro's own conversation resumes.

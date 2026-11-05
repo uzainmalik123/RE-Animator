@@ -65,6 +65,22 @@ describe('Grimoire', () => {
     expect(kiro.mock.calls.map((c) => c[0].resume)).toEqual([false, true, false]);
   });
 
+  it('does not resume after a first spell that never reached Kiro, and says the body was edited only once one did', async () => {
+    const turns: Array<'fail' | 'ok'> = ['fail', 'ok', 'ok'];
+    const { g, kiro } = make(async (o) => {
+      if (turns.shift() === 'fail') return { ok: false, error: 'error: not logged in' };
+      o.onEvent({ type: 'quill', text: 'ok' });
+      return { ok: true, stopReason: 'end_turn' };
+    });
+    await settle(g, cast(g));
+    expect(g.edited('r1')).toBe(false);
+    await settle(g, cast(g));
+    expect(g.edited('r1')).toBe(true);
+    expect(g.edited('r2')).toBe(false);
+    await settle(g, cast(g));
+    expect(kiro.mock.calls.map((c) => c[0].resume)).toEqual([false, false, true]);
+  });
+
   it('refuses a body that has not risen, a Death mid-attack, and a second spell', async () => {
     expect(make(healTurn, { risen: false }).g.start('r1', { text: 'x' })).toEqual({ notRisen: true });
     const dead = make(healTurn, { attacking: true });

@@ -9,7 +9,8 @@ export type SpellEvent =
   | { type: 'cast'; text: string; heal: HealTarget | null }
   | { type: 'quill'; text: string }
   | { type: 'margin'; id: string; title: string; status: string }
-  | { type: 'ruled'; path: string; oldText: string; newText: string }
+  // A tool call's file edits; the call may send them again (ACP replaces a call's content).
+  | { type: 'ruled'; id: string; files: { path: string; oldText: string; newText: string }[] }
   | { type: 'candle'; used: number; size: number }
   | { type: 'sealed'; stopReason: string }
   | { type: 'failed'; reason: string };
@@ -20,7 +21,7 @@ export type Page =
   | { kind: 'spell'; text: string }
   | { kind: 'quill'; text: string }
   | { kind: 'margin'; id: string; title: string; status: string }
-  | { kind: 'ruled'; path: string; lines: RuledLine[] };
+  | { kind: 'ruled'; id: string; files: { path: string; lines: RuledLine[] }[] };
 
 export interface GrimoireState {
   status: 'idle' | 'casting' | 'sealed' | 'failed';
@@ -67,8 +68,14 @@ export function reduceGrimoire(s: GrimoireState, e: SpellEvent): GrimoireState {
       pages[at] = { ...old, title: e.title || old.title, status: e.status };
       return { ...s, pages };
     }
-    case 'ruled':
-      return { ...s, pages: [...s.pages, { kind: 'ruled', path: e.path, lines: ruledLines(e.oldText, e.newText) }] };
+    case 'ruled': {
+      const page: Page = { kind: 'ruled', id: e.id, files: e.files.map((f) => ({ path: f.path, lines: ruledLines(f.oldText, f.newText) })) };
+      const at = s.pages.findIndex((p) => p.kind === 'ruled' && p.id === e.id);
+      if (at < 0) return { ...s, pages: [...s.pages, page] };
+      const pages = [...s.pages];
+      pages[at] = page;
+      return { ...s, pages };
+    }
     case 'candle':
       return { ...s, candle: { used: e.used, size: e.size } };
     case 'sealed':

@@ -42,11 +42,10 @@ export function toSpellEvents(raw: unknown): SpellEvent[] {
       const fresh = u.sessionUpdate === 'tool_call';
       const title = str(u.title) ?? (fresh ? (str(u.kind) ?? 'tool') : '');
       const out: SpellEvent[] = [{ type: 'margin', id, title, status: str(u.status) ?? 'pending' }];
-      for (const c of Array.isArray(u.content) ? u.content : []) {
-        if (isObj(c) && c.type === 'diff' && typeof c.path === 'string' && typeof c.newText === 'string') {
-          out.push({ type: 'ruled', path: c.path, oldText: str(c.oldText) ?? '', newText: c.newText });
-        }
-      }
+      const files = (Array.isArray(u.content) ? u.content : []).flatMap((c: unknown) =>
+        isObj(c) && c.type === 'diff' && typeof c.path === 'string' && typeof c.newText === 'string' ? [{ path: c.path, oldText: str(c.oldText) ?? '', newText: c.newText }] : [],
+      );
+      if (files.length > 0) out.push({ type: 'ruled', id, files });
       return out;
     }
     case 'usage_update':
@@ -63,7 +62,8 @@ const lastLine = (output: string) =>
     .filter((l) => l !== '')
     .at(-1) ?? 'Kiro stopped';
 
-// One turn. Its events go to onEvent as they arrive; the seal is the result, not an event.
+// One turn. Its events go to onEvent as they arrive; the seal is the result, not an event. A clean
+// exit with no stop reason from Kiro seals as 'exited', never as a reason Kiro didn't give (D-R11).
 export async function runKiro(o: {
   cli: string;
   cwd: string;
@@ -99,7 +99,7 @@ export async function runKiro(o: {
   line(partial);
   if (o.signal?.aborted) return { ok: false, error: 'stopped' };
   if (r.timedOut) return { ok: false, error: `Kiro ran past ${Math.round(timeoutMs / 60_000)} min` };
-  if (r.code === 0) return { ok: true, stopReason: sealed ?? 'end_turn' };
+  if (r.code === 0) return { ok: true, stopReason: sealed ?? 'exited' };
   if (/\bENOENT\b/.test(r.output) && r.code === null) return { ok: false, error: 'kiro-cli is not installed (or not on PATH)' };
   return { ok: false, error: lastLine(r.output) };
 }

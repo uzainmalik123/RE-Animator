@@ -29,6 +29,7 @@ const attacks: Attacks = new Attacks({
   cli: process.env.REANIMATOR_POLTERGEIST ?? DEFAULT_CLI,
   env: process.env,
   casting: () => grimoire.busy(),
+  edited: (id) => grimoire.edited(id),
 });
 // R7: the grimoire drives the real Kiro agent (kiro-cli) on the revived body, never during Death.
 const grimoire: Grimoire = new Grimoire({ rituals, attacking: () => attacks.busy(), cli: process.env.REANIMATOR_KIRO ?? DEFAULT_KIRO, env: process.env });

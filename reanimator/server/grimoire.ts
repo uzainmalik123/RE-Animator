@@ -21,7 +21,8 @@ interface Current {
 
 export class Grimoire {
   private current: Current | null = null;
-  // The ritual whose conversation Kiro holds, and whether a turn of it has reached Kiro.
+  // The ritual whose conversation Kiro holds, and whether a turn of it has reached Kiro (so the next
+  // resumes it, and the body may have been edited).
   private memory: { ritual: string; cast: boolean } | null = null;
   private readonly o: {
     rituals: Pick<Rituals, 'body'>;
@@ -51,9 +52,14 @@ export class Grimoire {
     cur.finished = (async () => {
       try {
         emit({ type: 'cast', text: o.text, heal: o.heal ?? null });
-        const resume = memory.cast;
-        memory.cast = true;
-        const r = await kiro({ cli: this.o.cli, cwd: body.revivedDir, text: o.text, resume, env: kiroEnv(this.o.env), signal, onEvent: emit });
+        let reached = false;
+        const onEvent = (e: SpellEvent) => {
+          reached = true;
+          emit(e);
+        };
+        const r = await kiro({ cli: this.o.cli, cwd: body.revivedDir, text: o.text, resume: memory.cast, env: kiroEnv(this.o.env), signal, onEvent });
+        // A turn that answered, or ended cleanly, has a conversation to resume; one that never got going hasn't.
+        if (reached || r.ok) memory.cast = true;
         if (signal.aborted) return emit({ type: 'failed', reason: STOPPED });
         emit(r.ok ? { type: 'sealed', stopReason: r.stopReason } : { type: 'failed', reason: r.error });
       } catch (e) {
@@ -61,6 +67,11 @@ export class Grimoire {
       }
     })();
     return { id: cur.id };
+  }
+
+  // Whether Kiro has worked on this ritual's body: the running app may no longer match it (R7 review).
+  edited(ritualId: string): boolean {
+    return this.memory?.ritual === ritualId && this.memory.cast;
   }
 
   busy(): boolean {

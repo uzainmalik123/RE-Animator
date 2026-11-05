@@ -49,8 +49,21 @@ describe('reduceGrimoire', () => {
   });
 
   it('draws an edit as a ruled box', () => {
-    const s = fold([{ type: 'cast', text: 'x', heal: null }, { type: 'ruled', path: 'server.js', oldText: 'a\nb', newText: 'a\nB' }]);
-    expect(s.pages.at(-1)).toEqual({ kind: 'ruled', path: 'server.js', lines: [{ sign: '-', text: 'b' }, { sign: '+', text: 'B' }] });
+    const s = fold([{ type: 'cast', text: 'x', heal: null }, { type: 'ruled', id: 't2', files: [{ path: 'server.js', oldText: 'a\nb', newText: 'a\nB' }] }]);
+    expect(s.pages.at(-1)).toEqual({ kind: 'ruled', id: 't2', files: [{ path: 'server.js', lines: [{ sign: '-', text: 'b' }, { sign: '+', text: 'B' }] }] });
+  });
+
+  it('redraws a tool call\'s ruled box in place when its diff is sent again', () => {
+    const diff = { path: 'server.js', oldText: 'a', newText: 'b' };
+    const s = fold([
+      { type: 'cast', text: 'x', heal: null },
+      { type: 'ruled', id: 't2', files: [diff] },
+      { type: 'quill', text: 'done' },
+      { type: 'ruled', id: 't2', files: [diff, { path: 'b.js', oldText: '', newText: 'c' }] },
+    ]);
+    expect(s.pages.filter((p) => p.kind === 'ruled')).toEqual([
+      { kind: 'ruled', id: 't2', files: [{ path: 'server.js', lines: [{ sign: '-', text: 'a' }, { sign: '+', text: 'b' }] }, { path: 'b.js', lines: [{ sign: '+', text: 'c' }] }] },
+    ]);
   });
 
   it('lights the candle, seals, and fails', () => {

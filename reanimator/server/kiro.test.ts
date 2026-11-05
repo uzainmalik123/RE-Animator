@@ -39,7 +39,7 @@ describe('toSpellEvents', () => {
       toSpellEvents(update({ sessionUpdate: 'tool_call_update', toolCallId: 't2', title: 'Edit', status: 'completed', content: [{ type: 'diff', path: 'a.js', newText: 'x' }, { type: 'content' }] })),
     ).toEqual([
       { type: 'margin', id: 't2', title: 'Edit', status: 'completed' },
-      { type: 'ruled', path: 'a.js', oldText: '', newText: 'x' },
+      { type: 'ruled', id: 't2', files: [{ path: 'a.js', oldText: '', newText: 'x' }] },
     ]);
   });
 
@@ -70,6 +70,11 @@ describe('runKiro', () => {
     expect(events.map((e) => e.type)).toEqual(['quill', 'quill', 'margin', 'margin', 'margin', 'ruled', 'candle']);
     const argv = JSON.parse(await readFile(argvFile, 'utf8')) as string[];
     expect(argv.slice(-2)).toEqual(['--', '-fix "it"']);
+  });
+
+  it('never invents a stop reason Kiro did not send', async () => {
+    const silent = await runKiro({ cli: FAKE_KIRO, cwd: tmpdir(), text: 'x', resume: false, env: env({ FAKE_KIRO_MODE: 'silent' }), onEvent: () => {} });
+    expect(silent).toEqual({ ok: true, stopReason: 'exited' });
   });
 
   it('reports a failed turn by its last words', async () => {

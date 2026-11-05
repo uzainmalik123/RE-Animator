@@ -50,14 +50,18 @@ function PageView({ page }: { page: Page }) {
     case 'ruled':
       return (
         <figure className="ruled">
-          <figcaption>{page.path}</figcaption>
-          <pre>
-            {page.lines.map((l, i) => (
-              <span key={i} className={l.sign === '-' ? 'minus' : 'plus'}>
-                {`${l.sign === '-' ? '−' : '+'} ${l.text}\n`}
-              </span>
-            ))}
-          </pre>
+          {page.files.map((f, j) => (
+            <div key={j}>
+              <figcaption>{f.path}</figcaption>
+              <pre>
+                {f.lines.map((l, i) => (
+                  <span key={i} className={l.sign === '-' ? 'minus' : 'plus'}>
+                    {`${l.sign === '-' ? '−' : '+'} ${l.text}\n`}
+                  </span>
+                ))}
+              </pre>
+            </div>
+          ))}
         </figure>
       );
   }
@@ -84,7 +88,8 @@ export function Grimoire({
 }) {
   const s = grimoire.state;
   const casting = s.status === 'casting';
-  const heal = s.status === 'sealed' && s.stopReason === 'end_turn' ? s.heal : null;
+  // A heal turn that ended (Kiro's end_turn, or a clean exit with no reason) can be proven by Death.
+  const heal = s.status === 'sealed' && (s.stopReason === 'end_turn' || s.stopReason === 'exited') ? s.heal : null;
   return (
     <section className="grimoire" aria-live="polite">
       <h2>The grimoire</h2>

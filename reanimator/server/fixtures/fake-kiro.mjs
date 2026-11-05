@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // A stand-in for `kiro-cli chat --output-format stream-json` (R7 tests, KI-R21): it never calls Kiro,
 // so no Kiro tokens are spent. It writes ACP JSON Lines shaped like the real stream as we understand
-// it. FAKE_KIRO_MODE: heal (default) | fail | hang. FAKE_KIRO_ARGV: a file to record argv in. Like
+// it. FAKE_KIRO_MODE: heal (default) | fail | hang | silent (exits 0 with no seal). FAKE_KIRO_ARGV: a file to record argv in. Like
 // Kiro, it edits the body it runs in: a heal appends a line to ./server.js if there is one.
 import { appendFileSync, existsSync, writeFileSync } from 'node:fs';
 
@@ -11,6 +11,7 @@ if (process.env.FAKE_KIRO_ARGV) writeFileSync(process.env.FAKE_KIRO_ARGV, JSON.s
 const say = (v) => process.stdout.write(JSON.stringify(v) + '\n');
 const update = (u) => say({ jsonrpc: '2.0', method: 'session/update', params: { sessionId: 'sess_fake', update: u } });
 
+if (mode === 'silent') process.exit(0);
 if (mode === 'fail') {
   process.stderr.write('error: not logged in\n');
   process.exit(1);
