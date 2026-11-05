@@ -53,14 +53,17 @@ export class Attacks {
     env: NodeJS.ProcessEnv;
     engine?: typeof runEngine;
     read?: typeof readWounds;
+    // R7: Kiro is editing the body (a spell is being cast); Death waits for the seal.
+    casting?: () => boolean;
   };
 
   constructor(o: Attacks['o']) {
     this.o = o;
   }
 
-  start(ritualId: string, o: { only?: string[]; heal?: HealTarget } = {}): { id: string } | { busy: true; id: string } | { notRisen: true } {
-    if (this.current && !this.current.log.done) return { busy: true, id: this.current.id };
+  start(ritualId: string, o: { only?: string[]; heal?: HealTarget } = {}): { id: string } | { busy: true; id: string } | { notRisen: true } | { casting: true } {
+    if (this.busy()) return { busy: true, id: this.current!.id };
+    if (this.o.casting?.()) return { casting: true };
     const body = this.o.rituals.body(ritualId);
     if (!body) return { notRisen: true };
     if (this.memory?.ritual !== ritualId) this.memory = { ritual: ritualId, attacks: 0, healed: new Map(), unproven: new Map() };
@@ -126,6 +129,10 @@ export class Attacks {
       }
     })();
     return { id: cur.id };
+  }
+
+  busy(): boolean {
+    return this.current !== null && !this.current.log.done;
   }
 
   events(id: string, after = -1): { log: AttackEvent[]; done: boolean } | null {

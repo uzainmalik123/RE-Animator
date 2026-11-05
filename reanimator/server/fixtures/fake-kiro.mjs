@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // A stand-in for `kiro-cli chat --output-format stream-json` (R7 tests, KI-R21): it never calls Kiro,
 // so no Kiro tokens are spent. It writes ACP JSON Lines shaped like the real stream as we understand
-// it. FAKE_KIRO_MODE: heal (default) | fail | hang. FAKE_KIRO_ARGV: a file to record argv in.
-// FAKE_KIRO_EDIT: a file to really append a line to (so a test sees the body was touched).
-import { appendFileSync, writeFileSync } from 'node:fs';
+// it. FAKE_KIRO_MODE: heal (default) | fail | hang. FAKE_KIRO_ARGV: a file to record argv in. Like
+// Kiro, it edits the body it runs in: a heal appends a line to ./server.js if there is one.
+import { appendFileSync, existsSync, writeFileSync } from 'node:fs';
 
 const mode = process.env.FAKE_KIRO_MODE ?? 'heal';
 if (process.env.FAKE_KIRO_ARGV) writeFileSync(process.env.FAKE_KIRO_ARGV, JSON.stringify(process.argv.slice(2)));
@@ -23,7 +23,7 @@ if (mode === 'hang') {
   update({ sessionUpdate: 'agent_message_chunk', content: { type: 'text', text: 'the guestbook.' } });
   update({ sessionUpdate: 'tool_call', toolCallId: 't1', title: 'Reading server.js', kind: 'read', status: 'pending' });
   update({ sessionUpdate: 'tool_call_update', toolCallId: 't1', status: 'completed' });
-  if (process.env.FAKE_KIRO_EDIT) appendFileSync(process.env.FAKE_KIRO_EDIT, '// healed\n');
+  if (existsSync('server.js')) appendFileSync('server.js', '// healed\n');
   update({
     sessionUpdate: 'tool_call_update',
     toolCallId: 't2',
