@@ -4,6 +4,7 @@ import { spellOver } from '../shared/grimoire.js';
 import type { RitualEvent } from '../shared/ritual.js';
 import type { Attacks } from './attack.js';
 import type { Grimoire } from './grimoire.js';
+import { parseGraveUrl } from './grave.js';
 import { loopbackGuard } from './guard.js';
 import type { Rituals } from './ritual.js';
 import { streamLog } from './sse.js';
@@ -31,8 +32,17 @@ export function createApp(o: { rituals?: RitualsApi; attacks?: AttacksApi; grimo
   const rituals = o.rituals;
   if (!rituals) return app;
 
-  app.post('/api/rituals', (c) => {
-    const s = rituals.start();
+  // R9: {repo} names a grave on GitHub; no repo raises our own corpse.
+  app.post('/api/rituals', async (c) => {
+    const body: unknown = await c.req.json().catch(() => ({}));
+    const repo = typeof body === 'object' && body !== null ? (body as { repo?: unknown }).repo : undefined;
+    let req = {};
+    if (repo !== undefined) {
+      const grave = typeof repo === 'string' ? parseGraveUrl(repo) : null;
+      if (!grave) return c.json({ error: 'repo must be https://github.com/<owner>/<repo>' }, 400);
+      req = { repo: grave.url };
+    }
+    const s = rituals.start(req);
     if ('busy' in s) return c.json({ error: 'a ritual is already running', id: s.id }, 409);
     return c.json({ id: s.id }, 202);
   });
@@ -52,6 +62,7 @@ export function createApp(o: { rituals?: RitualsApi; attacks?: AttacksApi; grimo
     if (heal !== undefined && !isHealTarget(heal)) return c.json({ error: 'heal must be {criterion, persona}' }, 400);
     const s = attacks.start(c.req.param('id'), { only: only as string[] | undefined, heal: heal && { criterion: heal.criterion, persona: heal.persona } });
     if ('notRisen' in s) return c.json({ error: 'the ritual has not risen' }, 409);
+    if ('noChart' in s) return c.json({ error: 'this grave has no chart: Death needs one to attack' }, 409);
     if ('casting' in s) return c.json({ error: 'Kiro is still casting; wait for the seal' }, 409);
     if ('busy' in s) return c.json({ error: 'Death is already attacking', id: s.id }, 409);
     return c.json({ id: s.id }, 202);

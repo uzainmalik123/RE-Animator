@@ -14,9 +14,10 @@ const WOUND: Wound = { criterion: '1.2', text: 'record only one entry', persona:
 
 type Engine = typeof runEngine;
 
-async function make(engine: Engine, o: { risen?: boolean; read?: boolean; reraise?: Rituals['reraise']; casting?: () => boolean; edited?: (ritualId: string) => boolean } = {}) {
+async function make(engine: Engine, o: { risen?: boolean; read?: boolean; reraise?: Rituals['reraise']; casting?: () => boolean; edited?: (ritualId: string) => boolean; chartless?: boolean } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'r3-attacks-'));
-  const fixture = await loadFixture(PRACTICE_CORPSE);
+  const loaded = await loadFixture(PRACTICE_CORPSE);
+  const fixture = o.chartless ? { ...loaded, chartDir: null } : loaded;
   let origin = 'http://127.0.0.1:5001';
   const reraise = vi.fn<Rituals['reraise']>(o.reraise ?? (async (_id, onVital) => {
     for (const vital of ['install', 'build', 'serve', 'render'] as const) onVital({ vital, ok: true, detail: '', ms: 1 });
@@ -85,6 +86,15 @@ describe('Attacks', () => {
     const { a } = await make(engine, { casting: () => true });
     expect(a.start('r1')).toEqual({ casting: true });
     expect(engine).not.toHaveBeenCalled();
+  });
+
+  it('refuses a grave with no chart before anything runs (R9)', async () => {
+    const engine = vi.fn<Engine>();
+    const { a, reraise } = await make(engine, { chartless: true });
+    expect(a.start('r1')).toEqual({ noChart: true });
+    expect(a.busy()).toBe(false);
+    expect(engine).not.toHaveBeenCalled();
+    expect(reraise).not.toHaveBeenCalled();
   });
 
   it('refuses a ritual that has not risen', async () => {

@@ -57,6 +57,12 @@ function RaiseStage({ state }: { state: RitualState }) {
   );
 }
 
+// R9: what the grave field sends; an empty field raises our own corpse.
+export function graveRequest(text: string): string | undefined {
+  const t = text.trim();
+  return t === '' ? undefined : t;
+}
+
 // In a replay nothing can be pressed: one disabled fieldset locks every button and field inside.
 function Locked({ when, children }: { when: boolean; children: ReactNode }) {
   return when ? (
@@ -77,6 +83,7 @@ export function RaiseView({ ritual, attack, grimoire, replay }: { ritual: Ritual
   const attackState: AttackState = attack.state;
   // R7: the grimoire on the same ritual; a wound's brief becomes the spell's draft.
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [grave, setGrave] = useState('');
   const casting = grimoire.state.status === 'casting';
   const running = state.status === 'examining' || state.status === 'raising';
 
@@ -92,7 +99,11 @@ export function RaiseView({ ritual, attack, grimoire, replay }: { ritual: Ritual
         <Locked when={replay !== undefined}>
           <h1>{state.repo ?? 'A dead repo waits'}</h1>
           {state.diedIn !== null && <p className="died">died {state.diedIn}</p>}
-          <button type="button" disabled={running} onClick={() => void ritual.start()}>
+          <label className="grave">
+            Name a grave (GitHub URL)
+            <input type="url" value={grave} placeholder="https://github.com/owner/repo" disabled={running} onChange={(e) => setGrave(e.target.value)} />
+          </label>
+          <button type="button" disabled={running} onClick={() => void ritual.start(graveRequest(grave))}>
             Begin the ritual
           </button>
           {ritual.error && <p className="flat">{ritual.error}</p>}
@@ -104,6 +115,16 @@ export function RaiseView({ ritual, attack, grimoire, replay }: { ritual: Ritual
                   <VitalLine key={r.vital} name={r.vital} result={r} />
                 ))}
               </ol>
+            </>
+          )}
+          {state.rites.length > 0 && (
+            <>
+              <h2>The rites</h2>
+              <ul className="rites">
+                {state.rites.map((r) => (
+                  <li key={r}>{r}</li>
+                ))}
+              </ul>
             </>
           )}
           {(state.status === 'raising' || state.revived.length > 0) && (

@@ -3,7 +3,7 @@ import { IDLE, reduceRitual, type RitualState } from '../../shared/ritual';
 import { connectRitual, requestRitual, type EventSourceLike } from './ritualClient';
 
 // Start (or rejoin) a ritual on the backend and fold its SSE stream into state (D-R15).
-export type RitualHandle = { state: RitualState; id: string | null; start: () => Promise<void>; error: string | null };
+export type RitualHandle = { state: RitualState; id: string | null; start: (repo?: string) => Promise<void>; error: string | null };
 
 export function useRitual(): RitualHandle {
   const [state, setState] = useState<RitualState>(IDLE);
@@ -13,9 +13,9 @@ export function useRitual(): RitualHandle {
 
   useEffect(() => () => source.current?.close(), []);
 
-  const start = useCallback(async () => {
+  const start = useCallback(async (repo?: string) => {
     setError(null);
-    const r = await requestRitual((url, init) => fetch(url, init));
+    const r = await requestRitual((url, init) => fetch(url, init), repo);
     if ('error' in r) {
       setError(r.error);
       return;
