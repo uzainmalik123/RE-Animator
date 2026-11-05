@@ -258,3 +258,71 @@ body,
     height: 60vh;
   }
 }
+
+/* R7: the grimoire (THEME §8). Smooth paper, real text: the user's spells and the seal in magic,
+   Kiro's quill in bone, margin notes small and dim, edits in a ruled box (− death, + rot). */
+.grimoire {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid var(--dim);
+  background: #0d0d14;
+  color: var(--bone);
+}
+.grimoire .pages {
+  max-height: 320px;
+  overflow-y: auto;
+}
+.grimoire .spell,
+.grimoire .seal {
+  color: var(--magic);
+}
+.grimoire .quill {
+  white-space: pre-wrap;
+}
+.grimoire .margin {
+  margin: 4px 0 4px 12px;
+  padding-left: 8px;
+  border-left: 1px solid var(--dim);
+  color: var(--dim);
+  font-size: 12px;
+}
+.grimoire .candle {
+  color: var(--dim);
+  font-size: 12px;
+}
+.grimoire .ruled {
+  margin: 8px 0;
+}
+.grimoire .ruled figcaption {
+  color: var(--dim);
+  font-size: 12px;
+}
+.grimoire .ruled pre {
+  margin: 0;
+  padding: 6px;
+  border: 1px solid var(--dim);
+  overflow-x: auto;
+  white-space: pre;
+}
+.grimoire .minus {
+  color: var(--death);
+}
+.grimoire .plus {
+  color: var(--rot);
+}
+.grimoire .flat {
+  color: var(--death);
+}
+.spell-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.spell-form textarea {
+  flex: 1;
+  min-height: 64px;
+  background: var(--void);
+  color: var(--bone);
+  border: 1px solid var(--dim);
+  font: inherit;
+}

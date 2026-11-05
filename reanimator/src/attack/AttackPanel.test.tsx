@@ -80,6 +80,22 @@ describe('AttackPanel', () => {
       expect(renderToStaticMarkup(<AttackPanel attack={attack(finished())} copy={copy} />)).toContain('Open /tmp/r/revived in Kiro');
     });
 
+    it('casts a wound in the grimoire (R7)', () => {
+      const onCast = vi.fn();
+      const tree = AttackPanel({ attack: attack(finished()), onCast });
+      const btn = elements(tree).find((e) => e.type === 'button' && textOf(e.props.children as ReactNode) === 'Cast in the grimoire')!;
+      (btn.props.onClick as () => void)();
+      expect(onCast).toHaveBeenCalledWith(W);
+      expect(elements(AttackPanel({ attack: attack(finished()) })).some((e) => textOf(e.props.children as ReactNode) === 'Cast in the grimoire')).toBe(false);
+    });
+
+    it('holds Death back while Kiro is casting (R7)', () => {
+      const tree = AttackPanel({ attack: attack(finished()), casting: true });
+      const buttons = elements(tree).filter((e) => e.type === 'button' && ['Summon Death', 'Dare Death again'].includes(textOf(e.props.children as ReactNode)));
+      expect(buttons).toHaveLength(2);
+      for (const b of buttons) expect(b.props.disabled).toBe(true);
+    });
+
     it('offers to copy the brief', () => {
       const copy = vi.fn(async () => {});
       const html = renderToStaticMarkup(<CopyButton text="brief" copy={copy} />);

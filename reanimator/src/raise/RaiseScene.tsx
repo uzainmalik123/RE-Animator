@@ -1,10 +1,13 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { VITALS, beats, flatlined, type RitualState, type VitalResult } from '../../shared/ritual';
 import type { AttackState } from '../../shared/attack';
 import { AttackPanel } from '../attack/AttackPanel';
 import { AttackScene } from '../attack/AttackScene';
 import { showsAttack } from '../attack/scene';
 import { useAttack } from '../attack/useAttack';
+import { healBrief } from '../../shared/heal';
+import { Grimoire, type Draft } from '../grimoire/Grimoire';
+import { useGrimoire } from '../grimoire/useGrimoire';
 import { useDotCanvas } from '../render/useDotCanvas';
 import { circleLuminance, monitorLuminance } from './scene';
 import { useRitual } from './useRitual';
@@ -62,6 +65,10 @@ export function RaiseScene({ initial }: { initial?: RitualState } = {}) {
   const state = initial ?? live.state;
   const attack = useAttack(live.id);
   const attackState: AttackState = attack.state;
+  // R7: the grimoire on the same ritual; a wound's brief becomes the spell's draft.
+  const grimoire = useGrimoire(live.id);
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const casting = grimoire.state.status === 'casting';
   const running = state.status === 'examining' || state.status === 'raising';
 
 
@@ -107,7 +114,12 @@ export function RaiseScene({ initial }: { initial?: RitualState } = {}) {
               It lives: <a href={state.origin}>{state.origin}</a>
             </p>
             <iframe className="raise-app" title="The revived app" src={state.origin} />
-            <AttackPanel attack={attack} />
+            <AttackPanel
+              attack={attack}
+              casting={casting}
+              onCast={(w) => attackState.body && setDraft({ text: healBrief(w, attackState.body), heal: { criterion: w.criterion, persona: w.persona } })}
+            />
+            <Grimoire grimoire={grimoire} draft={draft} attacking={attackState.status === 'attacking'} dare={attack.summon} />
           </>
         )}
       </section>
