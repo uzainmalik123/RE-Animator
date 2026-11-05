@@ -22,6 +22,7 @@ Work one PRD feature at a time, through the grill → plan → implement → rev
   - _Built (D-R20) without the PR text; tick once Kiro heals a real wound and the re-run closes it (KI-R19)._
 - [ ] 7. R7 Grimoire (agent surface)
   - _Requirements: 5.2_
+  - _Built (D-R21) against a fake kiro-cli; tick once a real Kiro heal is cast, sealed and dared closed from it (KI-R21)._
 - [ ] 8. R11 hosted replay; then R9 (arbitrary URLs)
   - _Requirements: as per PRD_
 - [ ] 9. 🔒 Built in Kiro (D-R18): R6 Graveyard (pick a repo)

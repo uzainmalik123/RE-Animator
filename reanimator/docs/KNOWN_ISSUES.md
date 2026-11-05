@@ -24,6 +24,7 @@
 | KI-R18 | R4 review minors: the frame throttle can drop a ghost's last (evidence) frame, a pre-spawn frame burns the first slot, labels and dots letterbox slightly differently, loose seq parsing, `lighten` blends red over bone, no test of minion placement in the canvas loop | Minor | none | Open |
 | KI-R19 | R5's Done-when (a real Kiro fix + a key-backed re-run closing a wound) hasn't been run; a heal lives only in the ritual's temp dir; the magic seal glow isn't drawn | Major | R5 Done-when, demo | Open |
 | KI-R20 | R5 review minors: a heal refused as not-open still counts as an attack (the next one re-raises needlessly); `summoned` echoes the heal target before it's checked | Minor | none | Open |
+| KI-R21 | R7's live Kiro cast is unproven: the stream-json envelope, `usage_update`, whether a trust prompt blocks a headless run, and the Done-when (a heal cast → sealed → dared → closed) | Major | R7 Done-when, demo | Open |
 | KI-R13 | R1 demo-page polish from review: void flash on pitch/mode click, resize jank, late web font, breath jump, no OffscreenCanvas fallback, fractional-DPR cell seams | Minor | R4 (seams) | Open |
 
 ---
@@ -164,3 +165,12 @@
   1. **A heal refused as "not open" still counts as an attack** (`server/attack.ts`, `memory.attacks++`). The next attack then pays for a needless re-raise (an `npm install`). Fix: count it only once a re-raise or the engine has run.
   2. **`summoned` echoes the heal target before the open check.** The panel flashes "Death returns for X · Y…" until the `failed` lands. Fix: check first, then emit.
 - **Next action:** when `server/attack.ts` is next touched.
+
+### KI-R21: R7's grimoire has never cast on the real Kiro · Major · Open
+- **What (2026-11-05):** R7 is built (D-R21) and tested only against `server/fixtures/fake-kiro.mjs`, because Kiro's tokens are saved for the demo. These are still unknown:
+  1. **The stream-json envelope.** The parser accepts `params.update`, `update`, or a bare update, and reads the seal from `result.stopReason`, a top-level `stopReason`, or exit 0. The real lines may differ.
+  2. **Whether `usage_update` arrives.** If it doesn't, the candle stays unlit (honestly).
+  3. **Whether a headless run blocks:** on a workspace-trust prompt (the revived dir is a new temp dir; `--trust-workspace` is V3-only), or on a tool that isn't in `--trust-tools`. A block ends in the 10-minute timeout or **Break off the spell**.
+  4. **Whether `--resume` picks up the ritual's conversation** in that dir.
+  5. **The Done-when:** a real wound (KI-R15) cast in the grimoire, Kiro editing the body, the seal, then **Dare Death again** closing it (with KI-R19 #1).
+- **Next action:** in the batched Kiro session, run `npm run server` (real `kiro-cli` on PATH, logged in) and `npm run dev`, raise the corpse, and cast a short spell. If the grimoire stays blank, save a few lines of `kiro-cli chat --output-format stream-json` output and fix `toSpellEvents` (`server/kiro.ts`). Then run the Done-when.

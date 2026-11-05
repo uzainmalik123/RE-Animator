@@ -40,7 +40,7 @@
 | 3 | R3 | Death's attack: wire in the Poltergeist engine | High | Built; live run pending KI-R15 |
 | 4 | R4 | The attack scene: draw Death + minions over the running app | High | Built; filming pending KI-R15 |
 | 5 | R5 | Wounds + heal loop: show findings, fix with Kiro, re-attack | High | Built; Kiro heal pending KI-R19 |
-| 6 | R7 | The grimoire: the agent/chat surface | Med | TBD |
+| 6 | R7 | The grimoire: the agent/chat surface | Med | Built; live Kiro cast pending KI-R21 |
 | 7 | R11 | Hosted demo / replay | Med | TBD |
 | 8 | R9 | Arbitrary GitHub URL + real clone & revive | Low | TBD |
 | 9 | R6 | 🔒 **Built in Kiro.** The graveyard: pick a dead repo | Med | TBD (Kiro only, D-R18) |
@@ -147,11 +147,17 @@
 
 ## MED
 
-### R7: The grimoire (agent surface) · Med · TBD
+### R7: The grimoire (agent surface) · Med · Built; live Kiro cast pending KI-R21
 **Owns:** the spellbook-styled surface for talking to Kiro (THEME §8): prompts as spells, replies as quill writing, tool runs as margin notes, code changes as ruled boxes, context as a candle.
 - **User story:** As the necromancer, I direct my familiar through the grimoire, not a chat box.
 - **Constraints:** the text stays real text (not dots). Wire it to the actual agent used for healing (R5).
 - **Done when:** a heal (R5) can be driven from the grimoire and reads like casting a spell.
+- **Built (2026-11-05, D-R21, plan `docs/plans/2026-11-05-R7-grimoire.md`):**
+  - Each spell is one headless `kiro-cli chat` turn in the revived body, with file tools only. Its ACP stream comes back as SSE (`server/kiro.ts`, `server/grimoire.ts`, `shared/grimoire.ts`).
+  - The grimoire panel (`src/grimoire/`) shows the spell, the quill reply, margin notes, ruled-box diffs, a candle (only from a real usage report) and the wax seal.
+  - Each wound's **Cast in the grimoire** pre-fills its heal brief. A sealed heal offers **Dare Death again** on that wound.
+  - Kiro and Death never run on the body at once.
+  - It was seen in the browser with a fake Kiro (`docs/img/r7-grimoire.png`). The live cast and the Done-when wait on the Kiro session (KI-R21).
 
 ### R11: Hosted demo / replay · Med · TBD
 **Owns:** a way for a judge to see it without installing: a recorded replay of a real run, or a hosted instance.
@@ -208,3 +214,4 @@ These are built **in Kiro, not Claude Code**, so the entry really uses Kiro's sp
 - 2026-11-04: R6 (graveyard), R8 (autopsy) and R10 (sound) are reserved for **Kiro** and moved to the end of the build order (D-R18). Claude Code sessions don't build them.
 - 2026-11-05: R4 Built (D-R19, plan `docs/plans/2026-11-05-R4-attack-scene.md`): the attack scene replaces the raise stage on Summon Death. The body is the engine's own frames, minions sit at the ghosts' real step positions, and wounds open where a haunted pair's ghost acted. Filming waits on KI-R15. Adds KI-R17.
 - 2026-11-05: R5 Built (D-R20, plan `docs/plans/2026-11-05-R5-heal.md`): heal briefs for Kiro, Dare Death again (re-raise on real vitals + a one-wound re-run), the merged report as ledger, and a wound closes only on a clean pair that really ran; healed lines in magic and a dissolving gash. The Done-when waits on Kiro + a key (KI-R19, KI-R15).
+- 2026-11-05: R7 Built (D-R21, plan `docs/plans/2026-11-05-R7-grimoire.md`): the grimoire drives the real Kiro agent through `kiro-cli chat --output-format stream-json` (one turn per spell, fs tools only, never during Death), drawn as spell, quill, margin notes, ruled boxes, candle and seal. A wound can be cast from its brief, and a sealed heal dares Death again. Tested against a fake kiro-cli. The live cast is KI-R21.
