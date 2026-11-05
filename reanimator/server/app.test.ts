@@ -113,10 +113,10 @@ describe('createApp', () => {
       { type: 'failed', reason: 'boom' },
     ];
     function fakeAttacks(answer: ReturnType<AttacksApi['start']>) {
-      const calls: Array<[string, string[] | undefined]> = [];
+      const calls: Array<[string, Parameters<AttacksApi['start']>[1]]> = [];
       const attacks: AttacksApi = {
-        start: (id, only) => {
-          calls.push([id, only]);
+        start: (id, o) => {
+          calls.push([id, o]);
           return answer;
         },
         events: (id, after = -1) => (id === 'a1' ? { log: ATTACK_LOG.slice(after + 1), done: true } : null),
@@ -133,13 +133,29 @@ describe('createApp', () => {
       const res = await post(createApp({ rituals: fakeRituals(), attacks }), { only: ['1.2'] });
       expect(res.status).toBe(202);
       expect(await res.json()).toEqual({ id: 'a1' });
-      expect(calls).toEqual([['r1', ['1.2']]]);
+      expect(calls).toEqual([['r1', { only: ['1.2'], heal: undefined }]]);
+    });
+
+    it('heals one wound', async () => {
+      const { attacks, calls } = fakeAttacks({ id: 'a1' });
+      expect((await post(createApp({ rituals: fakeRituals(), attacks }), { heal: { criterion: '1.2', persona: 'wraith' } })).status).toBe(202);
+      expect(calls).toEqual([['r1', { only: undefined, heal: { criterion: '1.2', persona: 'wraith' } }]]);
+    });
+
+    it('400s a heal without a criterion and a persona', async () => {
+      const { attacks, calls } = fakeAttacks({ id: 'a1' });
+      for (const heal of [{ criterion: '1.2' }, { criterion: '', persona: 'wraith' }, 'wraith', null]) {
+        const res = await post(createApp({ rituals: fakeRituals(), attacks }), { heal });
+        expect(res.status).toBe(400);
+        expect(await res.json()).toEqual({ error: 'heal must be {criterion, persona}' });
+      }
+      expect(calls).toEqual([]);
     });
 
     it('starts with no body at all', async () => {
       const { attacks, calls } = fakeAttacks({ id: 'a1' });
       expect((await post(createApp({ rituals: fakeRituals(), attacks }))).status).toBe(202);
-      expect(calls).toEqual([['r1', undefined]]);
+      expect(calls).toEqual([['r1', { only: undefined, heal: undefined }]]);
     });
 
     it('409s while Death is attacking, with the running id', async () => {

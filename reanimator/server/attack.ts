@@ -1,16 +1,19 @@
 // Death's attack (R3, D-R17): one attack at a time, on the current risen ritual. It prepares the
 // chart and config, runs the real Poltergeist engine, forwards its progress, and reads its report.
-// A new ritual (or shutdown) stops it first, through Rituals' onRelease.
+// A new ritual (or shutdown) stops it first, through Rituals' onRelease. R5 (D-R20): any attack after
+// a ritual's first raises the body again on real vitals (a heal may have edited it), and a heal runs
+// the engine on one wound only; the merged report is the ledger, and a wound closes only when its
+// pair really ran clean in this run.
 import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { attackOver, type AttackEvent } from '../shared/attack.js';
-import { prepareAttack } from './chart.js';
+import { attackOver, woundKey, type AttackEvent, type HealTarget, type Wound } from '../shared/attack.js';
+import { chartDir, prepareAttack } from './chart.js';
 import { runEngine } from './engine.js';
 import { engineEnv } from './env.js';
 import { EventLog } from './event-log.js';
 import type { Rituals } from './ritual.js';
-import { readWounds } from './report.js';
+import { openWounds, readWounds } from './report.js';
 
 const STOPPED = 'stopped: a new ritual began';
 
@@ -23,12 +26,20 @@ interface Current {
 }
 
 // A ghost id as the engine writes it (`<criterion>__<persona>__r<rep>__<actor>`): one path segment.
+// What Attacks remembers of the current ritual: how often Death came, and the wounds healed since.
+interface Memory {
+  ritual: string;
+  attacks: number;
+  healed: Map<string, Wound>;
+}
+
 const GHOST_ID = /^[A-Za-z0-9._-]+$/;
 
 export class Attacks {
   private current: Current | null = null;
+  private memory: Memory | null = null;
   private readonly o: {
-    rituals: Pick<Rituals, 'risen'>;
+    rituals: Pick<Rituals, 'body' | 'reraise'>;
     homeRoot: string;
     cli: string;
     env: NodeJS.ProcessEnv;
@@ -40,25 +51,42 @@ export class Attacks {
     this.o = o;
   }
 
-  start(ritualId: string, only?: string[]): { id: string } | { busy: true; id: string } | { notRisen: true } {
+  start(ritualId: string, o: { only?: string[]; heal?: HealTarget } = {}): { id: string } | { busy: true; id: string } | { notRisen: true } {
     if (this.current && !this.current.log.done) return { busy: true, id: this.current.id };
-    const risen = this.o.rituals.risen(ritualId);
-    if (!risen) return { notRisen: true };
+    const body = this.o.rituals.body(ritualId);
+    if (!body) return { notRisen: true };
+    if (this.memory?.ritual !== ritualId) this.memory = { ritual: ritualId, attacks: 0, healed: new Map() };
+    const memory = this.memory;
+    const again = memory.attacks++ > 0 || body.origin === null;
     const cur: Current = { id: randomUUID(), log: new EventLog(attackOver), abort: new AbortController(), finished: Promise.resolve(), runDir: null };
     this.current = cur;
     const emit = (e: AttackEvent) => cur.log.push(e);
     const { signal } = cur.abort;
     const engine = this.o.engine ?? runEngine;
     const read = this.o.read ?? readWounds;
+    const heal = o.heal ?? null;
     cur.finished = (async () => {
-      emit({ type: 'summoned', origin: risen.origin, only: only ?? null, heal: null, body: risen.revivedDir, wounds: [], healed: [] });
       try {
-        const prep = await prepareAttack({ fixture: risen.fixture, revivedDir: risen.revivedDir, origin: risen.origin, homeRoot: this.o.homeRoot });
+        const before = await openWounds(join(chartDir(body.revivedDir), 'haunting-report.json'));
+        emit({ type: 'summoned', origin: body.origin ?? '', only: o.only ?? null, heal, body: body.revivedDir, wounds: before, healed: [...memory.healed.values()] });
+        const target = heal ? before.find((w) => woundKey(w) === woundKey(heal)) : undefined;
+        if (heal && !target) return emit({ type: 'failed', reason: 'that wound is not open' });
+        let origin = body.origin;
+        if (again) {
+          const r = await this.o.rituals.reraise(ritualId, (result) => emit({ type: 'pulse', result }), signal);
+          if (signal.aborted) return emit({ type: 'failed', reason: STOPPED });
+          if ('failed' in r) return emit({ type: 'failed', reason: `the heal broke the body: ${r.failed}` });
+          origin = r.origin;
+          emit({ type: 'reraised', origin });
+        }
+        if (origin === null) return emit({ type: 'failed', reason: 'the body is down' });
+        const prep = await prepareAttack({ fixture: body.fixture, revivedDir: body.revivedDir, origin, homeRoot: this.o.homeRoot });
         const r = await engine({
           cli: this.o.cli,
           ...prep,
           env: engineEnv(this.o.env),
-          only,
+          only: heal ? [heal.criterion] : o.only,
+          personas: heal ? [heal.persona] : undefined,
           signal,
           onEvent: (event) => emit({ type: 'engine', event }),
           onRun: (runDir) => (cur.runDir = runDir),
@@ -67,8 +95,16 @@ export class Attacks {
         if (r.code !== 0 && r.code !== 1) return emit({ type: 'failed', reason: r.error ?? 'the engine failed' });
         // Exit 1 with no run is a crash, and the spec folder may still hold an earlier run's report.
         if (r.runId === null) return emit({ type: 'failed', reason: `the engine wrote no readable report: ${r.error ?? 'no run'}` });
-        const { counts, wounds } = await read(r.reportPath, r.runId);
-        emit({ type: 'finished', counts, wounds, healed: [], heal: null });
+        const { counts, wounds, pairs } = await read(r.reportPath, r.runId);
+        let verdict: string | null = null;
+        if (heal && target) {
+          // Only a pair that really ran in this run counts: a carried or missing one proves nothing.
+          const p = pairs[woundKey(heal)];
+          verdict = p && !p.carried ? p.verdict : 'notRun';
+          if (verdict === 'clean') memory.healed.set(woundKey(heal), target);
+        }
+        for (const w of wounds) memory.healed.delete(woundKey(w));
+        emit({ type: 'finished', counts, wounds, healed: [...memory.healed.values()], heal: heal && verdict ? { ...heal, verdict } : null });
       } catch (e) {
         emit({ type: 'failed', reason: signal.aborted ? STOPPED : e instanceof Error ? e.message : String(e) });
       }
