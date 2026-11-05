@@ -178,7 +178,7 @@
 **Owns:** accepting any dead-JS-repo URL, cloning it, and attempting a real revive (not just the prepared one).
 - **Constraints:** sandbox the clone and the install (untrusted code). This is the hardest part of the original Reanimator; treat as a stretch goal.
 - **Done when:** at least one *unprepared* permissively licensed repo revives end to end.
-- **Built (2026-11-05, D-R23):** a "Name a grave" field; `server/grave.ts` (URL check, shallow clone, headstone), `server/sandbox.ts` (bubblewrap), `server/rites.ts` (four fixed Node 22 cures, named in the ritual), `server/serve.ts` + `static-serve.mjs` (serving an unknown body). Proven on a local git repo in the real sandbox (`server/grave.integration.test.ts`). A real GitHub repo is KI-R25. Death refuses a grave with no chart. Screenshot: `docs/img/r9-grave-field.png`.
+- **Built (2026-11-05, D-R23):** a "Name a grave" field; `server/grave.ts` (URL check, shallow clone, headstone), `server/sandbox.ts` (bubblewrap), `server/rites.ts` (four fixed Node 22 cures, named in the ritual), `server/serve.ts` + `static-serve.mjs` (serving an unknown body). Proven on a local git repo in the real sandbox (`server/grave.integration.test.ts`). A real GitHub repo is KI-R25. Death refuses a grave with no chart, and Kiro won't cast on one (review fix). Screenshot: `docs/img/r9-grave-field.png`.
 
 ---
 

@@ -89,6 +89,7 @@ export function createApp(o: { rituals?: RitualsApi; attacks?: AttacksApi; grimo
     const s = grimoire.start(c.req.param('id'), { text, heal: heal && { criterion: heal.criterion, persona: heal.persona } });
     if ('notRisen' in s) return c.json({ error: 'the ritual has not risen' }, 409);
     if ('attacking' in s) return c.json({ error: 'Death is attacking; wait for him' }, 409);
+    if ('stranger' in s) return c.json({ error: "Kiro won't cast on a stranger's grave: its files could steer him outside the sandbox" }, 409);
     if ('busy' in s) return c.json({ error: 'Kiro is already casting', id: s.id }, 409);
     return c.json({ id: s.id }, 202);
   });

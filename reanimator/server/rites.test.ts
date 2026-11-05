@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { lstat, mkdtemp, readFile, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -83,5 +83,37 @@ describe('applyRites', () => {
     const dir = await body({ 'package.json': '{ "name": ' });
     expect(await applyRites(dir)).toEqual([]);
     expect(await readFile(join(dir, 'package.json'), 'utf8')).toBe('{ "name": ');
+  });
+
+  describe('never through a symlink (a grave can point one at the host)', () => {
+    it('leaves a host file a symlinked .npmrc points at untouched, and writes its own', async () => {
+      const host = join(await mkdtemp(join(tmpdir(), 'host-')), 'npmrc');
+      await writeFile(host, 'a=1\n\nb=2\n');
+      const dir = await body({ 'package.json': { name: 'x' }, 'package-lock.json': {} });
+      await symlink(host, join(dir, '.npmrc'));
+      expect(await applyRites(dir)).toEqual(['lockfile']);
+      expect(await readFile(host, 'utf8')).toBe('a=1\n\nb=2\n');
+      expect((await lstat(join(dir, '.npmrc'))).isSymbolicLink()).toBe(false);
+      expect(await npmrcOf(dir)).toBe('legacy-peer-deps=true\n');
+    });
+
+    it('treats a symlinked package.json as no package.json', async () => {
+      const host = join(await mkdtemp(join(tmpdir(), 'host-')), 'some.json');
+      const text = JSON.stringify({ engineStrict: true, engines: { node: '1' } });
+      await writeFile(host, text);
+      const dir = await body({});
+      await symlink(host, join(dir, 'package.json'));
+      expect(await applyRites(dir)).toEqual([]);
+      expect(await readFile(host, 'utf8')).toBe(text);
+    });
+
+    it('ignores a symlinked lockfile', async () => {
+      const host = join(await mkdtemp(join(tmpdir(), 'host-')), 'lock.json');
+      await writeFile(host, '{}');
+      const dir = await body({ 'package.json': { name: 'x' } });
+      await symlink(host, join(dir, 'package-lock.json'));
+      expect(await applyRites(dir)).toEqual([]);
+      expect(existsSync(host)).toBe(true);
+    });
   });
 });

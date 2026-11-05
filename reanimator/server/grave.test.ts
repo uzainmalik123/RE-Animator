@@ -4,7 +4,8 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { CommandResult } from './exec.js';
 import { runCommand } from './exec.js';
-import { cloneGrave, parseGraveUrl } from './grave.js';
+import { cloneGrave, graveFixture, licenceOf, NO_NPM, parseGraveUrl } from './grave.js';
+import { hasBwrap } from './sandbox.js';
 import { localRepo } from './test-repo.js';
 
 describe('parseGraveUrl', () => {
@@ -42,6 +43,19 @@ describe('cloneGrave', () => {
     expect(await cloneGrave(src, dest, { run: runCommand })).toMatchObject({ ok: true, licence: 'unknown' });
   });
 
+  it('does not read a licence through a symlinked package.json', async () => {
+    const src = await localRepo({ 'README.md': 'hi' });
+    const dest = join(await mkdtemp(join(tmpdir(), 'grave-')), 'grave');
+    const r = await cloneGrave(src, dest, { run: runCommand });
+    expect(r.ok).toBe(true);
+    const { symlink, writeFile, rm } = await import('node:fs/promises');
+    const host = join(await mkdtemp(join(tmpdir(), 'host-')), 'p.json');
+    await writeFile(host, JSON.stringify({ license: 'HOST-SECRET' }));
+    await rm(join(dest, 'package.json'), { force: true });
+    await symlink(host, join(dest, 'package.json'));
+    expect(await licenceOf(dest)).toBe('unknown');
+  });
+
   it('fails with a clone: reason when the repo is not there', async () => {
     const dest = join(await mkdtemp(join(tmpdir(), 'grave-')), 'grave');
     const r = await cloneGrave(join(tmpdir(), 'no-such-repo-here'), dest, { run: runCommand });
@@ -65,5 +79,19 @@ describe('cloneGrave', () => {
     const dest = join(await mkdtemp(join(tmpdir(), 'grave-')), 'grave');
     const r = await cloneGrave(src, dest, { run: runCommand, maxBytes: 1024 });
     expect(r).toEqual({ ok: false, reason: 'clone: the grave is too big (over 1 MB)' });
+  });
+});
+
+describe('graveFixture', async () => {
+  const available = await hasBwrap();
+  it.skipIf(!available)('refuses a grave before any vital when the sandbox has no npm, never calling it dead', async () => {
+    const src = await localRepo({ 'package.json': '{}' });
+    const workdir = await mkdtemp(join(tmpdir(), 'grave-w-'));
+    // A bwrap whose sandbox finds no npm: the real one, with PATH emptied by a wrapper.
+    const { writeFile, chmod } = await import('node:fs/promises');
+    const fake = join(workdir, 'bwrap-no-npm');
+    await writeFile(fake, '#!/bin/sh\ncase "$*" in *" -- npm "*) echo "bwrap: execvp npm: No such file or directory" >&2; exit 1;; esac\nexec bwrap "$@"\n');
+    await chmod(fake, 0o755);
+    await expect(graveFixture(src, workdir, { run: runCommand, bwrap: fake })).rejects.toThrow(NO_NPM);
   });
 });

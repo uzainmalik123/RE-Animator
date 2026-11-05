@@ -299,6 +299,7 @@ describe('createApp', () => {
       const cases: Array<[ReturnType<GrimoireApi['start']>, unknown]> = [
         [{ notRisen: true }, { error: 'the ritual has not risen' }],
         [{ attacking: true }, { error: 'Death is attacking; wait for him' }],
+        [{ stranger: true }, { error: "Kiro won't cast on a stranger's grave: its files could steer him outside the sandbox" }],
         [{ busy: true, id: 's1' }, { error: 'Kiro is already casting', id: 's1' }],
       ];
       for (const [answer, body] of cases) {

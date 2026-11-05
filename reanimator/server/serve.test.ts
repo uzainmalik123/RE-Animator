@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -28,6 +28,14 @@ describe('inferServe', () => {
   it('serves the root when only it holds an index.html', async () => {
     const dir = await body({ 'index.html': 'x' });
     expect(await inferServe(dir)).toEqual(['node', STATIC_SERVE, dir]);
+  });
+
+  it('does not read a package.json that is a symlink', async () => {
+    const host = join(await mkdtemp(join(tmpdir(), 'host-')), 'p.json');
+    await writeFile(host, JSON.stringify({ scripts: { start: 'x' } }));
+    const dir = await body({});
+    await symlink(host, join(dir, 'package.json'));
+    expect(await inferServe(dir)).toBeNull();
   });
 
   it('has no way to serve a body with neither', async () => {

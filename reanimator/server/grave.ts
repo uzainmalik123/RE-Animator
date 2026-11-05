@@ -1,11 +1,12 @@
 // A stranger's grave (R9, D-R23): a dead repo named by its GitHub URL, cloned shallow into the
 // ritual's work dir. The URL is checked strictly before anything runs; the clone never runs hooks,
 // fetches submodules or prompts for a password, and a grave too big to raise is refused.
-import { mkdir, readdir, readFile, stat } from 'node:fs/promises';
+import { mkdir, readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { childEnv } from './env.js';
 import type { runCommand } from './exec.js';
 import type { Fixture } from './fixtures.js';
+import { readOwn } from './own-file.js';
 import { applyRites } from './rites.js';
 import { bwrapSandbox, hasBwrap } from './sandbox.js';
 
@@ -45,9 +46,9 @@ async function sizeOf(dir: string): Promise<number> {
 
 const firstLine = (s: string) => s.split('\n').find((l) => l.trim() !== '')?.trim() ?? '';
 
-async function licenceOf(dir: string): Promise<string> {
+export async function licenceOf(dir: string): Promise<string> {
   try {
-    const pkg = JSON.parse(await readFile(join(dir, 'package.json'), 'utf8')) as { license?: unknown };
+    const pkg = JSON.parse((await readOwn(join(dir, 'package.json'))) ?? '{}') as { license?: unknown };
     return typeof pkg.license === 'string' && pkg.license !== '' ? pkg.license : 'unknown';
   } catch {
     return 'unknown';
@@ -75,6 +76,7 @@ export async function cloneGrave(
 export class GraveError extends Error {}
 
 export const NO_SANDBOX = "no sandbox: install bubblewrap (bwrap) to raise a stranger's repo";
+export const NO_NPM = 'no npm in the sandbox: a grave runs on the system Node, so install node and npm under /usr';
 
 // Open a grave into the ritual's work dir: clone it to <workdir>/grave, give it a home of its own,
 // and make it a fixture whose remedy is the rites and whose every command runs in the sandbox.
@@ -84,10 +86,14 @@ export async function graveFixture(
   o: { run: typeof runCommand; signal?: AbortSignal; bwrap?: string; name?: string },
 ): Promise<Fixture> {
   if (!(await hasBwrap(o.bwrap))) throw new GraveError(NO_SANDBOX);
+  await mkdir(join(workdir, 'home'));
+  // A sandbox that can't run npm would fail every vital and call a living repo dead (D-R11).
+  const sandbox = bwrapSandbox(workdir, { bwrap: o.bwrap });
+  const npm = await o.run(sandbox.argv(['npm', '--version'], workdir), { cwd: workdir, timeoutMs: 15_000, env: sandbox.env(), signal: o.signal });
+  if (npm.code !== 0) throw new GraveError(NO_NPM);
   const corpseDir = join(workdir, 'grave');
   const r = await cloneGrave(url, corpseDir, o);
   if (!r.ok) throw new GraveError(r.reason);
-  await mkdir(join(workdir, 'home'));
   const parsed = parseGraveUrl(url);
   return {
     name: o.name ?? (parsed ? `${parsed.owner}/${parsed.repo}` : url),
@@ -97,7 +103,7 @@ export async function graveFixture(
     dir: corpseDir,
     corpseDir,
     chartDir: null,
-    sandbox: bwrapSandbox(workdir, { bwrap: o.bwrap }),
+    sandbox,
     remedy: async (revived) => {
       const rites = await applyRites(revived);
       return { files: rites.length, rites };

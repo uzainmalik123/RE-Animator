@@ -36,11 +36,14 @@ export class Grimoire {
     this.o = o;
   }
 
-  start(ritualId: string, o: { text: string; heal?: HealTarget }): { id: string } | { busy: true; id: string } | { notRisen: true } | { attacking: true } {
+  start(ritualId: string, o: { text: string; heal?: HealTarget }): { id: string } | { busy: true; id: string } | { notRisen: true } | { attacking: true } | { stranger: true } {
     if (this.busy()) return { busy: true, id: this.current!.id };
     // Kiro only needs the revived dir: a body that is down (a heal broke it) can still be healed.
     const body = this.o.rituals.body(ritualId);
     if (!body) return { notRisen: true };
+    // R9: Kiro runs on the host with file tools trusted, so a stranger's files (or the grave itself,
+    // calling this backend over the shared loopback) could steer him outside the sandbox.
+    if (body.fixture.sandbox) return { stranger: true };
     if (this.o.attacking()) return { attacking: true };
     if (this.memory?.ritual !== ritualId) this.memory = { ritual: ritualId, cast: false };
     const memory = this.memory;
