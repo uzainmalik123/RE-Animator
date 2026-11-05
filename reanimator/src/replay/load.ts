@@ -28,11 +28,14 @@ export async function loadRecording(fetchFn: (url: string) => Promise<Response>,
     if (!isManifest(manifest)) return { error: 'this is not a Reanimator recording' };
     const events = await fetchFn(`${base}events.ndjson`);
     if (!events.ok) return { error: `could not fetch the recording's events (HTTP ${events.status})` };
+    let lines;
     try {
-      return { manifest, lines: parseLines(await events.text()) };
+      lines = parseLines(await events.text());
     } catch (e) {
       return { error: `the recording is damaged: ${e instanceof Error ? e.message : String(e)}` };
     }
+    // A server started with recording on but nothing run: there is no run to call a replay (D-R11).
+    return lines.length === 0 ? { missing: true } : { manifest, lines };
   } catch {
     return { error: 'could not fetch the recording' };
   }

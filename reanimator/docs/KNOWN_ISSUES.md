@@ -27,6 +27,7 @@
 | KI-R21 | R7's live Kiro cast is unproven: the stream-json envelope, `usage_update`, whether a trust prompt blocks a headless run, and the Done-when (a heal cast → sealed → dared → closed) | Major | R7 Done-when, demo | Open |
 | KI-R22 | R7 review minors: split-line test, failure reason from merged output, missing cwd read as not installed, a 409 rejoin replays onto the book, the draft's heal sticks, quill index keys and announce, a late stream after a ritual change, kiroEnv drops proxy/keyring vars | Minor | none | Open |
 | KI-R23 | The hosted replay has no recording yet: the real hero run (raise → Death → Kiro heal → closed wound) must be recorded, committed and deployed | Major | R11 Done-when, judging | Open |
+| KI-R24 | R11 review minors: pause/speed restart a gap, Pause shown after the end, late frames dropped across back-to-back attacks, the Pages build skips typecheck, no test that a replay makes no /api calls, UTC banner date, README in the Pages build | Minor | none | Open |
 | KI-R13 | R1 demo-page polish from review: void flash on pitch/mode click, resize jank, late web font, breath jump, no OffscreenCanvas fallback, fractional-DPR cell seams | Minor | R4 (seams) | Open |
 
 ---
@@ -195,7 +196,17 @@
 - **Steps:**
   1. Start the backend with recording on: `REANIMATOR_RECORD=public/recording doppler run -- npm run server` (from `reanimator/`), plus `npm run dev`.
   2. Run the hero run once, in one sitting: **Begin the ritual** → **Summon Death** → **Cast in the grimoire** on a wound → **Dare Death again** until it closes. Then stop the server.
-  3. Check it: `npx vite --open '/?replay'`, then the size (`du -sh public/recording`, frames are capped at 50 MB), and that no path or secret leaked (`grep -r "$HOME" public/recording` should print nothing).
+  3. Check it: `npx vite --open '/?replay'`, then the size (`du -sh public/recording`, frames are capped at 50 MB), and that nothing private leaked. The recorder already blanks the values of every `*KEY*`/`*TOKEN*`/`*SECRET*`/`*PASSWORD*`/`*AUTH*` env var to `[secret]` and replaces the home dir with `~`, but the recording keeps full vital output, engine errors, Kiro's text and diffs. Run `grep -rE "$HOME|$USER|sk-|ghp_|_authToken|AKIA" public/recording` (it should print nothing), and skim `events.ndjson` once before committing.
   4. Commit `public/recording/`. Enable GitHub Pages (Settings → Pages → Source: GitHub Actions), then run **Reanimator replay (GitHub Pages)** from the Actions tab.
 - **Done when:** the public Pages URL plays the hero run end to end in a fresh browser (R11's Done-when).
 - **Not covered by tests:** the recorder is unit-tested against fake logs. A real session (with real frame timing and a 409 rejoin) hasn't been recorded yet.
+
+### KI-R24: R11 review minors · Minor · Open
+- **Context:** the final review of R11 (2026-11-05). The two Important findings (a failed write could crash the live backend; secrets in published output) and the empty recording that would show a "RECORDED RUN" banner were fixed before merge (D-R22).
+  1. **Player clock:** pausing, or changing speed, restarts the current gap (at most 2 s). When playback ends, the button still says Pause.
+  2. **Late frames:** a frame read that resolves after the next attack has started returns null, so the last frames of an attack followed at once by a heal can be dropped. The replay just keeps the previous image.
+  3. **The Pages workflow** builds without `npm run typecheck`.
+  4. **No test asserts** that a replay makes no `/api` calls. It holds by construction, because the live hooks never mount.
+  5. **The banner date** is `recordedAt`'s UTC date.
+  6. `public/recording/README.md` ships in the Pages build. That's harmless.
+- **Next action:** #2 and #3 before KI-R23's recording session. The rest when `src/replay/` is next touched.

@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync } from 'node:fs';
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -8,7 +8,7 @@ import { parseLines } from '../shared/recording.js';
 import type { RitualEvent } from '../shared/ritual.js';
 import type { AttacksApi, GrimoireApi, RitualsApi } from './app.js';
 import { EventLog } from './event-log.js';
-import { Recorder, recordApis } from './recorder.js';
+import { Recorder, recordApis, secretValues } from './recorder.js';
 
 // One log per id, shaped like Rituals/Attacks/Grimoire's events + subscribe.
 function source<E>(isTerminal: (e: E) => boolean) {
@@ -24,11 +24,11 @@ function source<E>(isTerminal: (e: E) => boolean) {
 const started: RitualEvent = { type: 'started', repo: 'guestbook-2016', diedIn: 2016 };
 const risen: RitualEvent = { type: 'risen', origin: 'http://127.0.0.1:5000/' };
 
-async function setup(o: { capBytes?: number } = {}) {
+async function setup(o: { capBytes?: number; secrets?: string[] } = {}) {
   const dir = join(await mkdtemp(join(tmpdir(), 'r11-rec-')), 'recording');
   let clock = 1000;
   const warnings: string[] = [];
-  const rec = new Recorder({ dir, home: '/home/necro', now: () => clock, capBytes: o.capBytes, warn: (m) => warnings.push(m) });
+  const rec = new Recorder({ dir, home: '/home/necro', secrets: o.secrets, now: () => clock, capBytes: o.capBytes, warn: (m) => warnings.push(m) });
   const lines = () => parseLines(readFileSync(join(dir, 'events.ndjson'), 'utf8'));
   return { dir, rec, lines, warnings, tick: (ms: number) => (clock += ms) };
 }
@@ -58,6 +58,29 @@ describe('Recorder (R11)', () => {
     expect(lines()[0]!.event).toEqual({ type: 'failed', reason: 'cannot read ~/body/x' });
   });
 
+  it('blanks every secret value the server holds', async () => {
+    const { rec, lines } = await setup({ secrets: ['sk-ant-123456789'] });
+    const src = source<AttackEvent>(attackOver);
+    rec.watch('attack', 'a1', src);
+    src.log('a1').push({ type: 'failed', reason: '401: key sk-ant-123456789 is invalid' });
+    expect(lines()[0]!.event).toEqual({ type: 'failed', reason: '401: key [secret] is invalid' });
+  });
+
+  it('never breaks the live stream when a write fails: it warns once and stops recording', async () => {
+    const { dir, rec, warnings } = await setup();
+    const src = source<RitualEvent>((e) => e.type === 'risen');
+    const seen: RitualEvent[] = [];
+    rec.watch('ritual', 'r1', src);
+    src.subscribe('r1', (e) => seen.push(e));
+    rmSync(dir, { recursive: true });
+    expect(() => src.log('r1').push(started)).not.toThrow();
+    expect(() => src.log('r1').push(risen)).not.toThrow();
+    expect(() => rec.frame('a1', 'g1', 0, Buffer.from('x'))).not.toThrow();
+    expect(seen).toEqual([started, risen]);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toMatch(/recording stopped/);
+  });
+
   it('refuses a directory that already holds a recording', async () => {
     const { dir } = await setup();
     expect(() => new Recorder({ dir, home: '/home/necro' })).toThrow(/already exists/);
@@ -71,6 +94,12 @@ describe('Recorder (R11)', () => {
     expect(existsSync(join(dir, 'frames/a1/g1/0.jpg'))).toBe(true);
     expect(existsSync(join(dir, 'frames/a1/g1/1.jpg'))).toBe(false);
     expect(warnings).toHaveLength(1);
+  });
+});
+
+describe('secretValues (R11)', () => {
+  it('picks the values of keys, tokens and passwords, and nothing else', () => {
+    expect(secretValues({ ANTHROPIC_API_KEY: 'sk-1', GITHUB_TOKEN: 'ghp_2', DB_PASSWORD: 'pw', HOME: '/home/x', PATH: '/bin', EMPTY_TOKEN: '' })).toEqual(['sk-1', 'ghp_2', 'pw']);
   });
 });
 
@@ -101,6 +130,15 @@ describe('recordApis (R11)', () => {
     expect(lines().map((l) => [l.stream, l.id])).toEqual([['ritual', 'r1'], ['attack', 'a1']]);
     expect(readFileSync(join(dir, 'frames/a1/g1/3.jpg'), 'utf8')).toBe('jpg');
     expect(wrapped.grimoire.start('r1', { text: 'x' })).toEqual({ notRisen: true });
+  });
+
+  it('survives a frame read that rejects', async () => {
+    const { dir, rec } = await setup();
+    const { api, attacks } = apis(async () => Promise.reject(new Error('gone')));
+    recordApis(api, rec).attacks.start('r1', {});
+    attacks.log('a1').push(frameEvent);
+    await settle();
+    expect(existsSync(join(dir, 'frames'))).toBe(false);
   });
 
   it('skips a frame the engine no longer has', async () => {

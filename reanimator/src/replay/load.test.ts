@@ -25,6 +25,14 @@ describe('loadRecording (R11)', () => {
     expect(r).toEqual({ manifest, lines: [line] });
   });
 
+  it('takes a recording with no events (a server started, nothing run) as no recording', async () => {
+    const r = await loadRecording(
+      files({ './recording/recording.json': { status: 200, body: JSON.stringify(manifest) }, './recording/events.ndjson': { status: 200, body: '' } }),
+      './recording/',
+    );
+    expect(r).toEqual({ missing: true });
+  });
+
   it('refuses a manifest of another format', async () => {
     const r = await loadRecording(files({ './recording/recording.json': { status: 200, body: '{"format":"x"}' } }), './recording/');
     expect(r).toEqual({ error: 'this is not a Reanimator recording' });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isManifest, parseLines, redactHome } from './recording.js';
+import { isManifest, parseLines, redact } from './recording.js';
 
 describe('recording format (R11)', () => {
   it('parses lines and skips blank ones', () => {
@@ -24,8 +24,17 @@ describe('recording format (R11)', () => {
   });
 
   it('replaces the home directory with ~', () => {
-    expect(redactHome('{"p":"/home/u/x","q":"/home/u"}', '/home/u')).toBe('{"p":"~/x","q":"~"}');
-    expect(redactHome('{"p":"/x"}', '/')).toBe('{"p":"/x"}');
-    expect(redactHome('{"p":"/x"}', '')).toBe('{"p":"/x"}');
+    expect(redact('{"p":"/home/u/x","q":"/home/u"}', '/home/u')).toBe('{"p":"~/x","q":"~"}');
+    expect(redact('{"p":"/x"}', '/')).toBe('{"p":"/x"}');
+    expect(redact('{"p":"/x"}', '')).toBe('{"p":"/x"}');
+  });
+
+  it('blanks secret values, even ones JSON escapes', () => {
+    expect(redact('{"r":"key sk-1234567890 bad"}', '', ['sk-1234567890'])).toBe('{"r":"key [secret] bad"}');
+    expect(redact(JSON.stringify({ r: 'a"b\\c-secret' }), '', ['a"b\\c-secret'])).toBe('{"r":"[secret]"}');
+  });
+
+  it('ignores secrets too short to be secrets', () => {
+    expect(redact('{"r":"on"}', '', ['on', ''])).toBe('{"r":"on"}');
   });
 });

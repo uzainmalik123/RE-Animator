@@ -199,7 +199,8 @@
     - `events.ndjson`: lines of `{t, stream: ritual|attack|spell, id, event}` (`shared/recording.ts`).
     - `frames/<attackId>/<ghostId>/<seq>.jpg`.
 
-    Frames stop being kept past 50 MB (with one warning). The home dir is replaced by `~` in every line.
+    Frames stop being kept past 50 MB (with one warning). Before a line is written, the value of every secret-named env var (`KEY`, `TOKEN`, `SECRET`, `PASSWORD`, `AUTH`, …) becomes `[secret]`, and the home dir becomes `~`. A recording with no events counts as no recording.
+  - **The recorder never breaks a live run (from the review):** it writes inside the live streams' listeners, so a failed write (folder moved, disk full) warns once and stops the recording. It never throws into the stream. A frame read that fails is simply not kept.
   - **The replay is the real UI.** `RaiseScene` is split into a pure `RaiseView` fed by handles. Live, the handles are the three hooks. In a replay they come from `src/replay/` folding the lines with the **same shared reducers** (`step`, using the hooks' rules: a new ritual starts afresh, a new attack starts from QUIET, spells share one book). Frames come through `FrameUrlContext`.
   - **Honest by construction (D-R11):**
     - A permanent banner reads "RECORDED RUN · replay of a real run on <date> · nothing here is live · pauses longer than 2 s are shortened".

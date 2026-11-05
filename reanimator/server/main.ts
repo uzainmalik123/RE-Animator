@@ -11,7 +11,7 @@ import { Grimoire } from './grimoire.js';
 import { DEFAULT_KIRO } from './kiro.js';
 import { resolvePort } from './port.js';
 import { renderCheck } from './render-check.js';
-import { Recorder, recordApis } from './recorder.js';
+import { Recorder, recordApis, secretValues } from './recorder.js';
 import { Rituals } from './ritual.js';
 
 // Loopback only: this backend runs install/build/serve commands, so it must never face the LAN.
@@ -39,7 +39,7 @@ const grimoire: Grimoire = new Grimoire({ rituals, attacking: () => attacks.busy
 
 // R11 (D-R22): REANIMATOR_RECORD=<dir> records this session for the hosted replay.
 const recordDir = process.env.REANIMATOR_RECORD;
-const apis = recordDir ? recordApis({ rituals, attacks, grimoire }, new Recorder({ dir: resolve(recordDir), home: homedir() })) : { rituals, attacks, grimoire };
+const apis = recordDir ? recordApis({ rituals, attacks, grimoire }, new Recorder({ dir: resolve(recordDir), home: homedir(), secrets: secretValues(process.env) })) : { rituals, attacks, grimoire };
 if (recordDir) console.log(`Recording this session to ${resolve(recordDir)}`);
 
 serve({ fetch: createApp(apis).fetch, hostname, port }, (info) => {

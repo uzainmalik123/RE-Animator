@@ -39,9 +39,14 @@ export function parseLines(text: string): RecordedLine[] {
   return lines;
 }
 
-// Replace the recording machine's home directory with ~ in a JSON text, so no local path is published.
-export function redactHome(json: string, home: string): string {
-  if (home === '' || home === '/') return json;
-  const escaped = JSON.stringify(home).slice(1, -1);
-  return json.split(escaped).join('~');
+const MIN_SECRET = 8;
+
+// Before a line is published: every secret value the server holds becomes [secret], and the
+// recording machine's home directory becomes ~. Values are matched as they appear inside JSON.
+export function redact(json: string, home: string, secrets: readonly string[] = []): string {
+  const inJson = (v: string) => JSON.stringify(v).slice(1, -1);
+  let out = json;
+  for (const v of secrets) if (v.length >= MIN_SECRET) out = out.split(inJson(v)).join('[secret]');
+  if (home !== '' && home !== '/') out = out.split(inJson(home)).join('~');
+  return out;
 }
