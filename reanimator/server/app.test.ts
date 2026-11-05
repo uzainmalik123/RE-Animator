@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { RitualEvent } from '../shared/ritual.js';
 import type { AttackEvent } from '../shared/attack.js';
-import { createApp, type AttacksApi, type RitualsApi } from './app.js';
+import type { SpellEvent } from '../shared/grimoire.js';
+import { createApp, type AttacksApi, type GrimoireApi, type RitualsApi } from './app.js';
 
 const BASE = 'http://127.0.0.1:7070';
 
@@ -165,6 +166,13 @@ describe('createApp', () => {
       expect(await res.json()).toEqual({ error: 'Death is already attacking', id: 'a1' });
     });
 
+    it('409s while Kiro is casting (R7)', async () => {
+      const { attacks } = fakeAttacks({ casting: true });
+      const res = await post(createApp({ rituals: fakeRituals(), attacks }));
+      expect(res.status).toBe(409);
+      expect(await res.json()).toEqual({ error: 'Kiro is still casting; wait for the seal' });
+    });
+
     it('409s a ritual that has not risen', async () => {
       const { attacks } = fakeAttacks({ notRisen: true });
       const res = await post(createApp({ rituals: fakeRituals(), attacks }));
@@ -198,6 +206,79 @@ describe('createApp', () => {
       expect(await res.text()).toBe('jpeg');
       expect((await app.request(`${BASE}/api/attacks/a1/frames/g1/x`)).status).toBe(404);
       expect((await app.request(`${BASE}/api/attacks/a1/frames/..%2Fx/2`)).status).toBe(404);
+    });
+  });
+
+  describe('spells (R7)', () => {
+    const SPELL_LOG: SpellEvent[] = [
+      { type: 'cast', text: 'fix it', heal: null },
+      { type: 'sealed', stopReason: 'end_turn' },
+    ];
+    const attacks: AttacksApi = { start: () => ({ id: 'a1' }), events: () => null, subscribe: () => () => {}, frame: async () => null };
+    function fakeGrimoire(answer: ReturnType<GrimoireApi['start']>) {
+      const calls: Array<[string, Parameters<GrimoireApi['start']>[1]]> = [];
+      const stops: Array<string | undefined> = [];
+      const grimoire: GrimoireApi = {
+        start: (id, o) => {
+          calls.push([id, o]);
+          return answer;
+        },
+        events: (id, after = -1) => (id === 's1' ? { log: SPELL_LOG.slice(after + 1), done: true } : null),
+        subscribe: () => () => {},
+        stop: async (id) => {
+          stops.push(id);
+        },
+      };
+      return { app: createApp({ rituals: fakeRituals(), attacks, grimoire }), calls, stops };
+    }
+    const cast = (app: ReturnType<typeof createApp>, body: unknown) =>
+      app.request(`${BASE}/api/rituals/r1/spells`, { method: 'POST', body: JSON.stringify(body), headers: { 'content-type': 'application/json' } });
+
+    it('casts a spell, with the wound it heals', async () => {
+      const { app, calls } = fakeGrimoire({ id: 's1' });
+      const res = await cast(app, { text: 'fix it', heal: { criterion: '1.2', persona: 'wraith' } });
+      expect(res.status).toBe(202);
+      expect(await res.json()).toEqual({ id: 's1' });
+      expect(calls).toEqual([['r1', { text: 'fix it', heal: { criterion: '1.2', persona: 'wraith' } }]]);
+      await cast(app, { text: 'more' });
+      expect(calls[1]).toEqual(['r1', { text: 'more', heal: undefined }]);
+    });
+
+    it('400s an empty, blank, huge or missing spell, and a bad heal', async () => {
+      const { app, calls } = fakeGrimoire({ id: 's1' });
+      for (const body of [{}, { text: '' }, { text: '  \n ' }, { text: 'x'.repeat(20_001) }, { text: 3 }]) {
+        const res = await cast(app, body);
+        expect(res.status).toBe(400);
+        expect(await res.json()).toEqual({ error: 'text must be 1–20000 characters' });
+      }
+      const res = await cast(app, { text: 'ok', heal: { criterion: '1.2' } });
+      expect(res.status).toBe(400);
+      expect(await res.json()).toEqual({ error: 'heal must be {criterion, persona}' });
+      expect(calls).toEqual([]);
+    });
+
+    it('409s a ritual that has not risen, a Death mid-attack, and a second spell', async () => {
+      const cases: Array<[ReturnType<GrimoireApi['start']>, unknown]> = [
+        [{ notRisen: true }, { error: 'the ritual has not risen' }],
+        [{ attacking: true }, { error: 'Death is attacking; wait for him' }],
+        [{ busy: true, id: 's1' }, { error: 'Kiro is already casting', id: 's1' }],
+      ];
+      for (const [answer, body] of cases) {
+        const res = await cast(fakeGrimoire(answer).app, { text: 'x' });
+        expect(res.status).toBe(409);
+        expect(await res.json()).toEqual(body);
+      }
+    });
+
+    it('streams a spell, 404s an unknown one, and breaks one off', async () => {
+      const { app, stops } = fakeGrimoire({ id: 's1' });
+      const body = await (await app.request(`${BASE}/api/spells/s1/events`)).text();
+      expect(body).toContain('id: 1');
+      expect(body).toContain('"stopReason":"end_turn"');
+      expect((await app.request(`${BASE}/api/spells/nope/events`)).status).toBe(404);
+      const res = await app.request(`${BASE}/api/spells/s1/stop`, { method: 'POST' });
+      expect(res.status).toBe(202);
+      expect(stops).toEqual(['s1']);
     });
   });
 });

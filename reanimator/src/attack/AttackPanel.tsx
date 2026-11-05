@@ -37,10 +37,22 @@ function healLine(s: AttackState): { text: string; healed: boolean } | null {
 // R3: Death's attack as real text, under the risen app. The art (minions, wounds drawn as dots) is
 // R4's (AttackScene, on the same state); this shows only what the engine really reported (D-R11).
 // R5 adds the heal: a brief per wound for Kiro, Dare Death again on it, and the wounds it closed.
+// R7: a wound can be cast in the grimoire (Kiro drives the heal), and Death waits while Kiro casts.
 // No hooks here (CopyButton holds its own), so tests can walk the tree.
-export function AttackPanel({ attack, copy = clipboard }: { attack: Pick<AttackHandle, 'state' | 'summon' | 'error'>; copy?: Copy }) {
+export function AttackPanel({
+  attack,
+  copy = clipboard,
+  onCast,
+  casting = false,
+}: {
+  attack: Pick<AttackHandle, 'state' | 'summon' | 'error'>;
+  copy?: Copy;
+  onCast?: (w: Wound) => void;
+  casting?: boolean;
+}) {
   const state = attack.state;
   const attacking = state.status === 'attacking';
+  const locked = attacking || casting;
   const healed = healLine(state);
   const wound = (w: Wound) => (
     <li key={woundKey(w)} className="wound">
@@ -50,7 +62,12 @@ export function AttackPanel({ attack, copy = clipboard }: { attack: Pick<AttackH
       — {w.text}
       <div className="detail">{w.reason}</div>
       {state.body && <CopyButton text={healBrief(w, state.body)} copy={copy} />}
-      <button type="button" disabled={attacking} onClick={() => void attack.summon({ criterion: w.criterion, persona: w.persona })}>
+      {state.body && onCast && (
+        <button type="button" onClick={() => onCast(w)}>
+          Cast in the grimoire
+        </button>
+      )}
+      <button type="button" disabled={locked} onClick={() => void attack.summon({ criterion: w.criterion, persona: w.persona })}>
         Dare Death again
       </button>
     </li>
@@ -59,7 +76,7 @@ export function AttackPanel({ attack, copy = clipboard }: { attack: Pick<AttackH
   return (
     <section className="attack-panel" aria-live="polite">
       <h2>Death</h2>
-      <button type="button" disabled={attacking} onClick={() => void attack.summon()}>
+      <button type="button" disabled={locked} onClick={() => void attack.summon()}>
         Summon Death
       </button>
       {attack.error && <p className="flat">{attack.error}</p>}

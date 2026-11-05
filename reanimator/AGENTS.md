@@ -90,6 +90,7 @@ Before you hand back, if anything changed:
 - `npx playwright-core install chromium` once per machine: the render vital and its integration test need it.
 - `npm run health` → typecheck + lint + test.
 - `doppler run -- npm run attack:check` → raise the practice corpse and let Death (the real Poltergeist engine, needs an LLM key) attack it; prints the wounds (R3, KI-R15). The backend's **Summon Death** button does the same from the UI, and each wound's **Dare Death again** re-raises the body and re-runs Death on that wound only (R5). `../poltergeist` must be installed (`npm ci` there).
+- The grimoire (R7) runs `kiro-cli` (installed and logged in; override it with `REANIMATOR_KIRO`). To try it without spending Kiro tokens, run `REANIMATOR_KIRO=$PWD/server/fixtures/fake-kiro.mjs npm run server`.
 
 ## Health check (after every implementation)
 
@@ -120,7 +121,7 @@ Death's attack is the sibling engine. **Built in R3 (D-R16, D-R17):** `server/en
 1. Read `docs/STORY.md`, `docs/THEME.md`, `docs/PRD.md`.
 2. ~~R0 scaffold, R1 renderer~~ (done). **Approve the look:** run `npm run dev` + `npm run server`, press **Begin the ritual** on the raise, and try the renderer at `?renderer`; sign off or ask for changes (KI-R2; screenshots in `docs/img/`).
 3. ~~R2 machinery~~ (built on the practice corpse, D-R14). Shortlist and pick the one demo repo (KI-R1) and drop it in as a fixture (with a `chart/`).
-4. ~~R3 wiring~~ (built, D-R16/D-R17), ~~R4 attack scene~~ (built, D-R19). Run `doppler run -- npm run attack:check` once with a key (KI-R15), then press **Summon Death** in the UI to film R4. ~~R5 heal loop~~ (built, D-R20): in the batched Kiro session, open the revived dir shown in the panel in Kiro, paste a wound's **Copy for Kiro** brief, then press **Dare Death again** to close it (KI-R19).
+4. ~~R3 wiring~~ (built, D-R16/D-R17), ~~R4 attack scene~~ (built, D-R19). Run `doppler run -- npm run attack:check` once with a key (KI-R15), then press **Summon Death** in the UI to film R4. ~~R5 heal loop~~ (built, D-R20): in the batched Kiro session, open the revived dir shown in the panel in Kiro, paste a wound's **Copy for Kiro** brief, then press **Dare Death again** to close it (KI-R19). ~~R7 grimoire~~ (built, D-R21): in the same session, cast the wound from the grimoire instead (**Cast in the grimoire**), and check the live stream (KI-R21).
 5. Read the 2026 rules (KI-R6 / Poltergeist KI-05).
 
 ## Tools available

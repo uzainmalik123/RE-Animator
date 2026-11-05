@@ -24,6 +24,8 @@
 | KI-R18 | R4 review minors: the frame throttle can drop a ghost's last (evidence) frame, a pre-spawn frame burns the first slot, labels and dots letterbox slightly differently, loose seq parsing, `lighten` blends red over bone, no test of minion placement in the canvas loop | Minor | none | Open |
 | KI-R19 | R5's Done-when (a real Kiro fix + a key-backed re-run closing a wound) hasn't been run; a heal lives only in the ritual's temp dir; the magic seal glow isn't drawn | Major | R5 Done-when, demo | Open |
 | KI-R20 | R5 review minors: a heal refused as not-open still counts as an attack (the next one re-raises needlessly); `summoned` echoes the heal target before it's checked | Minor | none | Open |
+| KI-R21 | R7's live Kiro cast is unproven: the stream-json envelope, `usage_update`, whether a trust prompt blocks a headless run, and the Done-when (a heal cast → sealed → dared → closed) | Major | R7 Done-when, demo | Open |
+| KI-R22 | R7 review minors: split-line test, failure reason from merged output, missing cwd read as not installed, a 409 rejoin replays onto the book, the draft's heal sticks, quill index keys and announce, a late stream after a ritual change, kiroEnv drops proxy/keyring vars | Minor | none | Open |
 | KI-R13 | R1 demo-page polish from review: void flash on pitch/mode click, resize jank, late web font, breath jump, no OffscreenCanvas fallback, fractional-DPR cell seams | Minor | R4 (seams) | Open |
 
 ---
@@ -164,3 +166,24 @@
   1. **A heal refused as "not open" still counts as an attack** (`server/attack.ts`, `memory.attacks++`). The next attack then pays for a needless re-raise (an `npm install`). Fix: count it only once a re-raise or the engine has run.
   2. **`summoned` echoes the heal target before the open check.** The panel flashes "Death returns for X · Y…" until the `failed` lands. Fix: check first, then emit.
 - **Next action:** when `server/attack.ts` is next touched.
+
+### KI-R21: R7's grimoire has never cast on the real Kiro · Major · Open
+- **What (2026-11-05):** R7 is built (D-R21) and tested only against `server/fixtures/fake-kiro.mjs`, because Kiro's tokens are saved for the demo. These are still unknown:
+  1. **The stream-json envelope.** The parser accepts `params.update`, `update`, or a bare update, and reads the seal from `result.stopReason`, a top-level `stopReason`, or exit 0. The real lines may differ.
+  2. **Whether `usage_update` arrives.** If it doesn't, the candle stays unlit (honestly).
+  3. **Whether a headless run blocks:** on a workspace-trust prompt (the revived dir is a new temp dir; `--trust-workspace` is V3-only), or on a tool that isn't in `--trust-tools`. A block ends in the 10-minute timeout or **Break off the spell**.
+  4. **Whether `--resume` picks up the ritual's conversation** in that dir.
+  5. **The Done-when:** a real wound (KI-R15) cast in the grimoire, Kiro editing the body, the seal, then **Dare Death again** closing it (with KI-R19 #1).
+- **Next action:** in the batched Kiro session, run `npm run server` (real `kiro-cli` on PATH, logged in) and `npm run dev`, raise the corpse, and cast a short spell. If the grimoire stays blank, save a few lines of `kiro-cli chat --output-format stream-json` output and fix `toSpellEvents` (`server/kiro.ts`). Then run the Done-when.
+
+### KI-R22: R7 review minors (from the R7 code review) · Minor · Open
+- **Findings (2026-11-05; the review's Important ones were fixed before merge, see D-R21):**
+  1. **No test splits one JSON line across two stdout chunks, or puts many lines in one** (`server/kiro.ts` `onOutput`). The code handles both; only a split UTF-8 character is tested.
+  2. **A failed turn's reason comes from the merged stdout+stderr tail**, so a crash mid-stream can show a raw JSON line. Track stderr separately.
+  3. **A missing cwd also reads as "kiro-cli is not installed"** (both are `spawn … ENOENT`). This is rare, since the body exists while risen.
+  4. **A 409 rejoin replays onto the book:** a second tab, or a re-cast after a lost stream, reconnects to the running spell from index 0, so its pages show twice. A second tab's own text is silently dropped.
+  5. **The draft's heal sticks:** after a heal spell, a free-form spell from the same form still carries that wound (and offers its dare). Clicking **Cast in the grimoire** on the same wound again doesn't re-seed the form, and clicking it mid-typing discards the text. Fix: clear the draft on cast, and key the form by a counter.
+  6. **The quill:** pages are keyed by index, so a new ritual's quill at the same index keeps the old reveal count. A long reply trails the seal by seconds, and `aria-live` on the whole section announces the reveal letter by letter.
+  7. **A cast whose POST resolves after the ritual changed** opens a stream for the old ritual that is only closed on the next change or unmount.
+  8. **`kiroEnv` drops `HTTPS_PROXY`, `SSL_CERT_FILE`, `KIRO_*` and `DBUS_SESSION_BUS_ADDRESS`.** Kiro behind a proxy or using keyring login may fail. Check this during KI-R21's live run.
+- **Next action:** #8 with KI-R21. The rest when `src/grimoire/` or `server/kiro.ts` is next touched.

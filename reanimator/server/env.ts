@@ -18,3 +18,9 @@ export function childEnv(base: NodeJS.ProcessEnv, extra: Record<string, string> 
 export function engineEnv(base: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   return { ...childEnv(base), ...pick(base, (k) => ENGINE_KEYS.includes(k) || k.startsWith('ANTHROPIC_') || k.startsWith('AWS_')), NO_COLOR: '1' };
 }
+
+// Kiro (R7, D-R21): the child env plus the XDG dirs where kiro-cli keeps its login. No LLM key, no
+// AWS or Doppler secrets: Kiro brings its own account.
+export function kiroEnv(base: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  return { ...childEnv(base), ...pick(base, (k) => k.startsWith('XDG_')) };
+}

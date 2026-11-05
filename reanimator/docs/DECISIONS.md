@@ -24,7 +24,8 @@
 | D-R18 | R6, R8 and R10 are built in **Kiro** (spec-first), last; Claude Code never builds them | Accepted |
 | D-R17 | The attack protocol: `POST /api/rituals/:id/attack` + SSE, a wound = a haunted pair, one attack at a time, a new ritual stops it first | Accepted |
 | D-R19 | The R4 attack scene: live ghosts and the engine's own frames, Death + minions + wounds on a red layer over a bone body | Accepted |
-| D-R20 | The R5 heal loop: a brief per wound for Kiro (the user hands it over), a re-raise on real vitals before every attack but the first, a one-wound re-run, the merged report as ledger, and a wound closes only on a clean pair that really ran | Accepted |
+| D-R20 | The R5 heal loop: a brief per wound for Kiro (the user hands it over), a re-raise on real vitals before every attack but the first, a one-wound re-run, the merged report as ledger, and a wound closes only on a clean pair that really ran | Accepted (one bullet amended by D-R21) |
+| D-R21 | The R7 grimoire drives the real Kiro agent: one headless `kiro-cli chat` turn per spell in the revived body, file tools only, never while Death attacks; the user still dares Death | Accepted |
 
 ---
 
@@ -158,7 +159,7 @@
   - `useAttack` now lives in `RaiseScene` and is tagged with its ritual, so the panel and the scene share one state. `useDotCanvas` moved to `src/render/` for both scenes.
 - **Consequences:** filming R4's Done-when needs a key-backed run (KI-R15). R5 draws the wound closing on the same `woundPoints`.
 
-### D-R20: The heal loop (R5)
+### D-R20: The heal loop (R5) · amended by D-R21 (Reanimator now drives Kiro from the grimoire)
 - **Context:** R5's grill (2026-11-05), run with the recommended answers.
 - **Decision:**
   - **Reanimator doesn't drive Kiro.** Kiro has no stable headless API, and its tokens are kept for the demo. Each wound gets a **heal brief** (`shared/heal.ts`) in plain QA words, with no theme words (like Poltergeist D-09). It gives the criterion, the persona, the steps, the expected and failing checks, a pointer to `.kiro/specs/chart/haunting-report.md`, and "don't edit the chart". The panel shows **Copy for Kiro** and the revived repo's path to open in Kiro. Wiring Kiro in (MCP, `init`, the agent surface) is R7's.
@@ -168,3 +169,22 @@
   - **A wound closes only on a genuine pass (D-R11):** its pair is in this run's report (`runId`), not carried, with verdict `clean`. `finished.heal.verdict` is that verdict, or `notRun` for a carried or missing pair. `Attacks` remembers the ritual's healed wounds (`finished.healed`), and a later attack that breaks one again reopens it. A heal that comes back flaky or inconclusive replaces the haunted pair in the report but proves nothing. `Attacks` keeps that wound open (*unproven*, still listed and dareable) until a later run of its pair comes back clean (healed) or haunted.
   - **The look:** healed lines turn `--magic` ("The wound closed: Death could not break 1.2 again."). A haunted result reads "Death broke it again." and anything else "Not proven healed (<verdict>)". In the scene, the healed wound's gash dissolves cell by cell over 1.2 s in a fixed order; with reduced motion it's simply gone. The `--magic` seal glow (THEME §6) is not drawn yet (KI-R19).
 - **Consequences:** R5's Done-when needs a real Kiro fix plus a key-backed re-run (KI-R19, KI-R15). Every re-attack pays for an `npm install` on the body. The heal lives only in the ritual's temp dir (KI-R19).
+
+### D-R21: The grimoire drives Kiro (R7)
+- **Context:** R7's grill (2026-11-05), run with the recommended answers. D-R20 said Reanimator doesn't drive Kiro because Kiro had no stable headless API. `kiro-cli` 2.37 now has one: `chat --no-interactive --output-format stream-json` prints the run's ACP events as JSON Lines. This amends that one bullet of D-R20; the rest of D-R20 stands.
+- **Decision:**
+  - **A spell is one Kiro turn:** `kiro-cli chat --no-interactive --output-format stream-json --trust-tools=fs_read,fs_write [--resume] -- <text>`, run in the ritual's revived dir (`server/kiro.ts`). Later spells on the same ritual add `--resume`, which continues that directory's latest conversation. The spell goes after `--`, so it's never read as a flag. Its binary is `REANIMATOR_KIRO`, or `kiro-cli` by default.
+  - **What Kiro may do:** read and write files in the body, and nothing else (no shell tool). Its env is `kiroEnv`: `childEnv` plus `XDG_*`, so it finds its own login. It never gets `ANTHROPIC_*`, `AWS_*` or `DOPPLER_*`.
+  - **The protocol:** `POST /api/rituals/:id/spells {text, heal?}` → 202 `{id}`. Text is 1–20 000 characters, otherwise 400. It's 409 if the ritual hasn't risen, Death is attacking, or a spell is already being cast (with its id). Then `GET /api/spells/:id/events` (resumable SSE, like the attack) and `POST /api/spells/:id/stop`. A spell is `cast`, then `quill` / `margin` / `ruled` / `candle` events, then `sealed {stopReason}` or `failed {reason}` (`shared/grimoire.ts`). A spell times out after 10 min. A new ritual or shutdown breaks it off first (`onRelease`).
+  - **Kiro and Death never share the body:** a spell is refused while Death attacks, and Death is refused while a spell is being cast (`Kiro is still casting; wait for the seal`).
+  - **The page (THEME §8), all real DOM text:** a spell is a `†` line in magic. Kiro's reply is quill writing, revealed two letters a frame, or all at once with reduced motion. Each tool call is a margin note (its title and status). A diff is a ruled box with − lines in death and + lines in rot. A turn that ended is a wax seal ("Sealed (end_turn).").
+  - **The candle burns only from a real number** (D-R11): an ACP `usage_update {used, size}`. Without one it reads "the candle is unlit: Kiro reported no context".
+  - **The stream is read leniently**, because its live envelope is unverified (KI-R21): the update is at `params.update`, at `update`, or is the line itself. Thoughts, plans and unknown lines are ignored.
+  - **The heal stays the user's to prove:** each wound has **Cast in the grimoire**, which pre-fills the spell with its heal brief (still plain QA words). A heal spell that ends its turn (`end_turn`) offers **Dare Death again** on that wound, but never dares by itself: every dare costs an LLM key's tokens and re-raises the body. **Copy for Kiro** stays as the fallback.
+  - **From the review (fixed before merge):**
+    - A body Kiro has edited is raised again even before the ritual's first attack (`Grimoire.edited` → `Attacks`). The running app never reloads edits, so Death would otherwise attack the pre-spell code.
+    - `--resume` is used only once a turn has reached Kiro (it sent an event or ended cleanly). A first spell that failed to start doesn't poison the next one.
+    - A tool call's diffs are one ruled box, keyed by its `toolCallId` and redrawn in place when the call sends them again.
+    - A clean exit with no stop reason seals as `exited`, never as an `end_turn` that Kiro didn't send. Either one offers the dare.
+  - **No Poltergeist `init`/MCP in the body:** Reanimator stays the only caller of Death, so there's one ledger (D-R20).
+- **Consequences:** R7 is built and tested against a fake `kiro-cli` (`server/fixtures/fake-kiro.mjs`), with no Kiro tokens spent. The live cast and R7's Done-when wait on the batched Kiro session (KI-R21). The grimoire lives in the page's memory: a reload starts a blank book, though Kiro's own conversation resumes.

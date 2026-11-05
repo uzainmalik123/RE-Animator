@@ -53,19 +53,24 @@ export class Attacks {
     env: NodeJS.ProcessEnv;
     engine?: typeof runEngine;
     read?: typeof readWounds;
+    // R7: Kiro is editing the body (a spell is being cast); Death waits for the seal.
+    casting?: () => boolean;
+    // R7: Kiro has edited this ritual's body, so even a first attack must raise it again.
+    edited?: (ritualId: string) => boolean;
   };
 
   constructor(o: Attacks['o']) {
     this.o = o;
   }
 
-  start(ritualId: string, o: { only?: string[]; heal?: HealTarget } = {}): { id: string } | { busy: true; id: string } | { notRisen: true } {
-    if (this.current && !this.current.log.done) return { busy: true, id: this.current.id };
+  start(ritualId: string, o: { only?: string[]; heal?: HealTarget } = {}): { id: string } | { busy: true; id: string } | { notRisen: true } | { casting: true } {
+    if (this.busy()) return { busy: true, id: this.current!.id };
+    if (this.o.casting?.()) return { casting: true };
     const body = this.o.rituals.body(ritualId);
     if (!body) return { notRisen: true };
     if (this.memory?.ritual !== ritualId) this.memory = { ritual: ritualId, attacks: 0, healed: new Map(), unproven: new Map() };
     const memory = this.memory;
-    const again = memory.attacks++ > 0 || body.origin === null;
+    const again = memory.attacks++ > 0 || body.origin === null || this.o.edited?.(ritualId) === true;
     const cur: Current = { id: randomUUID(), log: new EventLog(attackOver), abort: new AbortController(), finished: Promise.resolve(), runDir: null };
     this.current = cur;
     const emit = (e: AttackEvent) => cur.log.push(e);
@@ -126,6 +131,10 @@ export class Attacks {
       }
     })();
     return { id: cur.id };
+  }
+
+  busy(): boolean {
+    return this.current !== null && !this.current.log.done;
   }
 
   events(id: string, after = -1): { log: AttackEvent[]; done: boolean } | null {

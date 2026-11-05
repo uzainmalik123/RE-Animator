@@ -6,6 +6,14 @@ const node = process.execPath;
 const cwd = tmpdir();
 
 describe('runCommand', () => {
+  it('streams stdout to onOutput, keeping a character split across writes whole', async () => {
+    let seen = '';
+    const script = "process.stdout.write(Buffer.from([0xc3]));setTimeout(()=>process.stdout.write(Buffer.from([0xa9,0x0a])),50)";
+    const r = await runCommand([node, '-e', script], { cwd, timeoutMs: 10_000, onOutput: (t) => (seen += t) });
+    expect(r.code).toBe(0);
+    expect(seen).toBe('\u00e9\n');
+  });
+
   it('captures stdout and stderr', async () => {
     const r = await runCommand([node, '-e', "console.log('hi');console.error('err')"], { cwd, timeoutMs: 10_000 });
     expect(r.code).toBe(0);

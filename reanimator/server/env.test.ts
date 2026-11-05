@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { childEnv, engineEnv } from './env.js';
+import { childEnv, engineEnv, kiroEnv } from './env.js';
 
 describe('childEnv', () => {
   it('keeps only the allowlisted keys and npm_config_*', () => {
@@ -21,5 +21,12 @@ describe('engineEnv', () => {
   it('also passes the LLM credentials and turns colour off, but nothing else', () => {
     const env = engineEnv({ PATH: '/b', ANTHROPIC_API_KEY: 'k', AWS_REGION: 'r', DOPPLER_TOKEN: 'd' });
     expect(env).toEqual({ PATH: '/b', ANTHROPIC_API_KEY: 'k', AWS_REGION: 'r', NO_COLOR: '1' });
+  });
+});
+
+describe('kiroEnv', () => {
+  it('passes what Kiro needs to find its login, and no secrets', () => {
+    const env = kiroEnv({ PATH: '/b', HOME: '/h', XDG_CONFIG_HOME: '/c', XDG_DATA_HOME: '/d', ANTHROPIC_API_KEY: 'k', AWS_SECRET_ACCESS_KEY: 's', DOPPLER_TOKEN: 'd' });
+    expect(env).toEqual({ PATH: '/b', HOME: '/h', XDG_CONFIG_HOME: '/c', XDG_DATA_HOME: '/d' });
   });
 });
