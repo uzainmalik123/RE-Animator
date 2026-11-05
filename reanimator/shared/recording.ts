@@ -1,0 +1,47 @@
+// A recorded session (R11, D-R22): every event the backend streamed during a real run, stamped with
+// when it was sent, so a static page can replay the real UI on it. Frames sit beside it as jpgs.
+import type { AttackEvent } from './attack.js';
+import type { SpellEvent } from './grimoire.js';
+import type { RitualEvent } from './ritual.js';
+
+export const RECORDING_FORMAT = 'reanimator-recording';
+
+export type Manifest = { format: typeof RECORDING_FORMAT; version: 1; recordedAt: string };
+
+export type Stream = 'ritual' | 'attack' | 'spell';
+const STREAMS: readonly string[] = ['ritual', 'attack', 'spell'] satisfies Stream[];
+
+// `t` is ms since the recorder started; `id` is the ritual, attack or spell the event belongs to.
+export type RecordedLine = { t: number; stream: Stream; id: string; event: RitualEvent | AttackEvent | SpellEvent };
+
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
+
+export function isManifest(v: unknown): v is Manifest {
+  return isObject(v) && v.format === RECORDING_FORMAT && v.version === 1 && typeof v.recordedAt === 'string';
+}
+
+// events.ndjson → lines, blank lines skipped. A malformed line is an error, never skipped silently.
+export function parseLines(text: string): RecordedLine[] {
+  const lines: RecordedLine[] = [];
+  text.split('\n').forEach((raw, i) => {
+    if (raw.trim() === '') return;
+    let v: unknown;
+    try {
+      v = JSON.parse(raw);
+    } catch {
+      v = null;
+    }
+    if (!isObject(v) || typeof v.t !== 'number' || typeof v.stream !== 'string' || !STREAMS.includes(v.stream) || typeof v.id !== 'string' || !isObject(v.event)) {
+      throw new Error(`bad recording line ${i + 1}`);
+    }
+    lines.push(v as RecordedLine);
+  });
+  return lines;
+}
+
+// Replace the recording machine's home directory with ~ in a JSON text, so no local path is published.
+export function redactHome(json: string, home: string): string {
+  if (home === '' || home === '/') return json;
+  const escaped = JSON.stringify(home).slice(1, -1);
+  return json.split(escaped).join('~');
+}
