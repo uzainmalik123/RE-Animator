@@ -1,0 +1,16 @@
+{"t": 0, "stream": "ritual", "id": "r1", "event": {"type": "started", "repo": "guestbook-2016", "diedIn": 2016}}
+{"t": 400, "stream": "ritual", "id": "r1", "event": {"type": "vital", "phase": "corpse", "result": {"vital": "install", "ok": false, "detail": "EBADENGINE", "ms": 9}}}
+{"t": 1000, "stream": "ritual", "id": "r1", "event": {"type": "vital", "phase": "revived", "result": {"vital": "install", "ok": true, "detail": "", "ms": 10}}}
+{"t": 1500, "stream": "ritual", "id": "r1", "event": {"type": "vital", "phase": "revived", "result": {"vital": "build", "ok": true, "detail": "", "ms": 10}}}
+{"t": 2000, "stream": "ritual", "id": "r1", "event": {"type": "vital", "phase": "revived", "result": {"vital": "serve", "ok": true, "detail": "", "ms": 10}}}
+{"t": 2500, "stream": "ritual", "id": "r1", "event": {"type": "vital", "phase": "revived", "result": {"vital": "render", "ok": true, "detail": "", "ms": 10}}}
+{"t": 3000, "stream": "ritual", "id": "r1", "event": {"type": "risen", "origin": "http://127.0.0.1:5001"}}
+{"t": 60000, "stream": "attack", "id": "a1", "event": {"type": "summoned", "origin": "http://127.0.0.1:5001", "only": null, "heal": null, "body": "~/body", "wounds": [], "healed": []}}
+{"t": 61000, "stream": "attack", "id": "a1", "event": {"type": "engine", "event": {"type": "ghost.spawned", "ghostId": "g1", "criterion": "C1", "persona": "chaos", "rep": 1}}}
+{"t": 61500, "stream": "attack", "id": "a1", "event": {"type": "engine", "event": {"type": "frame", "ghostId": "g1", "seq": 0}}}
+{"t": 90000, "stream": "attack", "id": "a1", "event": {"type": "finished", "counts": {"haunted": 1, "flaky": 0, "inconclusive": 0, "clean": 0, "notApplicable": 0, "notRun": 0}, "wounds": [{"criterion": "C1", "text": "Guests can sign", "persona": "chaos", "reason": "500 on empty name", "steps": [], "expected": [], "failing": [], "artifacts": [], "carried": false}], "healed": [], "heal": null}}
+{"t": 100000, "stream": "spell", "id": "s1", "event": {"type": "cast", "text": "heal C1", "heal": {"criterion": "C1", "persona": "chaos"}}}
+{"t": 101000, "stream": "spell", "id": "s1", "event": {"type": "quill", "text": "I added a check."}}
+{"t": 102000, "stream": "spell", "id": "s1", "event": {"type": "sealed", "stopReason": "end_turn"}}
+{"t": 110000, "stream": "attack", "id": "a2", "event": {"type": "summoned", "origin": "http://127.0.0.1:5002", "only": ["C1"], "heal": {"criterion": "C1", "persona": "chaos"}, "body": "~/body", "wounds": [{"criterion": "C1", "text": "Guests can sign", "persona": "chaos", "reason": "500 on empty name", "steps": [], "expected": [], "failing": [], "artifacts": [], "carried": false}], "healed": []}}
+{"t": 130000, "stream": "attack", "id": "a2", "event": {"type": "finished", "counts": {"haunted": 0, "flaky": 0, "inconclusive": 0, "clean": 1, "notApplicable": 0, "notRun": 0}, "wounds": [], "healed": [{"criterion": "C1", "text": "Guests can sign", "persona": "chaos", "reason": "500 on empty name", "steps": [], "expected": [], "failing": [], "artifacts": [], "carried": false}], "heal": {"criterion": "C1", "persona": "chaos", "verdict": "clean"}}}
