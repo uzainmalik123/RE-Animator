@@ -23,6 +23,7 @@
 | KI-R17 | The attack scene restates the engine's viewports (Lich 360×640, else 1280×720); if Poltergeist changes them, minions and wounds land off-target | Minor | R4 accuracy | Open |
 | KI-R18 | R4 review minors: the frame throttle can drop a ghost's last (evidence) frame, a pre-spawn frame burns the first slot, labels and dots letterbox slightly differently, loose seq parsing, `lighten` blends red over bone, no test of minion placement in the canvas loop | Minor | none | Open |
 | KI-R19 | R5's Done-when (a real Kiro fix + a key-backed re-run closing a wound) hasn't been run; a heal lives only in the ritual's temp dir; the magic seal glow isn't drawn | Major | R5 Done-when, demo | Open |
+| KI-R20 | R5 review minors: a heal refused as not-open still counts as an attack (the next one re-raises needlessly); `summoned` echoes the heal target before it's checked | Minor | none | Open |
 | KI-R13 | R1 demo-page polish from review: void flash on pitch/mode click, resize jank, late web font, breath jump, no OffscreenCanvas fallback, fractional-DPR cell seams | Minor | R4 (seams) | Open |
 
 ---
@@ -157,3 +158,9 @@
   4. **Healed and unproven wounds live in the backend's memory** (`Attacks`). After a restart, a healed pair just isn't listed, and an unproven one drops out of the open list until the next full attack.
   5. **`npm run -s health` fails the ritual integration test:** `npm_config_loglevel=silent` leaks into the corpse's `npm install`, which then prints nothing (the inherited env of KI-R14). Use `npm run health`.
 - **Next action:** #1 in the Kiro session after KI-R15; #2 with the "send it to the living" work; #3 at the look sign-off (KI-R2); #4 with #2; #5 with KI-R14. The keyed run should have two or more wounds and heal one, so the ledger's carry-over is seen for real.
+
+### KI-R20: R5 review minors (from the R5 code review) · Minor · Open
+- **Findings (2026-11-05; the review's Critical and Important were fixed before merge, see D-R20):**
+  1. **A heal refused as "not open" still counts as an attack** (`server/attack.ts`, `memory.attacks++`). The next attack then pays for a needless re-raise (an `npm install`). Fix: count it only once a re-raise or the engine has run.
+  2. **`summoned` echoes the heal target before the open check.** The panel flashes "Death returns for X · Y…" until the `failed` lands. Fix: check first, then emit.
+- **Next action:** when `server/attack.ts` is next touched.
