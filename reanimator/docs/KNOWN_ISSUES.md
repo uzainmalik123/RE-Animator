@@ -20,6 +20,7 @@
 | KI-R14 | R2 review minors: grandchild-kill test, negative Last-Event-ID, `close` vs `exit`, inherited env, render-check port scope, error-line pick, freePort race, uncancellable serve/render waits | Minor | none (#2, #4 fixed in R3) | Open |
 | KI-R16 | R3 review minors: shared engine home between `attack:check` and the server, unbounded `runs/`, UTF-8 split across reads, no Bedrock selection, a lost stream's message shown twice, an abort during prepare still spawns the engine, the integration test's skip check | Minor | none | Open |
 | KI-R15 | R3's live run (a real key, a real report with a reproduced wound) hasn't been run; whether the guestbook really yields a wound is unproven | Major | R3 Done-when, R4 | Open |
+| KI-R17 | The attack scene restates the engine's viewports (Lich 360×640, else 1280×720); if Poltergeist changes them, minions and wounds land off-target | Minor | R4 accuracy | Open |
 | KI-R13 | R1 demo-page polish from review: void flash on pitch/mode click, resize jank, late web font, breath jump, no OffscreenCanvas fallback, fractional-DPR cell seams | Minor | R4 (seams) | Open |
 
 ---
@@ -130,4 +131,9 @@
   7. **`it.skipIf(!existsSync(DEFAULT_CLI))`** never skips (the bin is tracked); without `poltergeist/node_modules` the test fails, now with the real "Cannot find package" line. Check for the engine's `node_modules` instead.
   8. **Proxy/CA vars** (`HTTPS_PROXY`, `NODE_EXTRA_CA_CERTS`) are dropped by the child env allowlist, including for `npm install`. Fine locally; add them if a demo machine needs a proxy.
 - **Next action:** fold into R4/R5's backend work.
+
+### KI-R17: The attack scene's restated engine viewports · Minor · Open
+- **What:** `src/attack/scene.ts` maps a ghost's `x,y` onto the body using `VIEWPORTS` (`lich` 360×640) and `DEFAULT_VIEWPORT` (1280×720, Playwright's default for a context with no viewport). These are copies of Poltergeist's `personas/devices.ts` and runner defaults, because Reanimator never imports the engine (D-R16).
+- **Risk:** if the engine adds a device preset or sets a viewport, minions and wounds land in the wrong place. Real verdicts are unaffected; it's only where they're drawn.
+- **Next action:** if it bites, have the engine put the viewport in `ghost.spawned` (an engine change, Poltergeist-side), and read it from there.
 

@@ -120,7 +120,7 @@ Death's attack is the sibling engine. **Built in R3 (D-R16, D-R17):** `server/en
 1. Read `docs/STORY.md`, `docs/THEME.md`, `docs/PRD.md`.
 2. ~~R0 scaffold, R1 renderer~~ (done). **Approve the look:** run `npm run dev` + `npm run server`, press **Begin the ritual** on the raise, and try the renderer at `?renderer`; sign off or ask for changes (KI-R2; screenshots in `docs/img/`).
 3. ~~R2 machinery~~ (built on the practice corpse, D-R14). Shortlist and pick the one demo repo (KI-R1) and drop it in as a fixture (with a `chart/`).
-4. ~~R3 wiring~~ (built, D-R16/D-R17). Run `doppler run -- npm run attack:check` once with a key (KI-R15). Then R4.
+4. ~~R3 wiring~~ (built, D-R16/D-R17), ~~R4 attack scene~~ (built, D-R19). Run `doppler run -- npm run attack:check` once with a key (KI-R15), then press **Summon Death** in the UI to film R4. Then R5.
 5. Read the 2026 rules (KI-R6 / Poltergeist KI-05).
 
 ## Tools available

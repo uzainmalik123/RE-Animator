@@ -16,6 +16,7 @@ Work one PRD feature at a time, through the grill → plan → implement → rev
   - _Built (D-R16, D-R17); tick once `doppler run -- npm run attack:check` finds a real wound (KI-R15)._
 - [ ] 5. R4 The attack scene: Death + minions + wounds over the app
   - _Requirements: 2.4, 4.2_
+  - _Built (D-R19); tick once a key-backed run plays with a visible wound (KI-R15)._
 - [ ] 6. R5 Wounds + heal loop (Kiro fix, re-run, close wound, PR text)
   - _Requirements: 3.1–3.4_
 - [ ] 7. R7 Grimoire (agent surface)
