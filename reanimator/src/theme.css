@@ -186,6 +186,19 @@ body,
   padding: 0;
 }
 
+/* R5: healing is the user's necromancy, so a closed wound turns to magic (never red). */
+.attack-panel .healed,
+.attack-panel .healed b {
+  color: var(--magic);
+}
+.attack-panel .wound button {
+  margin: 4px 8px 8px 0;
+}
+.attack-panel .pulses {
+  list-style: none;
+  padding: 0;
+}
+
 /* R4: the attack scene takes the stage. Two one-ink canvases (bone body, red Death) and real-text
    wound labels over them. It fades in like eyes opening, unless motion is reduced (THEME §5, §9). */
 .attack-stage {

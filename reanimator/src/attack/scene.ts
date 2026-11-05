@@ -2,7 +2,7 @@
 // renderer: pure maths, deterministic for the same arguments. Everything drawn follows real engine
 // facts (D-R11): a minion sits where its ghost last acted, a wound only where a haunted pair's ghost
 // was, and the body is only ever a frame the engine captured.
-import type { AttackState, Ghost, Wound } from '../../shared/attack';
+import { woundKey, type AttackState, type Ghost, type Wound } from '../../shared/attack';
 import { containRect } from '../render/viewport';
 
 export type Rect = { x: number; y: number; w: number; h: number };
@@ -137,6 +137,10 @@ const GASH = (() => {
   return { w, h: 3, lum };
 })();
 
+// R5: the order the gash's cells go dark as a healed wound closes (THEME §6: glyph by glyph). A fixed
+// shuffle (a multiplicative step coprime with 27), so it dissolves the same way every time.
+const CLOSE_RANK = Uint8Array.from({ length: GASH.w * GASH.h }, (_, i) => (i * 11 + 5) % (GASH.w * GASH.h));
+
 export type Minion = { col: number; row: number; persona: string; trail: Cell[] };
 
 // Everything in Death's red, as one grid: the vignette, Death himself, his minions (with fading
@@ -144,7 +148,7 @@ export type Minion = { col: number; row: number; persona: string; trail: Cell[] 
 export function deathLayer(
   cols: number,
   rows: number,
-  o: { strength: number; minions: Minion[]; wounds: Cell[]; death: Float32Array | null; deathRect: Rect | null },
+  o: { strength: number; minions: Minion[]; wounds: Cell[]; death: Float32Array | null; deathRect: Rect | null; closing?: { cell: Cell; remain: number } },
 ): Float32Array {
   const out = vignetteLuminance(cols, rows, o.strength);
   if (cols === 0 || rows === 0) return out;
@@ -156,7 +160,20 @@ export function deathLayer(
     at(m, 1);
   }
   for (const w of o.wounds) stamp(out, cols, rows, GASH.lum, GASH.w, GASH.h, w.col - 4, w.row - 1, 1);
+  if (o.closing && o.closing.remain > 0) {
+    const kept = o.closing.remain * CLOSE_RANK.length;
+    const lum = GASH.lum.map((v, i) => (CLOSE_RANK[i]! < kept ? v : 0));
+    stamp(out, cols, rows, lum, GASH.w, GASH.h, o.closing.cell.col - 4, o.closing.cell.row - 1, 1);
+  }
   return out;
+}
+
+export const CLOSE_MS = 1200;
+
+// How much of a healed wound is still there (1..0), `startMs` after it closed; gone at once for
+// reduced motion.
+export function closingRemain(tMs: number, startMs: number, reduceMotion: boolean): number {
+  return reduceMotion ? 0 : 1 - clamp((tMs - startMs) / CLOSE_MS, 0, 1);
 }
 
 export const ATTACK_RAMP_MS = 1500;
@@ -181,17 +198,27 @@ export type WoundPoint = { key: string; label: string; fx: number; fy: number };
 // Each wound's spot as a fraction of the body (0..1 across the frame), shared by the dots and the
 // real-text labels. A wound whose minion never reported a position gets a fixed slot on the right, by
 // its place in the list.
+function pointOf(w: Wound, s: AttackState, i: number): WoundPoint {
+  const key = `${w.criterion}-${w.persona}`;
+  const label = `${w.criterion} · ${w.persona}`;
+  const spot = woundSpot(w, s);
+  if (spot) {
+    const vp = viewportOf(spot.persona);
+    return { key, label, fx: clamp(spot.x / vp.width, 0, 1), fy: clamp(spot.y / vp.height, 0, 1) };
+  }
+  return { key, label, fx: 0.85, fy: Math.min(0.95, Math.round((0.15 + 0.12 * i) * 100) / 100) };
+}
+
 export function woundPoints(s: AttackState): WoundPoint[] {
-  return s.wounds.map((w, i) => {
-    const key = `${w.criterion}-${w.persona}`;
-    const label = `${w.criterion} · ${w.persona}`;
-    const spot = woundSpot(w, s);
-    if (spot) {
-      const vp = viewportOf(spot.persona);
-      return { key, label, fx: clamp(spot.x / vp.width, 0, 1), fy: clamp(spot.y / vp.height, 0, 1) };
-    }
-    return { key, label, fx: 0.85, fy: Math.min(0.95, Math.round((0.15 + 0.12 * i) * 100) / 100) };
-  });
+  return s.wounds.map((w, i) => pointOf(w, s, i));
+}
+
+// R5: the wound a finished heal just proved clean, where it was (its pair's ghost ran this heal).
+export function closingPoint(s: AttackState): WoundPoint | null {
+  if (s.status !== 'finished' || s.healVerdict !== 'clean' || !s.heal) return null;
+  const key = woundKey(s.heal);
+  const w = s.healed.find((x) => woundKey(x) === key);
+  return w ? pointOf(w, s, s.wounds.length) : null;
 }
 
 // The stage is Death's from the moment an attack exists, before its first event lands, so it never

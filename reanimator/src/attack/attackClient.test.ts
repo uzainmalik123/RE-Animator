@@ -12,6 +12,16 @@ describe('requestAttack', () => {
     expect(fetchFn).toHaveBeenCalledWith('/api/rituals/r%201/attack', { method: 'POST' });
   });
 
+  it('posts a heal as JSON', async () => {
+    const fetchFn = vi.fn(json(202, { id: 'a1' }));
+    await requestAttack(fetchFn, 'r1', { criterion: '1.2', persona: 'wraith' });
+    expect(fetchFn).toHaveBeenCalledWith('/api/rituals/r1/attack', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: '{"heal":{"criterion":"1.2","persona":"wraith"}}',
+    });
+  });
+
   it('rejoins the attack already running', async () => {
     expect(await requestAttack(json(409, { error: 'Death is already attacking', id: 'a0' }), 'r1')).toEqual({ id: 'a0' });
   });

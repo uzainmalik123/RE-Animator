@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { QUIET, reduceAttack, type AttackState } from '../../shared/attack';
+import { QUIET, reduceAttack, type AttackState, type HealTarget } from '../../shared/attack';
 import type { EventSourceLike } from '../raise/ritualClient';
 import { connectAttack, requestAttack } from './attackClient';
 
-export type AttackHandle = { id: string | null; state: AttackState; summon: () => Promise<void>; error: string | null };
+export type AttackHandle = { id: string | null; state: AttackState; summon: (heal?: HealTarget) => Promise<void>; error: string | null };
 
 type Run = { ritual: string | null; id: string | null; state: AttackState; error: string | null };
 const NONE: Run = { ritual: null, id: null, state: QUIET, error: null };
@@ -16,10 +16,10 @@ export function useAttack(ritualId: string | null): AttackHandle {
 
   useEffect(() => () => source.current?.close(), [ritualId]);
 
-  const summon = useCallback(async () => {
+  const summon = useCallback(async (heal?: HealTarget) => {
     if (!ritualId) return;
     setRun((r) => ({ ...(r.ritual === ritualId ? r : NONE), ritual: ritualId, error: null }));
-    const r = await requestAttack((url, init) => fetch(url, init), ritualId);
+    const r = await requestAttack((url, init) => fetch(url, init), ritualId, heal);
     if ('error' in r) {
       setRun((x) => ({ ...x, error: r.error }));
       return;
