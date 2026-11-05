@@ -23,7 +23,11 @@ const started = JSON.stringify({ t: 1, type: 'run.started', runId: 'stub-1', run
 const plan = JSON.stringify({ t: 2, type: 'plan.compiled', criterion: '1.2', persona: 'wraith', status: 'compiled', cached: false });
 appendFileSync(events, `${started}\n${plan.slice(0, 20)}`);
 await new Promise((r) => setTimeout(r, 300));
-appendFileSync(events, `${plan.slice(20)}\n${JSON.stringify({ t: 3, type: 'ghost.step', ghost: 'g' })}\n`);
+const spawned = { t: 3, type: 'ghost.spawned', ghostId: 'g1', criterion: '1.2', persona: 'wraith', rep: 1, actor: 'a' };
+const step = { t: 4, type: 'ghost.step', ghostId: 'g1', index: 0, step: 'click', outcome: 'ok', x: 3, y: 4 };
+appendFileSync(events, `${plan.slice(20)}\n${JSON.stringify({ t: 3, type: 'ghost.step', ghost: 'g' })}\n${JSON.stringify(spawned)}\n${JSON.stringify(step)}\n`);
+const marks = [0, 1, 2].map((seq, i) => JSON.stringify({ ghostId: 'g1', seq, t: [1000, 1500, 2100][i] }));
+appendFileSync(join(runDir, 'frames.ndjson'), `${marks.join('\n')}\n`);
 if (process.env.STUB_HANG === '1') setInterval(() => {}, 1000);
 else {
   const pair = { persona: 'wraith', verdict: 'haunted', reason: 'two entries', notes: [], reps: 3, repsRun: 3, threshold: 2, expected: [], failing: [], failedReps: [1, 2, 3], outcomes: {}, artifacts: [] };
