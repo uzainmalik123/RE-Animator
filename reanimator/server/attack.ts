@@ -26,14 +26,22 @@ interface Current {
 }
 
 // A ghost id as the engine writes it (`<criterion>__<persona>__r<rep>__<actor>`): one path segment.
-// What Attacks remembers of the current ritual: how often Death came, and the wounds healed since.
+// What Attacks remembers of the current ritual: how often Death came, the wounds healed since, and
+// the wounds a heal left unproven. A flaky or inconclusive re-run replaces the haunted pair in the
+// report, but proves nothing: the wound stays open (and can be dared again) until a run settles it.
 interface Memory {
   ritual: string;
   attacks: number;
   healed: Map<string, Wound>;
+  unproven: Map<string, Wound>;
 }
 
 const GHOST_ID = /^[A-Za-z0-9._-]+$/;
+
+const withUnproven = (wounds: Wound[], memory: Memory): Wound[] => {
+  const open = new Set(wounds.map(woundKey));
+  return [...wounds, ...[...memory.unproven.values()].filter((w) => !open.has(woundKey(w)))];
+};
 
 export class Attacks {
   private current: Current | null = null;
@@ -55,7 +63,7 @@ export class Attacks {
     if (this.current && !this.current.log.done) return { busy: true, id: this.current.id };
     const body = this.o.rituals.body(ritualId);
     if (!body) return { notRisen: true };
-    if (this.memory?.ritual !== ritualId) this.memory = { ritual: ritualId, attacks: 0, healed: new Map() };
+    if (this.memory?.ritual !== ritualId) this.memory = { ritual: ritualId, attacks: 0, healed: new Map(), unproven: new Map() };
     const memory = this.memory;
     const again = memory.attacks++ > 0 || body.origin === null;
     const cur: Current = { id: randomUUID(), log: new EventLog(attackOver), abort: new AbortController(), finished: Promise.resolve(), runDir: null };
@@ -67,7 +75,7 @@ export class Attacks {
     const heal = o.heal ?? null;
     cur.finished = (async () => {
       try {
-        const before = await openWounds(join(chartDir(body.revivedDir), 'haunting-report.json'));
+        const before = withUnproven(await openWounds(join(chartDir(body.revivedDir), 'haunting-report.json')), memory);
         emit({ type: 'summoned', origin: body.origin ?? '', only: o.only ?? null, heal, body: body.revivedDir, wounds: before, healed: [...memory.healed.values()] });
         const target = heal ? before.find((w) => woundKey(w) === woundKey(heal)) : undefined;
         if (heal && !target) return emit({ type: 'failed', reason: 'that wound is not open' });
@@ -101,10 +109,18 @@ export class Attacks {
           // Only a pair that really ran in this run counts: a carried or missing one proves nothing.
           const p = pairs[woundKey(heal)];
           verdict = p && !p.carried ? p.verdict : 'notRun';
-          if (verdict === 'clean') memory.healed.set(woundKey(heal), target);
+          if (verdict !== 'clean' && verdict !== 'haunted' && verdict !== 'notRun') memory.unproven.set(woundKey(heal), target);
         }
+        // An unproven wound is settled by the next run of its pair: clean heals it, haunted reopens it.
+        for (const [key, w] of memory.unproven) {
+          const p = pairs[key];
+          if (!p || p.carried || (key === (heal && woundKey(heal)) && verdict !== 'clean' && verdict !== 'haunted')) continue;
+          memory.unproven.delete(key);
+          if (p.verdict === 'clean') memory.healed.set(key, w);
+        }
+        if (heal && target && verdict === 'clean') memory.healed.set(woundKey(heal), target);
         for (const w of wounds) memory.healed.delete(woundKey(w));
-        emit({ type: 'finished', counts, wounds, healed: [...memory.healed.values()], heal: heal && verdict ? { ...heal, verdict } : null });
+        emit({ type: 'finished', counts, wounds: withUnproven(wounds, memory), healed: [...memory.healed.values()], heal: heal && verdict ? { ...heal, verdict } : null });
       } catch (e) {
         emit({ type: 'failed', reason: signal.aborted ? STOPPED : e instanceof Error ? e.message : String(e) });
       }

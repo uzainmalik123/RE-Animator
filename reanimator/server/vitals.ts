@@ -29,6 +29,7 @@ export async function runVitals(
   deps: VitalDeps,
   emit: (e: RitualEvent) => void,
   signal?: AbortSignal,
+  port?: number,
 ): Promise<{ ok: boolean; app: RunningApp | null; failed: VitalName | null }> {
   let app: RunningApp | null = null;
   for (const vital of VITALS) {
@@ -43,8 +44,8 @@ export async function runVitals(
         ok = r.code === 0;
         detail = r.timedOut ? timedOut(vital) : r.output.trim();
       } else if (vital === 'serve') {
-        const port = await deps.freePort();
-        app = deps.startApp(fixture.serve, { cwd: workdir, port });
+        // `port` re-raises a body where it stood (R5): the engine merges its reports per target.
+        app = deps.startApp(fixture.serve, { cwd: workdir, port: port ?? (await deps.freePort()) });
         const up = await deps.waitForHttp(app.origin, { timeoutMs: TIMEOUTS.serve, exited: app.exited });
         ok = up.ok;
         detail = up.ok ? `${app.origin} answered ${up.detail}` : `${up.detail}\n${app.output().trim()}`.trim();

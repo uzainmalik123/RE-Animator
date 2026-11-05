@@ -63,6 +63,8 @@ interface Current {
   workdir: string | null;
   fixture: Fixture | null;
   app: RunningApp | null;
+  // Where the body first rose; a re-raise serves it there again (D-R20).
+  port: number | null;
   abort: AbortController;
   finished: Promise<void>;
 }
@@ -88,7 +90,7 @@ export class Rituals {
   start(): { id: string } | { busy: true; id: string } {
     if (this.current && !this.current.done) return { busy: true, id: this.current.id };
     const previous = this.current;
-    const cur: Current = { id: randomUUID(), log: [], done: false, listeners: new Set(), workdir: null, fixture: null, app: null, abort: new AbortController(), finished: Promise.resolve() };
+    const cur: Current = { id: randomUUID(), log: [], done: false, listeners: new Set(), workdir: null, fixture: null, app: null, port: null, abort: new AbortController(), finished: Promise.resolve() };
     this.current = cur;
     const emit = (e: RitualEvent) => {
       if (cur.done) return;
@@ -103,6 +105,7 @@ export class Rituals {
         cur.workdir = await mkdtemp(join(this.workRoot, 'reanimator-'));
         cur.fixture = await this.fixture();
         cur.app = await performRitual(cur.fixture, this.deps, cur.workdir, emit, cur.abort.signal);
+        cur.port = cur.app?.port ?? null;
       } catch (e) {
         emit({ type: 'failed', phase: 'revived', reason: e instanceof Error ? e.message : String(e) });
       }
@@ -133,6 +136,8 @@ export class Rituals {
 
   // Raise the same revived body again (R5, D-R20): a heal may have edited it, and the app doesn't
   // reload. The old app stops, the four vitals run on the revived dir, and a failure leaves it down.
+  // It stays on its first port: Poltergeist only carries an earlier report's rows for the same target,
+  // so a new origin would drop every other wound from the ledger. A port taken meanwhile fails serve.
   async reraise(id: string, onVital: (r: VitalResult) => void, signal?: AbortSignal): Promise<{ origin: string } | { failed: string }> {
     const cur = this.current;
     const body = this.body(id);
@@ -145,7 +150,7 @@ export class Rituals {
       if (e.type !== 'vital') return;
       lastDetail = e.result.detail;
       onVital(e.result);
-    }, signal);
+    }, signal, cur.port ?? undefined);
     // A ritual let go meanwhile must not get an app back (nothing would ever stop it).
     if (this.current !== cur) {
       await r.app?.stop();

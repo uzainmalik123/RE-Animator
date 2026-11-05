@@ -18,12 +18,15 @@ describe('a real re-raise on the practice corpse', () => {
       for (let i = 0; i < 850 && !r.events(s.id)!.done; i++) await new Promise((res) => setTimeout(res, 100));
       const body = r.body(s.id);
       expect(body).not.toBeNull();
+      const before = body!.origin;
       const server = join(body!.revivedDir, 'server.js');
       await writeFile(server, (await readFile(server, 'utf8')).replaceAll('Guestbook', 'Healed guestbook'));
       const pulses: VitalResult[] = [];
       const out = await r.reraise(s.id, (v) => pulses.push(v));
       expect(pulses.map((p) => `${p.vital}:${p.ok}`)).toEqual(['install:true', 'build:true', 'serve:true', 'render:true']);
       if (!('origin' in out)) throw new Error(out.failed);
+      // The same origin, or Poltergeist would drop the earlier report's rows (it merges per target).
+      expect(out.origin).toBe(before);
       expect(await (await fetch(out.origin)).text()).toContain('Healed guestbook');
     } finally {
       await r.dispose();

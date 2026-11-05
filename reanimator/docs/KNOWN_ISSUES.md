@@ -154,5 +154,6 @@
   1. **The Done-when itself:** a real wound (KI-R15, needs a key), fixed by Kiro from the brief, then **Dare Death again** closing it on a clean re-run. This needs the batched Kiro session (D-R18).
   2. **A heal lives only in the ritual's temp dir.** A new ritual (or a backend restart) deletes the fix. Exporting it as a branch, patch or PR text (D-R10, the story's close) is not built.
   3. **The magic seal glow** over a part whose wounds are all closed (THEME §6) isn't drawn. The gash dissolves, but there's no `--magic` on the canvas.
-  4. **`npm run -s health` fails the ritual integration test:** `npm_config_loglevel=silent` leaks into the corpse's `npm install`, which then prints nothing (the inherited env of KI-R14). Use `npm run health`.
-- **Next action:** #1 in the Kiro session after KI-R15; #2 with the "send it to the living" work; #3 at the look sign-off (KI-R2); #4 with KI-R14.
+  4. **Healed and unproven wounds live in the backend's memory** (`Attacks`). After a restart, a healed pair just isn't listed, and an unproven one drops out of the open list until the next full attack.
+  5. **`npm run -s health` fails the ritual integration test:** `npm_config_loglevel=silent` leaks into the corpse's `npm install`, which then prints nothing (the inherited env of KI-R14). Use `npm run health`.
+- **Next action:** #1 in the Kiro session after KI-R15; #2 with the "send it to the living" work; #3 at the look sign-off (KI-R2); #4 with #2; #5 with KI-R14. The keyed run should have two or more wounds and heal one, so the ledger's carry-over is seen for real.

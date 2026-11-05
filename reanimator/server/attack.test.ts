@@ -185,6 +185,18 @@ describe('Attacks: healing (R5)', () => {
     expect(fin).toMatchObject({ type: 'finished', healed: [], heal: { ...HEAL, verdict: 'notRun' } });
   });
 
+  it('keeps a wound a heal left unproven (flaky) open, and lets it be dared again', async () => {
+    let next = engineWriting('run-2', [pair('wraith', 'flaky')]);
+    const { a, root } = await make(vi.fn<Engine>((o) => next(o)), { read: false });
+    await writeReport(root, reportOf('run-1', [pair('wraith', 'haunted')]));
+    const fin = (await settle(a, begin(a, undefined, HEAL))).at(-1);
+    expect(fin).toMatchObject({ type: 'finished', healed: [], wounds: [{ criterion: '1.2', persona: 'wraith' }], heal: { ...HEAL, verdict: 'flaky' } });
+    next = engineWriting('run-3', [pair('wraith', 'clean')]);
+    const log = await settle(a, begin(a, undefined, HEAL));
+    expect(log[0]).toMatchObject({ type: 'summoned', wounds: [{ persona: 'wraith' }] });
+    expect(log.at(-1)).toMatchObject({ type: 'finished', wounds: [], healed: [{ persona: 'wraith' }], heal: { ...HEAL, verdict: 'clean' } });
+  });
+
   it('fails when the heal broke the body', async () => {
     const engine = engineWriting('run-2', []);
     const { a, root } = await make(engine, { read: false, reraise: async () => ({ failed: 'build: boom' }) });

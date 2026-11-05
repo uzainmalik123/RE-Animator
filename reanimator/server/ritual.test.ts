@@ -182,6 +182,18 @@ describe('Rituals', () => {
   });
 
   describe('reraise (R5)', () => {
+    it('raises the body again on the same port, so the engine keeps its ledger', async () => {
+      const { r, deps } = await make();
+      let next = 5001;
+      vi.mocked(deps.freePort).mockImplementation(async () => next++);
+      const id = start(r);
+      await settle(r, id);
+      expect(await r.reraise(id, () => {})).toEqual({ origin: 'http://127.0.0.1:5001' });
+      expect(await r.reraise(id, () => {})).toEqual({ origin: 'http://127.0.0.1:5001' });
+      expect(deps.freePort).toHaveBeenCalledTimes(1);
+      await r.dispose();
+    });
+
     it('stops the old app and raises the same body again on the four vitals', async () => {
       const { r, apps } = await make();
       const id = start(r);
