@@ -23,6 +23,7 @@
 | D-R16 | Calling Death: the Poltergeist CLI as a subprocess, the fixture's chart copied into the revived repo, a persistent per-fixture engine home, an allowlisted env | Accepted |
 | D-R18 | R6, R8 and R10 are built in **Kiro** (spec-first), last; Claude Code never builds them | Accepted |
 | D-R17 | The attack protocol: `POST /api/rituals/:id/attack` + SSE, a wound = a haunted pair, one attack at a time, a new ritual stops it first | Accepted |
+| D-R19 | The R4 attack scene: live ghosts and the engine's own frames, Death + minions + wounds on a red layer over a bone body | Accepted |
 
 ---
 
@@ -144,4 +145,15 @@
   - They move to the **end** of the build order. **Claude Code sessions never grill, plan, implement or review them**, and nothing Claude Code builds depends on them. If asked, they stop and remind the user (AGENTS hard rule 7).
   - The same Kiro session also does: the Candy Swap build (KI-44), the real heal loop through Poltergeist's MCP tools (R5's demo; KI-51, KI-65), one project hook in this repo (e.g. run `npm run health` on save), and a final whole-app Kiro review.
 - **Consequences:** the write-up can honestly say Kiro built three Reanimator features and the demo target, and heals wounds live. R6's fixture choice in `server/main.ts` stays a hard-coded practice corpse until Kiro builds R6.
+
+### D-R19: The attack scene (R4)
+- **Context:** R4's grill (2026-11-05), run with the recommended answers.
+- **Decision:**
+  - **Live, not from the report alone.** The tail also forwards `ghost.spawned`, `ghost.step` (only its `x,y`, kept when both are numbers), `rep.finished` and frame marks from the run's `frames.ndjson`, at most one a second per ghost. `reduceAttack` folds them into `ghosts` (a 3-point trail each). Wounds still come only from the report (D-R17).
+  - **The body is the engine's own frames** of the app under attack (its CDP screencast jpgs), served by `GET /api/attacks/:id/frames/:ghostId/:seq` from the current attack's run dir only (the ghost id is one safe path segment, and seq is a non-negative integer). The cross-origin iframe can't be sampled, and a separate screenshot would need a second Chromium. Before the first frame, there's no body: Death arrives over the void.
+  - **Which frame:** the earliest-spawned ghost still running that has a frame; after the attack, the first wound's ghost (its evidence), else the last ghost seen.
+  - **Placement:** a minion sits at its ghost's last `x,y` ÷ its viewport (the Lich 360×640, the rest Playwright's default 1280×720, restated in `src/attack/scene.ts`, KI-R17). An unplaced ghost waits in a fixed slot along the bottom, with at most 12 shown. A wound opens where a ghost of its pair last acted (the latest rep wins), else in a fixed slot on the right.
+  - **Layers:** the attack scene replaces the raise stage once Death is summoned (fresh per attack). It's two one-ink canvases, the body in `--bone` and the red layer (vignette, Death from `public/art/death.svg`, minion sprites from THEME §6, ▓▒░ wound gashes) in `--death`, blended with `lighten`. Wound labels (`1.2 · wraith`) are positioned real text. Death ramps in over 1.5 s, and the stage fades in over 400 ms. With reduced motion, everything appears instantly and minions leave no trail.
+  - `useAttack` now lives in `RaiseScene` and is tagged with its ritual, so the panel and the scene share one state. `useDotCanvas` moved to `src/render/` for both scenes.
+- **Consequences:** filming R4's Done-when needs a key-backed run (KI-R15). R5 draws the wound closing on the same `woundPoints`.
 

@@ -1,5 +1,5 @@
-import type { AttackState, Counts } from '../../shared/attack';
-import { useAttack } from './useAttack';
+import type { Counts } from '../../shared/attack';
+import type { AttackHandle } from './useAttack';
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
@@ -11,19 +11,18 @@ function countsLine(c: Counts): string {
 }
 
 // R3: Death's attack as real text, under the risen app. The art (minions, wounds drawn as dots) is
-// R4's; this shows only what the engine really reported (D-R11).
-export function AttackPanel({ ritualId, initial }: { ritualId: string | null; initial?: AttackState }) {
-  const live = useAttack(ritualId);
-  const state = initial ?? live.state;
+// R4's (AttackScene, on the same state); this shows only what the engine really reported (D-R11).
+export function AttackPanel({ attack }: { attack: Pick<AttackHandle, 'state' | 'summon' | 'error'> }) {
+  const state = attack.state;
   const attacking = state.status === 'attacking';
 
   return (
     <section className="attack-panel" aria-live="polite">
       <h2>Death</h2>
-      <button type="button" disabled={attacking} onClick={() => void live.summon()}>
+      <button type="button" disabled={attacking} onClick={() => void attack.summon()}>
         Summon Death
       </button>
-      {live.error && <p className="flat">{live.error}</p>}
+      {attack.error && <p className="flat">{attack.error}</p>}
       {attacking && (
         <p>
           Scouting… {plural(state.routes, 'route')} · Plans {state.plans} / {state.planned}

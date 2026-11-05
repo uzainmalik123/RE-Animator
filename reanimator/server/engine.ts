@@ -13,40 +13,60 @@ const ENGINE_TIMEOUT_MS = 15 * 60_000;
 type Obj = Record<string, unknown>;
 const strs = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
 
-// The four event types Reanimator folds, with only the fields it reads; anything else is dropped.
+// The event types Reanimator folds, with only the fields it reads; anything else is dropped. A ghost
+// event without a ghost id is dropped too, and a step's x/y are kept only when both are numbers.
 export function toEngineEvent(raw: unknown): EngineEvent | null {
   if (typeof raw !== 'object' || raw === null) return null;
   const e = raw as Obj;
   const s = (k: string) => (typeof e[k] === 'string' ? e[k] : '');
+  const n = (k: string) => (typeof e[k] === 'number' ? e[k] : 0);
   switch (e.type) {
     case 'run.started':
-      return { type: 'run.started', criteria: strs(e.criteria), personas: strs(e.personas), reps: typeof e.reps === 'number' ? e.reps : 0 };
+      return { type: 'run.started', criteria: strs(e.criteria), personas: strs(e.personas), reps: n('reps') };
     case 'scout.route':
       return { type: 'scout.route', path: s('path'), status: s('status') };
     case 'plan.compiled':
       return { type: 'plan.compiled', criterion: s('criterion'), persona: s('persona'), status: s('status'), cached: e.cached === true };
     case 'verdict.criterion':
       return { type: 'verdict.criterion', criterion: s('criterion'), verdict: s('verdict') };
+    case 'ghost.spawned':
+      return s('ghostId') ? { type: 'ghost.spawned', ghostId: s('ghostId'), criterion: s('criterion'), persona: s('persona'), rep: n('rep') } : null;
+    case 'ghost.step': {
+      if (!s('ghostId')) return null;
+      const placed = typeof e.x === 'number' && typeof e.y === 'number';
+      return { type: 'ghost.step', ghostId: s('ghostId'), ...(placed ? { x: e.x as number, y: e.y as number } : {}) };
+    }
+    case 'rep.finished':
+      return { type: 'rep.finished', rep: n('rep') };
     default:
       return null;
   }
 }
 
+const FRAME_GAP_MS = 1000;
+
+// A frames.ndjson mark ({ghostId, seq, t}) → a frame event, at most one a second per ghost (by its t),
+// so the attack's event log stays small.
+function frameThrottle(onEvent: (e: EngineEvent) => void) {
+  const last = new Map<string, number>();
+  return (raw: unknown) => {
+    if (typeof raw !== 'object' || raw === null) return;
+    const { ghostId, seq, t } = raw as Obj;
+    if (typeof ghostId !== 'string' || ghostId === '' || !Number.isSafeInteger(seq) || typeof t !== 'number') return;
+    const prev = last.get(ghostId);
+    if (prev !== undefined && t - prev < FRAME_GAP_MS) return;
+    last.set(ghostId, t);
+    onEvent({ type: 'frame', ghostId, seq: seq as number });
+  };
+}
+
 const listRuns = (runsDir: string) => readdir(runsDir).then((names) => new Set(names), () => new Set<string>());
 
-// Follows the events.ndjson of whichever run dir appears after `before`, parsing whole lines only.
-function tailer(runsDir: string, before: Set<string>, onEvent: (e: EngineEvent) => void) {
-  let file: string | null = null;
-  let runId: string | null = null;
+// Follows one growing ndjson file, handing each whole parsed line to `onLine`.
+function lineTail(file: string, onLine: (v: unknown) => void) {
   let offset = 0;
   let partial = '';
-  const poll = async () => {
-    if (!file) {
-      const fresh = [...(await listRuns(runsDir))].find((n) => !before.has(n));
-      if (!fresh) return;
-      runId = fresh;
-      file = join(runsDir, fresh, 'events.ndjson');
-    }
+  return async () => {
     const fh = await open(file, 'r').catch(() => null);
     if (!fh) return;
     try {
@@ -65,12 +85,34 @@ function tailer(runsDir: string, before: Set<string>, onEvent: (e: EngineEvent) 
         } catch {
           continue;
         }
-        const e = toEngineEvent(parsed);
-        if (e) onEvent(e);
+        onLine(parsed);
       }
     } finally {
       await fh.close();
     }
+  };
+}
+
+// Follows the events.ndjson and frames.ndjson of whichever run dir appears after `before`.
+function tailer(runsDir: string, before: Set<string>, onEvent: (e: EngineEvent) => void, onRun?: (runDir: string) => void) {
+  let runId: string | null = null;
+  let tails: (() => Promise<void>)[] = [];
+  const poll = async () => {
+    if (!runId) {
+      const fresh = [...(await listRuns(runsDir))].find((n) => !before.has(n));
+      if (!fresh) return;
+      runId = fresh;
+      const runDir = join(runsDir, fresh);
+      tails = [
+        lineTail(join(runDir, 'events.ndjson'), (v) => {
+          const e = toEngineEvent(v);
+          if (e) onEvent(e);
+        }),
+        lineTail(join(runDir, 'frames.ndjson'), frameThrottle(onEvent)),
+      ];
+      onRun?.(runDir);
+    }
+    for (const tail of tails) await tail();
   };
   return { poll, runId: () => runId };
 }
@@ -92,10 +134,11 @@ export async function runEngine(o: {
   signal?: AbortSignal;
   timeoutMs?: number;
   onEvent: (e: EngineEvent) => void;
+  onRun?: (runDir: string) => void;
   pollMs?: number;
 }): Promise<{ code: number | null; error: string | null; runId: string | null; reportPath: string }> {
   const runsDir = join(o.home, '.poltergeist', 'runs');
-  const { poll, runId: foundRun } = tailer(runsDir, await listRuns(runsDir), o.onEvent);
+  const { poll, runId: foundRun } = tailer(runsDir, await listRuns(runsDir), o.onEvent, o.onRun);
   let polling = Promise.resolve();
   const timer = setInterval(() => {
     polling = polling.then(poll).catch(() => undefined);

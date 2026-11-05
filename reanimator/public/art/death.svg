@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 360" width="240" height="360">
+  <!-- R4 art for the attack scene: Death, a hooded reaper with his scythe. Hand-made for Reanimator
+       during Kiroween 2026; same licence as this repo. Brightness only: the renderer turns it into
+       dots and the ink (the death token) comes from the palette. Dark = empty, so his face is a void. -->
+  <defs>
+    <linearGradient id="robe" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="0.6" stop-color="#aaa"/>
+      <stop offset="1" stop-color="#222"/>
+    </linearGradient>
+    <radialGradient id="eyes" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- the scythe: a long staff and a curved blade over his left shoulder -->
+  <rect x="186" y="28" width="7" height="320" fill="#bbb" transform="rotate(8 190 190)"/>
+  <path d="M196 30 C 150 4, 80 10, 40 52 C 92 34, 150 34, 194 52 Z" fill="#fff"/>
+  <!-- hood and robe -->
+  <path d="M120 22 C 70 22, 52 76, 56 128 C 40 190, 30 270, 18 352 L 222 352 C 210 270, 200 190, 184 128 C 188 76, 170 22, 120 22 Z" fill="url(#robe)"/>
+  <!-- the face, a void, and two embers in it -->
+  <ellipse cx="120" cy="96" rx="34" ry="44" fill="#000"/>
+  <circle cx="106" cy="92" r="7" fill="url(#eyes)"/>
+  <circle cx="134" cy="92" r="7" fill="url(#eyes)"/>
+  <!-- a bony hand on the staff -->
+  <path d="M172 176 h22 v10 h-22 Z M172 190 h20 v8 h-20 Z" fill="#fff"/>
+  <!-- folds in the robe -->
+  <path d="M96 170 L 82 352 M144 170 L 158 352" stroke="#000" stroke-width="6" opacity="0.5"/>
+</svg>

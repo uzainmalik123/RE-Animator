@@ -1,4 +1,4 @@
-import { mkdtemp } from 'node:fs/promises';
+import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
@@ -102,5 +102,24 @@ describe('Attacks', () => {
     const log = a.events(id)!.log;
     expect(log.at(-1)).toMatchObject({ type: 'failed' });
     expect((log.at(-1) as { reason: string }).reason).toMatch(/^stopped/);
+  });
+
+  it('serves a frame of the current run, and nothing outside it', async () => {
+    const runDir = await mkdtemp(join(tmpdir(), 'r4-run-'));
+    await mkdir(join(runDir, 'frames', 'g1'), { recursive: true });
+    await writeFile(join(runDir, 'frames', 'g1', '00002.jpg'), 'jpeg-bytes');
+    await writeFile(join(runDir, 'secret.jpg'), 'nope');
+    const engine = vi.fn<Engine>(async (o) => {
+      o.onRun?.(runDir);
+      return { code: 1, error: null, runId: 'run-1', reportPath: o.specDir };
+    });
+    const { a } = await make(engine);
+    const id = begin(a);
+    await settle(a, id);
+    expect((await a.frame(id, 'g1', 2))?.toString()).toBe('jpeg-bytes');
+    for (const [ghost, seq] of [['..', 2], ['g1/..', 2], ['.', 2], ['g1', -1], ['g1', 1.5], ['g1', 3], ['g1', Number.NaN]] as const) {
+      expect(await a.frame(id, ghost, seq)).toBeNull();
+    }
+    expect(await a.frame('other', 'g1', 2)).toBeNull();
   });
 });

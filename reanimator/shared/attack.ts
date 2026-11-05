@@ -21,7 +21,30 @@ export type EngineEvent =
   | { type: 'run.started'; criteria: string[]; personas: string[]; reps: number }
   | { type: 'scout.route'; path: string; status: string }
   | { type: 'plan.compiled'; criterion: string; persona: string; status: string; cached: boolean }
-  | { type: 'verdict.criterion'; criterion: string; verdict: string };
+  | { type: 'verdict.criterion'; criterion: string; verdict: string }
+  // R4: where Death's minions are (a step's x,y is in that ghost's viewport px) and the frames of the
+  // app they see (a mark from frames.ndjson, at most one a second per ghost; the jpg is served apart).
+  | { type: 'ghost.spawned'; ghostId: string; criterion: string; persona: string; rep: number }
+  | { type: 'ghost.step'; ghostId: string; x?: number; y?: number }
+  | { type: 'rep.finished'; rep: number }
+  | { type: 'frame'; ghostId: string; seq: number };
+
+type Point = { x: number; y: number };
+
+// One minion (a Poltergeist ghost), as R4 draws it. `trail` is its last 3 earlier positions, oldest first.
+export interface Ghost {
+  ghostId: string;
+  criterion: string;
+  persona: string;
+  rep: number;
+  x?: number;
+  y?: number;
+  trail: Point[];
+  done: boolean;
+  frame?: number;
+}
+
+const TRAIL = 3;
 
 export type AttackEvent =
   | { type: 'summoned'; origin: string; only: string[] | null }
@@ -36,6 +59,7 @@ export interface AttackState {
   plans: number;
   planned: number;
   verdicts: Record<string, string>;
+  ghosts: Record<string, Ghost>;
   counts: Counts | null;
   wounds: Wound[];
   failure: string | null;
@@ -48,6 +72,7 @@ export const QUIET: AttackState = {
   plans: 0,
   planned: 0,
   verdicts: {},
+  ghosts: {},
   counts: null,
   wounds: [],
   failure: null,
@@ -65,6 +90,22 @@ function reduceEngine(s: AttackState, e: EngineEvent): AttackState {
       return { ...s, plans: s.plans + 1 };
     case 'verdict.criterion':
       return { ...s, verdicts: { ...s.verdicts, [e.criterion]: e.verdict } };
+    case 'ghost.spawned':
+      return { ...s, ghosts: { ...s.ghosts, [e.ghostId]: { ghostId: e.ghostId, criterion: e.criterion, persona: e.persona, rep: e.rep, trail: [], done: false } } };
+    case 'ghost.step': {
+      const g = s.ghosts[e.ghostId];
+      if (!g) return s;
+      if (e.x === undefined || e.y === undefined) return s;
+      const trail = g.x === undefined || g.y === undefined ? g.trail : [...g.trail, { x: g.x, y: g.y }].slice(-TRAIL);
+      return { ...s, ghosts: { ...s.ghosts, [e.ghostId]: { ...g, x: e.x, y: e.y, trail } } };
+    }
+    case 'frame': {
+      const g = s.ghosts[e.ghostId];
+      if (!g) return s;
+      return { ...s, ghosts: { ...s.ghosts, [e.ghostId]: { ...g, frame: e.seq } } };
+    }
+    case 'rep.finished':
+      return { ...s, ghosts: Object.fromEntries(Object.entries(s.ghosts).map(([id, g]) => [id, g.rep === e.rep ? { ...g, done: true } : g])) };
   }
 }
 
