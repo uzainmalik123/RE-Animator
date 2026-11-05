@@ -43,3 +43,14 @@ export function step(s: Session, line: RecordedLine): Session {
 }
 
 export const foldTo = (lines: RecordedLine[], n: number): Session => lines.slice(0, n).reduce(step, EMPTY_SESSION);
+
+export type Position = { n: number; session: Session };
+
+// Play the next line, and every line due at the same moment with it.
+export function advance(p: Position, lines: RecordedLine[], times: number[]): Position {
+  if (p.n >= lines.length) return p;
+  let { n, session } = p;
+  const now = times[n]!;
+  while (n < lines.length && times[n] === now) session = step(session, lines[n++]!);
+  return { n, session };
+}

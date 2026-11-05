@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseLines, type RecordedLine } from '../../shared/recording';
 import session from './fixtures/session.ndjson?raw';
-import { EMPTY_SESSION, foldTo, schedule, step } from './timeline';
+import { EMPTY_SESSION, advance, foldTo, schedule, step } from './timeline';
 
 // A synthetic session, for tests only: it is never published (D-R11, D-R22).
 const lines = parseLines(session);
@@ -48,5 +48,21 @@ describe('the session fold (R11)', () => {
     expect(s.ritual.state.status).toBe('examining');
     expect(s.attack).toEqual(EMPTY_SESSION.attack);
     expect(s.spell).toEqual(EMPTY_SESSION.spell);
+  });
+});
+
+describe('advance (R11)', () => {
+  it('plays every line due at the same moment in one step', () => {
+    const ls = [at(0), at(0), at(100)];
+    const times = schedule(ls);
+    const first = advance({ n: 0, session: EMPTY_SESSION }, ls, times);
+    expect(first.n).toBe(2);
+    expect(advance(first, ls, times).n).toBe(3);
+  });
+
+  it('stays put at the end', () => {
+    const ls = [at(0)];
+    const end = advance({ n: 0, session: EMPTY_SESSION }, ls, schedule(ls));
+    expect(advance(end, ls, schedule(ls))).toBe(end);
   });
 });
