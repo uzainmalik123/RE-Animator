@@ -1,4 +1,6 @@
 import { serve } from '@hono/node-server';
+import { homedir } from 'node:os';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createApp } from './app.js';
 import { Attacks } from './attack.js';
@@ -9,6 +11,7 @@ import { Grimoire } from './grimoire.js';
 import { DEFAULT_KIRO } from './kiro.js';
 import { resolvePort } from './port.js';
 import { renderCheck } from './render-check.js';
+import { Recorder, recordApis, secretValues } from './recorder.js';
 import { Rituals } from './ritual.js';
 
 // Loopback only: this backend runs install/build/serve commands, so it must never face the LAN.
@@ -34,7 +37,12 @@ const attacks: Attacks = new Attacks({
 // R7: the grimoire drives the real Kiro agent (kiro-cli) on the revived body, never during Death.
 const grimoire: Grimoire = new Grimoire({ rituals, attacking: () => attacks.busy(), cli: process.env.REANIMATOR_KIRO ?? DEFAULT_KIRO, env: process.env });
 
-serve({ fetch: createApp({ rituals, attacks, grimoire }).fetch, hostname, port }, (info) => {
+// R11 (D-R22): REANIMATOR_RECORD=<dir> records this session for the hosted replay.
+const recordDir = process.env.REANIMATOR_RECORD;
+const apis = recordDir ? recordApis({ rituals, attacks, grimoire }, new Recorder({ dir: resolve(recordDir), home: homedir(), secrets: secretValues(process.env) })) : { rituals, attacks, grimoire };
+if (recordDir) console.log(`Recording this session to ${resolve(recordDir)}`);
+
+serve({ fetch: createApp(apis).fetch, hostname, port }, (info) => {
   console.log(`Reanimator backend listening on http://${hostname}:${info.port}`);
 });
 

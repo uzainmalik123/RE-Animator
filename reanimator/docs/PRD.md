@@ -41,7 +41,7 @@
 | 4 | R4 | The attack scene: draw Death + minions over the running app | High | Built; filming pending KI-R15 |
 | 5 | R5 | Wounds + heal loop: show findings, fix with Kiro, re-attack | High | Built; Kiro heal pending KI-R19 |
 | 6 | R7 | The grimoire: the agent/chat surface | Med | Built; live Kiro cast pending KI-R21 |
-| 7 | R11 | Hosted demo / replay | Med | TBD |
+| 7 | R11 | Hosted demo / replay | Med | Built (recording owed, KI-R23) |
 | 8 | R9 | Arbitrary GitHub URL + real clone & revive | Low | TBD |
 | 9 | R6 | 🔒 **Built in Kiro.** The graveyard: pick a dead repo | Med | TBD (Kiro only, D-R18) |
 | 10 | R8 | 🔒 **Built in Kiro.** Autopsy: why it died | Med | TBD (Kiro only, D-R18) |
@@ -159,11 +159,16 @@
   - Kiro and Death never run on the body at once.
   - It was seen in the browser with a fake Kiro (`docs/img/r7-grimoire.png`). The live cast and the Done-when wait on the Kiro session (KI-R21).
 
-### R11: Hosted demo / replay · Med · TBD
+### R11: Hosted demo / replay · Med · Built (recording owed, KI-R23)
 **Owns:** a way for a judge to see it without installing: a recorded replay of a real run, or a hosted instance.
 - **User story:** As a judge, I want to open a URL and see it work.
 - **Constraints:** if hosting the live revive+attack is too heavy, ship a recorded replay (clearly labelled), like Poltergeist's F15.
 - **Done when:** a public URL shows the hero run end to end.
+- **Built (2026-11-05, D-R22):**
+  - With `REANIMATOR_RECORD=<dir>`, the backend records its own event streams and frames (`server/recorder.ts`).
+  - `?replay` (or the `npm run build:replay` site) plays them in the real UI. It uses the same reducers, a permanent "RECORDED RUN" banner, locked controls and gaps capped at 2 s (`src/replay/`).
+  - A hand-run workflow deploys to GitHub Pages.
+  - The real hero recording is KI-R23.
 
 ---
 
@@ -215,3 +220,4 @@ These are built **in Kiro, not Claude Code**, so the entry really uses Kiro's sp
 - 2026-11-05: R4 Built (D-R19, plan `docs/plans/2026-11-05-R4-attack-scene.md`): the attack scene replaces the raise stage on Summon Death. The body is the engine's own frames, minions sit at the ghosts' real step positions, and wounds open where a haunted pair's ghost acted. Filming waits on KI-R15. Adds KI-R17.
 - 2026-11-05: R5 Built (D-R20, plan `docs/plans/2026-11-05-R5-heal.md`): heal briefs for Kiro, Dare Death again (re-raise on real vitals + a one-wound re-run), the merged report as ledger, and a wound closes only on a clean pair that really ran; healed lines in magic and a dissolving gash. The Done-when waits on Kiro + a key (KI-R19, KI-R15).
 - 2026-11-05: R7 Built (D-R21, plan `docs/plans/2026-11-05-R7-grimoire.md`): the grimoire drives the real Kiro agent through `kiro-cli chat --output-format stream-json` (one turn per spell, fs tools only, never during Death), drawn as spell, quill, margin notes, ruled boxes, candle and seal. A wound can be cast from its brief, and a sealed heal dares Death again. Tested against a fake kiro-cli. The live cast is KI-R21.
+- 2026-11-05: R11 Built (D-R22, plan `docs/plans/2026-11-05-R11-replay.md`). The backend records a session (`REANIMATOR_RECORD`), and the real UI replays it from static files with a "RECORDED RUN" banner and locked controls. `npm run build:replay` plus a hand-run GitHub Pages workflow host it. Resolves KI-R7. The hero recording is KI-R23.
