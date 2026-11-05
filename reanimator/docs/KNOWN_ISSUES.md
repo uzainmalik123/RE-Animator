@@ -32,6 +32,7 @@
 | KI-R27 | R9 review minors: a non-object `dependencies` crashes the rites, the size cap is checked only after the clone (and a host git-lfs filter can fetch first), `files` holds the rite count, the abort test stops at the factory | Minor | none | Open |
 | KI-R24 | R11 review minors: pause/speed restart a gap, Pause shown after the end, late frames dropped across back-to-back attacks, the Pages build skips typecheck, no test that a replay makes no /api calls, UTC banner date, README in the Pages build | Minor | none | Open |
 | KI-R13 | R1 demo-page polish from review: void flash on pitch/mode click, resize jank, late web font, breath jump, no OffscreenCanvas fallback, fractional-DPR cell seams | Minor | R4 (seams) | Open |
+| KI-R28 | `npm run health` fails on native Windows: 19 backend tests fail because `server/exec.ts` spawns and kills processes the POSIX way (`npm` without `.cmd`, scripts without an interpreter, `process.kill(-pid)` process-group kills) | Major | local health gate on Windows (CI on Ubuntu is unaffected) | Open |
 
 ---
 
@@ -239,3 +240,13 @@
   4. The abort test stops at the fixture factory. That the git group is killed rests on `runCommand`'s own abort tests.
 - **Next action:** #1 and #2 when `server/rites.ts` / `server/grave.ts` are next touched.
 
+
+### KI-R28: `npm run health` fails on native Windows · Major · Open
+- **Context:** found 2026-11-05 on a Windows 11 machine (Node 26.13, npm 9.1). After `npm install`, typecheck and lint pass but tests end at 368 passed / 19 failed / 3 skipped. CI runs on `ubuntu-latest` and is unaffected. Every failure comes from how `server/exec.ts` launches and stops processes, which assumes Linux/macOS:
+  1. **`spawn npm ENOENT`.** Commands spawn with `shell: false`, and on Windows `npm` is `npm.cmd`, so it isn't found. Fails `ritual.integration`, `heal.integration` and `attack.integration` (the raise fails before Death runs).
+  2. **`spawn EFTYPE`.** The tests launch the fake `kiro-cli` (`server/fixtures/fake-kiro.mjs`) directly, and Windows can't execute a script without its interpreter. Fails five `kiro.test.ts` cases and `grimoire.integration`.
+  3. **Timeouts.** `killGroup` sends signals to `-child.pid` (the process group), which Windows doesn't support, so timeouts, aborts and `stop()` never take effect. Fails `exec.test.ts` (4), `engine.test.ts` (1) and `serve.test.ts` (5, its `afterEach` hook times out).
+- **Also:** `attack.integration` needs `../poltergeist` installed (`npm ci` there), as CI does.
+- **Decision for now:** don't change `exec.ts` for Windows. Run the health gate on Linux, as CI does. R9's bubblewrap sandbox needs Linux anyway (D-R23). On Windows that means a WSL distro such as Ubuntu (Docker Desktop's internal `docker-desktop` distros can't run it) or a Linux container. Keep a separate Linux checkout, or a separate `node_modules`: esbuild and rollup ship per-platform binaries, so one install can't serve both systems.
+- **Working setup (2026-11-05):** WSL Ubuntu 26.04 (`wsl --install -d Ubuntu --no-launch`), apt `nodejs` 22.22.1 + `npm` (so `/usr/bin/node` is 22, per KI-R26 #2), a non-root user `dev`, and the repo cloned to `~/kiroween` (its own `node_modules`). Then `npm ci` in `reanimator/` and `poltergeist/`, `npx playwright-core install-deps chromium` as root and `npx playwright-core install chromium` as `dev`. Result: `npm run health` green, 50 files and 390 tests passed, none skipped (the bwrap sandbox test runs: unprivileged user namespaces are on in WSL). Run it with `wsl -d Ubuntu -u dev --cd ~/kiroween/reanimator -- npm run health` after `git pull` in the clone.
+- **Next action:** if the team ends up developing on native Windows, make `exec.ts` launch through `.cmd` shims or a shell and kill the process tree with `taskkill /T /F`. Until then, accept this.
