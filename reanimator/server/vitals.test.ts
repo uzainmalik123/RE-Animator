@@ -1,7 +1,12 @@
+import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import type { RitualEvent } from '../shared/ritual.js';
 import type { CommandResult, RunningApp } from './exec.js';
 import type { Fixture } from './fixtures.js';
+import type { Sandbox } from './sandbox.js';
+import { STATIC_SERVE } from './serve.js';
 import { runVitals, type VitalDeps } from './vitals.js';
 
 const fixture: Fixture = {
@@ -106,5 +111,37 @@ describe('runVitals', () => {
     const { deps } = fakeDeps();
     await runVitals('revived', '/work', fixture, deps, () => {}, ac.signal);
     expect(deps.runCommand).toHaveBeenCalledWith(expect.any(Array), expect.objectContaining({ signal: ac.signal }));
+  });
+
+  describe('a grave (R9)', () => {
+    const sandbox: Sandbox = { argv: (a, cwd) => ['jail', cwd, ...a], env: (extra = {}) => ({ JAILED: '1', ...extra }) };
+
+    it('runs every command of a sandboxed body inside its sandbox, with its bare env', async () => {
+      const dir = await mkdtemp(join(tmpdir(), 'vitals-'));
+      await writeFile(join(dir, 'package.json'), JSON.stringify({ scripts: { start: 'node s.js' } }));
+      const { deps } = fakeDeps();
+      await runVitals('revived', dir, { ...fixture, serve: null, sandbox }, deps, () => {});
+      expect(deps.runCommand).toHaveBeenNthCalledWith(1, ['jail', dir, 'npm', 'install', '--no-audit', '--no-fund'], expect.objectContaining({ cwd: dir, env: { JAILED: '1' } }));
+      expect(deps.startApp).toHaveBeenCalledWith(['jail', dir, 'npm', 'start'], { cwd: dir, port: 5001, env: { JAILED: '1', PORT: '5001', HOST: '127.0.0.1' } });
+    });
+
+    it('serves a built folder with our static server when there is no start script', async () => {
+      const dir = await mkdtemp(join(tmpdir(), 'vitals-'));
+      await mkdir(join(dir, 'dist'));
+      await writeFile(join(dir, 'dist', 'index.html'), '<p>x</p>');
+      const { deps } = fakeDeps();
+      await runVitals('revived', dir, { ...fixture, serve: null }, deps, () => {});
+      expect(deps.startApp).toHaveBeenCalledWith(['node', STATIC_SERVE, join(dir, 'dist')], { cwd: dir, port: 5001 });
+    });
+
+    it('fails serve when there is no way to serve the body', async () => {
+      const dir = await mkdtemp(join(tmpdir(), 'vitals-'));
+      const { deps } = fakeDeps();
+      const events: RitualEvent[] = [];
+      const r = await runVitals('revived', dir, { ...fixture, serve: null }, deps, (e) => events.push(e));
+      expect(r).toEqual({ ok: false, app: null, failed: 'serve' });
+      expect(events.at(-1)).toMatchObject({ result: { vital: 'serve', ok: false, detail: 'no way to serve it: no start script and no index.html' } });
+      expect(deps.startApp).not.toHaveBeenCalled();
+    });
   });
 });

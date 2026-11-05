@@ -4,7 +4,7 @@ import { QUIET } from '../../shared/attack';
 import { BLANK } from '../../shared/grimoire';
 import { IDLE, type RitualState } from '../../shared/ritual';
 import { art } from '../art';
-import { RaiseView } from './RaiseView';
+import { RaiseView, graveRequest } from './RaiseView';
 
 const vital = (v: 'install' | 'build' | 'serve' | 'render') => ({ vital: v, ok: true, detail: '', ms: 12 });
 const risen: RitualState = { ...IDLE, repo: 'guestbook-2016', diedIn: 2016, status: 'risen', revived: [vital('install'), vital('build'), vital('serve'), vital('render')], origin: 'http://127.0.0.1:5001' };
@@ -29,6 +29,30 @@ describe('RaiseView (R11)', () => {
     const html = renderToStaticMarkup(<RaiseView {...handles} />);
     expect(html).toContain('<iframe');
     expect(html).not.toContain('<fieldset');
+  });
+});
+
+describe('RaiseView (R9)', () => {
+  it('offers a field to name a grave', () => {
+    const html = renderToStaticMarkup(<RaiseView {...handles} ritual={{ ...handles.ritual, state: IDLE }} />);
+    expect(html).toContain('Name a grave (GitHub URL)');
+    expect(html).toContain('placeholder="https://github.com/owner/repo"');
+  });
+
+  it('lists the rites a grave was given', () => {
+    const html = renderToStaticMarkup(<RaiseView {...handles} ritual={{ ...handles.ritual, state: { ...risen, rites: ['engines', 'openssl'] } }} />);
+    expect(html).toContain('The rites');
+    expect(html).toContain('engines');
+    expect(html).toContain('openssl');
+  });
+
+  it('shows no rites for our own corpse', () => {
+    expect(renderToStaticMarkup(<RaiseView {...handles} />)).not.toContain('The rites');
+  });
+
+  it('sends a named grave, and nothing for an empty field', () => {
+    expect(graveRequest('  https://github.com/a/b ')).toBe('https://github.com/a/b');
+    expect(graveRequest('   ')).toBeUndefined();
   });
 });
 

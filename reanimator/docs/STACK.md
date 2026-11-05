@@ -53,6 +53,11 @@ UI reads vitals + report and draws the raise, Death's attack, and the wounds.
 | 7070 | Reanimator backend |
 | random free | The revived app on 127.0.0.1 (served for the attack; chosen per ritual, D-R15) |
 
+## System tools (R9, D-R23)
+
+- **`git`** clones a named grave.
+- **`bwrap`** (bubblewrap) sandboxes every command of a grave. Without it, graves are refused; the practice corpse still rises.
+
 ## Pinned versions
 
 Pinned exactly in `reanimator/package.json` (R0, D-R12). Shared tools match Poltergeist.

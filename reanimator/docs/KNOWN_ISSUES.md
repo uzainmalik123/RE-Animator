@@ -12,7 +12,7 @@
 | KI-R5 | The revived app needs a spec ("chart") for Poltergeist to test against | Major | R3 | Resolved (practice corpse; the demo repo needs its own) |
 | KI-R6 | Eligibility: the idea was prototyped before the window; present the rebuild honestly | Major | submission | Open |
 | KI-R7 | Running revive + attack live for a judge may be too heavy; may need a recorded replay | Major | R11 | Resolved (R11 replay, D-R22) |
-| KI-R8 | Reviving arbitrary cloned repos runs untrusted code | Major | R9 | Open (deferred to R9) |
+| KI-R8 | Reviving arbitrary cloned repos runs untrusted code | Major | R9 | Resolved (bubblewrap sandbox, D-R23) |
 | KI-R9 | Scene scope: four scenes is a lot for a vibe-coder; which are essential | Minor | R4, R6, R7 | Open |
 | KI-R10 | `npm audit`: moderate `minimatch` advisory in the ESLint dev chain | Minor | none (dev-only) | Accepted |
 | KI-R11 | Canvas sizing: CSS `100vw/100vh` vs `innerWidth/innerHeight`, and a DPR-only change isn't redrawn | Minor | R1 | Resolved |
@@ -27,6 +27,9 @@
 | KI-R21 | R7's live Kiro cast is unproven: the stream-json envelope, `usage_update`, whether a trust prompt blocks a headless run, and the Done-when (a heal cast → sealed → dared → closed) | Major | R7 Done-when, demo | Open |
 | KI-R22 | R7 review minors: split-line test, failure reason from merged output, missing cwd read as not installed, a 409 rejoin replays onto the book, the draft's heal sticks, quill index keys and announce, a late stream after a ritual change, kiroEnv drops proxy/keyring vars | Minor | none | Open |
 | KI-R23 | The hosted replay has no recording yet: the real hero run (raise → Death → Kiro heal → closed wound) must be recorded, committed and deployed | Major | R11 Done-when, judging | Open |
+| KI-R25 | R9's Done-when (a real, unprepared, permissively licensed GitHub repo raised end to end) hasn't been run; only a local git repo has, in the real sandbox | Major | R9 Done-when | Open |
+| KI-R26 | R9 sandbox limits: the network is shared (a grave's scripts can reach the internet, the LAN and every loopback service on the machine), the grave runs on the system Node, the render check's Chromium runs outside the sandbox, the revived dir holds attacker-written files (don't open it in an IDE), no disk cap, and no unprivileged user namespaces means no graves | Major | raising untrusted repos on a machine with other local services | Accepted |
+| KI-R27 | R9 review minors: a non-object `dependencies` crashes the rites, the size cap is checked only after the clone (and a host git-lfs filter can fetch first), `files` holds the rite count, the abort test stops at the factory | Minor | none | Open |
 | KI-R24 | R11 review minors: pause/speed restart a gap, Pause shown after the end, late frames dropped across back-to-back attacks, the Pages build skips typecheck, no test that a replay makes no /api calls, UTC banner date, README in the Pages build | Minor | none | Open |
 | KI-R13 | R1 demo-page polish from review: void flash on pitch/mode click, resize jank, late web font, breath jump, no OffscreenCanvas fallback, fractional-DPR cell seams | Minor | R4 (seams) | Open |
 
@@ -74,10 +77,11 @@
 - **Plan:** record a real run as the primary artifact (R11), like Poltergeist's F15; offer live as a bonus.
 - **Resolution (2026-11-05):** R11 records the backend's own streams and replays them in the real UI as a static site (D-R22). The recording itself is KI-R23.
 
-### KI-R8: Reviving arbitrary repos runs untrusted code · Major · Open (deferred to R9)
+### KI-R8: Reviving arbitrary repos runs untrusted code · Major · Resolved (D-R23)
 - **Problem:** cloning and `npm install`-ing a stranger's repo executes their scripts.
 - **Plan:** v1 avoids this by using one prepared repo (D-R6). For R9, sandbox (container or locked-down runner) before going general.
 - **Next action:** only when R9 is attempted.
+- **Resolved (2026-11-05, R9):** every command of a grave runs in a bubblewrap sandbox (D-R23); without bwrap no grave is raised. What it doesn't cover is KI-R26.
 
 ### KI-R9: Scene scope · Minor · Open
 - **Problem:** graveyard, raise, attack, grimoire is a lot of UI for a vibe-coder.
@@ -210,3 +214,28 @@
   5. **The banner date** is `recordedAt`'s UTC date.
   6. `public/recording/README.md` ships in the Pages build. That's harmless.
 - **Next action:** #2 and #3 before KI-R23's recording session. The rest when `src/replay/` is next touched.
+
+### KI-R25: R9 hasn't raised a real stranger's repo · Major · Open
+- **Context:** R9 is built (D-R23). Its integration test raises a dead package from a local git repo through the real clone, the real bwrap sandbox, the `engines` rite, real npm and headless Chromium. No real GitHub repo has been raised yet: that needs the network and runs third-party code, so it's a hand check.
+- **Steps:** `npm run server` and `npm run dev`, paste the URL of a small, MIT/ISC/Apache, dependency-light JS repo last touched around 2015–2019 that has a `start` script or a built `index.html`, and press **Begin the ritual**.
+- **Done when:** one unprepared, permissively licensed repo goes flatline → rites → four beating vitals → served in the iframe (R9's Done-when). Note the repo and the rites it took here.
+- **Watch for:** installs over 120 s (the vital times out), repos whose death is code-level (no rite fits; that's the grimoire's), and `start` scripts that ignore `PORT`/`HOST` (serve times out).
+
+### KI-R26: R9 sandbox limits · Major · Accepted
+- **Context:** the bubblewrap sandbox (D-R23) keeps a grave's own commands off the host's files, home, secrets and processes. It does not:
+  1. **isolate the network.** It's shared, so install scripts and the served app can reach the internet, the LAN and every loopback service on the machine. That includes this backend, which only checks Host/Origin (KI-R12). The review (2026-11-05) showed a grave could call the spell route and run Kiro unsandboxed on the host; that is closed (Kiro and Death both refuse graves), so this backend now only lets a grave start a new ritual. Any *other* local service (a dev database, another dev server) is still in reach. Splitting the network needs a netns with user-mode networking (pasta/slirp4netns) and a port forward for the app.
+  2. **choose the Node.** A grave runs on `/usr/bin/node` (the system's), not the shell's (mise/nvm). On a machine whose system Node isn't 22, "dead on Node 22" means dead on that Node.
+  3. **sandbox the render check.** Chromium runs on the host, but it only loads loopback and aborts every other request (D-R15).
+  4. **work everywhere.** Where unprivileged user namespaces are off (e.g. Ubuntu 24.04's AppArmor default), `bwrap` fails, and graves are refused with the no-sandbox message. The integration and sandbox tests skip there, so CI may not run them.
+  5. **make the revived dir safe to open.** It holds the grave's files and `.git`, which the sandboxed install may have rewritten (e.g. `core.fsmonitor`). Opening it in an IDE that runs git means running the grave's config on the host.
+  6. **cap disk.** A grave's `node_modules` lands in the work dir under `/tmp`, which is RAM on some machines.
+- **Next action:** raise graves only on a machine with nothing sensitive listening on loopback, for the demo. Fix #1 (netns + pasta) before graves are raised anywhere shared.
+
+### KI-R27: R9 review minors · Minor · Open
+- **Context:** the final review of R9 (2026-11-05). The Critical finding (a grave driving Kiro through the backend) and two Important ones (the rites writing through symlinks; a sandbox without npm calling a repo dead) were fixed before merge (D-R23).
+  1. `"dependencies": "x"` (not an object) makes `'node-sass' in deps` throw, so the ritual fails with a raw TypeError. Guard with `typeof deps === 'object'`.
+  2. The 100 MB cap is checked after the clone has finished. A host-wide git-lfs smudge filter would also fetch LFS objects first. Consider `GIT_LFS_SKIP_SMUDGE=1` and `--filter=blob:limit=`.
+  3. The `remedy` event's `files` is the rite count for a grave.
+  4. The abort test stops at the fixture factory. That the git group is killed rests on `runCommand`'s own abort tests.
+- **Next action:** #1 and #2 when `server/rites.ts` / `server/grave.ts` are next touched.
+

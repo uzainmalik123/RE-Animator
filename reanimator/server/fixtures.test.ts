@@ -13,7 +13,7 @@ describe('loadFixture', () => {
     expect(f.licence).toBe('MIT');
     expect(f.serve).toEqual(['node', 'server.js']);
     expect(existsSync(f.corpseDir)).toBe(true);
-    expect(existsSync(f.remedyDir)).toBe(true);
+    expect(existsSync(f.remedyDir!)).toBe(true);
     expect(f.chartDir).not.toBeNull();
     expect(existsSync(join(f.chartDir!, 'requirements.md'))).toBe(true);
   });

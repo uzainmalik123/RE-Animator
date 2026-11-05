@@ -92,6 +92,7 @@ Before you hand back, if anything changed:
 - `doppler run -- npm run attack:check` → raise the practice corpse and let Death (the real Poltergeist engine, needs an LLM key) attack it; prints the wounds (R3, KI-R15). The backend's **Summon Death** button does the same from the UI, and each wound's **Dare Death again** re-raises the body and re-runs Death on that wound only (R5). `../poltergeist` must be installed (`npm ci` there).
 - **The hosted replay (R11, D-R22):** `REANIMATOR_RECORD=public/recording npm run server` records the session (events + frames) while you use the app; `?replay` on the dev server plays `public/recording/`; `npm run build:replay` builds the static site, and the hand-run **Reanimator replay (GitHub Pages)** workflow publishes it. Only a real run goes in `public/recording/` (KI-R23).
 - The grimoire (R7) runs `kiro-cli` (installed and logged in; override it with `REANIMATOR_KIRO`). To try it without spending Kiro tokens, run `REANIMATOR_KIRO=$PWD/server/fixtures/fake-kiro.mjs npm run server`.
+- R9: paste a GitHub URL in **Name a grave** to raise a stranger's repo. It needs `git` and `bwrap` (bubblewrap) on the machine; every command of that repo runs in the sandbox (D-R23). Death can't attack it without a chart.
 
 ## Health check (after every implementation)
 

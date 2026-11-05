@@ -25,6 +25,7 @@ Work one PRD feature at a time, through the grill → plan → implement → rev
   - _Built (D-R21) against a fake kiro-cli; tick once a real Kiro heal is cast, sealed and dared closed from it (KI-R21)._
 - [x] 8. R11 hosted replay (built, D-R22; the real hero recording is KI-R23); then R9 (arbitrary URLs)
   - _Requirements: as per PRD_
+  - _R9 built (D-R23): a GitHub URL is cloned, sandboxed in bubblewrap and raised by fixed rites; the live run on a real repo is KI-R25._
 - [ ] 9. 🔒 Built in Kiro (D-R18): R6 Graveyard (pick a repo)
   - _Requirements: 5.1, 5.3_
 - [ ] 10. 🔒 Built in Kiro (D-R18): R8 Autopsy (why it died)

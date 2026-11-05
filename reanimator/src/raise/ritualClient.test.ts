@@ -20,6 +20,16 @@ describe('requestRitual', () => {
     expect(r).toEqual({ error: 'the backend is not answering (npm run server)' });
   });
 
+  it('names the grave to raise (R9)', async () => {
+    const fetchFn = vi.fn(json(202, { id: 'r1' }));
+    expect(await requestRitual(fetchFn, 'https://github.com/a/b')).toEqual({ id: 'r1' });
+    expect(fetchFn).toHaveBeenCalledWith('/api/rituals', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ repo: 'https://github.com/a/b' }) });
+  });
+
+  it('passes on why a grave was refused', async () => {
+    expect(await requestRitual(json(400, { error: 'repo must be https://github.com/<owner>/<repo>' }), 'x')).toEqual({ error: 'repo must be https://github.com/<owner>/<repo>' });
+  });
+
   it('explains a refusal', async () => {
     expect(await requestRitual(json(403, { error: 'forbidden' }))).toEqual({ error: 'the backend refused the ritual (HTTP 403)' });
   });

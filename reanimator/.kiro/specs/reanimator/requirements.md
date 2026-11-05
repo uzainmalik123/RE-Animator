@@ -32,6 +32,8 @@ Criterion IDs follow Kiro's `N.M` convention. **Death's attack is QA/robustness 
 2. THE Reanimator SHALL show the heart monitor move from flatline to a pulse as each vital passes, reflecting the real vital results.
 3. IF a vital fails, THEN THE Reanimator SHALL show the pulse stall at that step and report which vital failed.
 4. THE Reanimator SHALL NOT fake a pulse: the monitor beats only when vitals actually pass.
+5. WHEN the user names a grave by `https://github.com/<owner>/<repo>`, THE Reanimator SHALL clone it shallow, run every one of its commands in a sandbox, apply only the fixed rites whose symptoms are in its files, and name each rite applied (R9, D-R23).
+6. IF the named repo is not a GitHub repo URL, or no sandbox is available, THEN THE Reanimator SHALL refuse it without running anything from it.
 
 ### Requirement 2: Death attacks the revived app
 

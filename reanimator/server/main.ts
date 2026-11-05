@@ -7,6 +7,7 @@ import { Attacks } from './attack.js';
 import { DEFAULT_CLI } from './engine.js';
 import { freePort, runCommand, startApp, waitForHttp } from './exec.js';
 import { PRACTICE_CORPSE, loadFixture } from './fixtures.js';
+import { graveFixture } from './grave.js';
 import { Grimoire } from './grimoire.js';
 import { DEFAULT_KIRO } from './kiro.js';
 import { resolvePort } from './port.js';
@@ -18,10 +19,11 @@ import { Rituals } from './ritual.js';
 const hostname = '127.0.0.1';
 const port = resolvePort(process.env.REANIMATOR_PORT);
 
-// v1 raises the practice corpse; the real demo repo (KI-R1) is another fixture folder (D-R14).
+// With no repo named, the practice corpse rises; the real demo repo (KI-R1) is another fixture
+// folder (D-R14). A named grave (R9, D-R23) is cloned into the ritual's work dir and sandboxed.
 // Death's attack and Kiro's spell stop before the app does (onRelease), on a new ritual or shutdown.
 const rituals: Rituals = new Rituals({
-  fixture: () => loadFixture(PRACTICE_CORPSE),
+  fixture: (req, workdir, signal) => (req.repo ? graveFixture(req.repo, workdir, { run: runCommand, signal }) : loadFixture(PRACTICE_CORPSE)),
   deps: { runCommand, startApp, freePort, waitForHttp, renderCheck },
   onRelease: () => Promise.all([attacks.stop(), grimoire.stop()]).then(() => undefined),
 });

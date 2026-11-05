@@ -17,9 +17,10 @@ const hangingTurn: Kiro = (o) =>
     o.signal?.addEventListener('abort', () => resolve({ ok: false, error: 'stopped' }), { once: true });
   });
 
-function make(kiro: Kiro, o: { risen?: boolean; attacking?: boolean } = {}) {
+function make(kiro: Kiro, o: { risen?: boolean; attacking?: boolean; grave?: boolean } = {}) {
   const fn = vi.fn<Kiro>(kiro);
-  const rituals = { body: (id: string) => (o.risen !== false && (id === 'r1' || id === 'r2') ? { origin: null, revivedDir: `/bodies/${id}`, fixture: {} as never } : null) };
+  const fixture = (o.grave ? { sandbox: { argv: (a: string[]) => a, env: () => ({}) } } : {}) as never;
+  const rituals = { body: (id: string) => (o.risen !== false && (id === 'r1' || id === 'r2') ? { origin: null, revivedDir: `/bodies/${id}`, fixture } : null) };
   const g = new Grimoire({ rituals, attacking: () => o.attacking === true, cli: '/kiro', env: { PATH: '/b', HOME: '/h', ANTHROPIC_API_KEY: 'k' }, kiro: fn });
   return { g, kiro: fn };
 }
@@ -79,6 +80,13 @@ describe('Grimoire', () => {
     expect(g.edited('r2')).toBe(false);
     await settle(g, cast(g));
     expect(kiro.mock.calls.map((c) => c[0].resume)).toEqual([false, false, true]);
+  });
+
+  it('never casts on a stranger\'s grave: its files could steer Kiro outside the sandbox (R9)', () => {
+    const { g, kiro } = make(healTurn, { grave: true });
+    expect(g.start('r1', { text: 'x' })).toEqual({ stranger: true });
+    expect(g.busy()).toBe(false);
+    expect(kiro).not.toHaveBeenCalled();
   });
 
   it('refuses a body that has not risen, a Death mid-attack, and a second spell', async () => {
