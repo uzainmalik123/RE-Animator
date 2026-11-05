@@ -11,7 +11,7 @@
 | KI-R4 | How exactly Reanimator calls Poltergeist (CLI vs MCP; monorepo wiring) | Major | R3 | Resolved |
 | KI-R5 | The revived app needs a spec ("chart") for Poltergeist to test against | Major | R3 | Resolved (practice corpse; the demo repo needs its own) |
 | KI-R6 | Eligibility: the idea was prototyped before the window; present the rebuild honestly | Major | submission | Open |
-| KI-R7 | Running revive + attack live for a judge may be too heavy; may need a recorded replay | Major | R11 | Open |
+| KI-R7 | Running revive + attack live for a judge may be too heavy; may need a recorded replay | Major | R11 | Resolved (R11 replay, D-R22) |
 | KI-R8 | Reviving arbitrary cloned repos runs untrusted code | Major | R9 | Open (deferred to R9) |
 | KI-R9 | Scene scope: four scenes is a lot for a vibe-coder; which are essential | Minor | R4, R6, R7 | Open |
 | KI-R10 | `npm audit`: moderate `minimatch` advisory in the ESLint dev chain | Minor | none (dev-only) | Accepted |
@@ -26,6 +26,7 @@
 | KI-R20 | R5 review minors: a heal refused as not-open still counts as an attack (the next one re-raises needlessly); `summoned` echoes the heal target before it's checked | Minor | none | Open |
 | KI-R21 | R7's live Kiro cast is unproven: the stream-json envelope, `usage_update`, whether a trust prompt blocks a headless run, and the Done-when (a heal cast → sealed → dared → closed) | Major | R7 Done-when, demo | Open |
 | KI-R22 | R7 review minors: split-line test, failure reason from merged output, missing cwd read as not installed, a 409 rejoin replays onto the book, the draft's heal sticks, quill index keys and announce, a late stream after a ritual change, kiroEnv drops proxy/keyring vars | Minor | none | Open |
+| KI-R23 | The hosted replay has no recording yet: the real hero run (raise → Death → Kiro heal → closed wound) must be recorded, committed and deployed | Major | R11 Done-when, judging | Open |
 | KI-R13 | R1 demo-page polish from review: void flash on pitch/mode click, resize jank, late web font, breath jump, no OffscreenCanvas fallback, fractional-DPR cell seams | Minor | R4 (seams) | Open |
 
 ---
@@ -67,10 +68,10 @@
 - **Plan:** keep the earlier projects private and unlinked; don't port code; in the write-up, say plainly the idea was prototyped before the event and rebuilt from scratch during it. Confirm the 2026 "new project" wording (Poltergeist KI-05).
 - **Next action:** read the 2026 rules.
 
-### KI-R7: Live demo may be too heavy · Major · Open
+### KI-R7: Live demo may be too heavy · Major · Resolved (R11 replay, D-R22)
 - **Problem:** revive + serve + attack live, in front of a judge, is a lot.
 - **Plan:** record a real run as the primary artifact (R11), like Poltergeist's F15; offer live as a bonus.
-- **Next action:** decide during R11.
+- **Resolution (2026-11-05):** R11 records the backend's own streams and replays them in the real UI as a static site (D-R22). The recording itself is KI-R23.
 
 ### KI-R8: Reviving arbitrary repos runs untrusted code · Major · Open (deferred to R9)
 - **Problem:** cloning and `npm install`-ing a stranger's repo executes their scripts.
@@ -187,3 +188,14 @@
   7. **A cast whose POST resolves after the ritual changed** opens a stream for the old ritual that is only closed on the next change or unmount.
   8. **`kiroEnv` drops `HTTPS_PROXY`, `SSL_CERT_FILE`, `KIRO_*` and `DBUS_SESSION_BUS_ADDRESS`.** Kiro behind a proxy or using keyring login may fail. Check this during KI-R21's live run.
 - **Next action:** #8 with KI-R21. The rest when `src/grimoire/` or `server/kiro.ts` is next touched.
+
+### KI-R23: The hosted replay has no recording yet · Major · Open
+- **Context:** R11 is built (D-R22), but nothing real has been recorded. A synthetic session would break D-R11, so the hosted page says "No recording yet".
+- **Blocked on:** the demo repo (KI-R1), a key-backed attack (KI-R15) and the Kiro heal (KI-R19, KI-R21), so it fits the batched Kiro session.
+- **Steps:**
+  1. Start the backend with recording on: `REANIMATOR_RECORD=public/recording doppler run -- npm run server` (from `reanimator/`), plus `npm run dev`.
+  2. Run the hero run once, in one sitting: **Begin the ritual** → **Summon Death** → **Cast in the grimoire** on a wound → **Dare Death again** until it closes. Then stop the server.
+  3. Check it: `npx vite --open '/?replay'`, then the size (`du -sh public/recording`, frames are capped at 50 MB), and that no path or secret leaked (`grep -r "$HOME" public/recording` should print nothing).
+  4. Commit `public/recording/`. Enable GitHub Pages (Settings → Pages → Source: GitHub Actions), then run **Reanimator replay (GitHub Pages)** from the Actions tab.
+- **Done when:** the public Pages URL plays the hero run end to end in a fresh browser (R11's Done-when).
+- **Not covered by tests:** the recorder is unit-tested against fake logs. A real session (with real frame timing and a 409 rejoin) hasn't been recorded yet.

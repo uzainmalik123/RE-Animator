@@ -589,6 +589,7 @@
 ### KI-55: F15 Done-when not yet run on the hero Candy Swap run · Major · Open
 - **Context:** F15 was built in Claude Code against the claims fixture (D-43). The PRD Done-when is "the public URL replays the hero Candy Swap run in a fresh browser", which needs F10 (KI-44), a frame-rich 12-ghost run (KI-49) and Reanimator's R11 to host and play the bundle.
 - **Next action:** after the hero run, `poltergeist export .poltergeist/runs/<id> --out <R11 public folder>`. Check the size line is under 50 MB without much thinning; if it's thinned hard, lower `frameFps` for the hero run rather than raising the cap. R11 plays it with `buildTimeline`/`stateAt` (static) or by pointing R4's scene at `poltergeist replay` (local).
+- **Update (2026-11-05, Reanimator D-R22):** R11 records Reanimator's own streams, engine events and frames included, and hosts that instead. It doesn't play an F15 bundle. This F15 Done-when only matters if Poltergeist's standalone Candy Swap demo comes back.
 
 ### KI-56: F15 review minors · Minor · Open
 - **Context:** the final review of F15 (2026-11-02). Its one Important finding (absolute paths in a public bundle) was fixed before merge (D-43 review fixes).

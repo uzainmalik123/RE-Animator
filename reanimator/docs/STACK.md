@@ -39,7 +39,7 @@ UI reads vitals + report and draws the raise, Death's attack, and the wounds.
 | **Doppler** | Secrets, same as the sibling | Team convention |
 | **YouTube** | The < 3-min demo video | **Yes** |
 | **Devpost** | Submission | **Yes** |
-| Vercel / static host | Hosted replay (R11) | Med |
+| GitHub Pages (static, `npm run build:replay`, hand-run workflow) | Hosted replay (R11, D-R22) | Med |
 
 ## AWS
 

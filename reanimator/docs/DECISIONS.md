@@ -188,3 +188,29 @@
     - A clean exit with no stop reason seals as `exited`, never as an `end_turn` that Kiro didn't send. Either one offers the dare.
   - **No Poltergeist `init`/MCP in the body:** Reanimator stays the only caller of Death, so there's one ledger (D-R20).
 - **Consequences:** R7 is built and tested against a fake `kiro-cli` (`server/fixtures/fake-kiro.mjs`), with no Kiro tokens spent. The live cast and R7's Done-when wait on the batched Kiro session (KI-R21). The grimoire lives in the page's memory: a reload starts a blank book, though Kiro's own conversation resumes.
+
+### D-R22: The hosted replay is a recording of Reanimator's own streams (R11)
+- **Context:** R11's grill (2026-11-05), run with the recommended answers. A judge must see the run without installing anything. Hosting the live raise and attack needs a sandbox, Node, Chromium and an LLM key on a public box (KI-R7). Poltergeist's F15 export (D-43) records only the engine, not the raise, the heal or the grimoire.
+- **Decision:**
+  - **A static replay of a real run, not a hosted live instance.** Live stays a bonus.
+  - **The backend records what it streams.** With `REANIMATOR_RECORD=<dir>`, `server/recorder.ts` copies every ritual, attack and spell event the backend sends (the SSE logs), each stamped with ms since recording began, plus every engine frame the attack streamed. Recording the hero run means using the app normally, including the human heal. The recorder is off by default. It refuses a folder that already holds a recording, and it never deletes.
+  - **The bundle:**
+    - `recording.json`: `{format: 'reanimator-recording', version: 1, recordedAt}`.
+    - `events.ndjson`: lines of `{t, stream: ritual|attack|spell, id, event}` (`shared/recording.ts`).
+    - `frames/<attackId>/<ghostId>/<seq>.jpg`.
+
+    Frames stop being kept past 50 MB (with one warning). The home dir is replaced by `~` in every line.
+  - **The replay is the real UI.** `RaiseScene` is split into a pure `RaiseView` fed by handles. Live, the handles are the three hooks. In a replay they come from `src/replay/` folding the lines with the **same shared reducers** (`step`, using the hooks' rules: a new ritual starts afresh, a new attack starts from QUIET, spells share one book). Frames come through `FrameUrlContext`.
+  - **Honest by construction (D-R11):**
+    - A permanent banner reads "RECORDED RUN · replay of a real run on <date> · nothing here is live · pauses longer than 2 s are shortened".
+    - Every control sits in one disabled `<fieldset>`.
+    - The revived app's iframe is replaced by "The revived app ran at <origin> on the recording machine."
+    - With no recording published, the page says "No recording yet" and plays nothing.
+    - The synthetic test session lives in `src/replay/fixtures/` and is never published.
+  - **The clock:** real gaps, each capped at 2 s (`MAX_GAP_MS`). Play/pause, 1×/2×/4× and restart; no scrubbing. With reduced motion it waits for Play.
+  - **Hosting:**
+    - `vite base: './'`, and art goes through `art()` (`import.meta.env.BASE_URL`).
+    - `npm run build:replay` (`--mode replay`, `.env.replay`: `VITE_REPLAY=1`) opens on the replay. Locally it's `?replay`.
+    - `.github/workflows/reanimator-pages.yml` deploys `dist/` to GitHub Pages, **by hand only** (`workflow_dispatch`). Nothing is published until someone enables Pages and runs it.
+  - **Poltergeist's F15 export isn't used:** the Reanimator recording already carries the engine events and frames the UI showed.
+- **Consequences:** R11 is built, but the hosted page shows "No recording yet" until the real hero run is recorded and committed to `public/recording/` (KI-R23, blocked on KI-R1, KI-R15 and the Kiro session). A recording is a snapshot: it shows what the UI showed then, not a re-run.
