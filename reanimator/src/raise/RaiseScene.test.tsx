@@ -38,6 +38,9 @@ describe('RaiseScene', () => {
     expect(html).toMatch(/aria-label="Heart monitor: 4 of 4 vitals beating"/);
     for (const v of ['install', 'build', 'serve', 'render']) expect(html).toContain(v);
     expect(html).toContain('Summon Death');
+    // An attack not yet summoned keeps the raise stage.
+    expect(html).toMatch(/<canvas[^>]*aria-label="Spell circle/);
+    expect(html).not.toContain('attack-stage');
   });
 
   it('says why the ritual failed', () => {

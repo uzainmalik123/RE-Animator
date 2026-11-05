@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 360" width="240" height="360">
   <!-- R4 art for the attack scene: Death, a hooded reaper with his scythe. Hand-made for Reanimator
        during Kiroween 2026; same licence as this repo. Brightness only: the renderer turns it into
-       dots and the ink (--death) comes from the palette. Dark = empty, so his face is a void. -->
+       dots and the ink (the death token) comes from the palette. Dark = empty, so his face is a void. -->
   <defs>
     <linearGradient id="robe" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#fff"/>

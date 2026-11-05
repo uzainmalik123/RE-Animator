@@ -185,3 +185,63 @@ body,
   list-style: none;
   padding: 0;
 }
+
+/* R4: the attack scene takes the stage. Two one-ink canvases (bone body, red Death) and real-text
+   wound labels over them. It fades in like eyes opening, unless motion is reduced (THEME §5, §9). */
+.attack-stage {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  animation: eyes-open 400ms ease-out;
+}
+
+.attack-body,
+.attack-death {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The red layer is drawn over the bone one; its void background must not hide the body. */
+.attack-death {
+  mix-blend-mode: lighten;
+}
+
+.attack-wounds {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+
+.attack-wounds li {
+  position: absolute;
+  transform: translate(-50%, -150%);
+  white-space: nowrap;
+  font: 12px/1 'JetBrains Mono', ui-monospace, monospace;
+  color: var(--death);
+  background: var(--void);
+  padding: 2px 4px;
+}
+
+@keyframes eyes-open {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .attack-stage {
+    animation: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .attack-stage {
+    height: 60vh;
+  }
+}

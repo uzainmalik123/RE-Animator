@@ -175,3 +175,21 @@ export function sceneLabel(s: AttackState): string {
   const live = s.status === 'finished' ? 0 : Object.values(s.ghosts).filter((g) => !g.done).length;
   return `Death ${s.status === 'finished' ? 'attacked' : 'attacks'}: ${plural(live, 'minion')}, ${plural(s.wounds.length, 'wound')}`;
 }
+
+export type WoundPoint = { key: string; label: string; fx: number; fy: number };
+
+// Each wound's spot as a fraction of the body (0..1 across the frame), shared by the dots and the
+// real-text labels. A wound whose minion never reported a position gets a fixed slot on the right, by
+// its place in the list.
+export function woundPoints(s: AttackState): WoundPoint[] {
+  return s.wounds.map((w, i) => {
+    const key = `${w.criterion}-${w.persona}`;
+    const label = `${w.criterion} · ${w.persona}`;
+    const spot = woundSpot(w, s);
+    if (spot) {
+      const vp = viewportOf(spot.persona);
+      return { key, label, fx: clamp(spot.x / vp.width, 0, 1), fy: clamp(spot.y / vp.height, 0, 1) };
+    }
+    return { key, label, fx: 0.85, fy: Math.min(0.95, Math.round((0.15 + 0.12 * i) * 100) / 100) };
+  });
+}

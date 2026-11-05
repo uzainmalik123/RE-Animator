@@ -12,6 +12,7 @@ import {
   spriteLuminance,
   vignetteLuminance,
   watchedGhost,
+  woundPoints,
   woundSpot,
 } from './scene';
 
@@ -123,5 +124,15 @@ describe('motion and words', () => {
     expect(sceneLabel(state({ status: 'attacking', ghosts: { a: ghost('a'), b: ghost('b', { done: true }) } }))).toBe('Death attacks: 1 minion, 0 wounds');
     expect(sceneLabel(state({ status: 'finished', wounds: [WOUND, WOUND], ghosts: { a: ghost('a') } }))).toBe('Death attacked: 0 minions, 2 wounds');
     expect(sceneLabel(state({ status: 'failed' }))).toBe('Death faltered');
+  });
+});
+
+describe('woundPoints', () => {
+  it('puts each wound where its minion acted, as a fraction of the body, else in a fixed slot', () => {
+    const s = state({ status: 'finished', wounds: [WOUND, { ...WOUND, criterion: '2.1' }], ghosts: { a: ghost('a', { x: 640, y: 180 }) } });
+    expect(woundPoints(s)).toEqual([
+      { key: '1.2-wraith', label: '1.2 · wraith', fx: 0.5, fy: 0.25 },
+      { key: '2.1-wraith', label: '2.1 · wraith', fx: 0.85, fy: 0.27 },
+    ]);
   });
 });

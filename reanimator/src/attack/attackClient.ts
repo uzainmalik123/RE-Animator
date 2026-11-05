@@ -41,3 +41,7 @@ export function connectAttack(
   };
   return es;
 }
+
+// R4: one of the engine's frames of the app under attack (GET /api/attacks/:id/frames/:ghost/:seq).
+export const frameUrl = (attackId: string, ghostId: string, seq: number) =>
+  `/api/attacks/${encodeURIComponent(attackId)}/frames/${encodeURIComponent(ghostId)}/${seq}`;
