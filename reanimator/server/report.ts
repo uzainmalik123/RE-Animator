@@ -28,6 +28,7 @@ function wound(criterion: Obj, pair: Obj): Wound {
     expected: strings(pair.expected),
     failing: (Array.isArray(pair.failing) ? pair.failing : []).map(failingLine).filter((l): l is string => l !== null),
     artifacts: strings(pair.artifacts),
+    carried: false,
   };
 }
 

@@ -40,7 +40,7 @@ describe('readWounds', () => {
     expect(wounds).toEqual([{
       criterion: '1.2', text: 'record only one entry', persona: 'wraith', reason: 'wraith haunted',
       steps: ['fill Name', 'double-click Sign', 'B: open /'], expected: ['the list shows one entry'],
-      failing: ['one entry (3×): saw 2'], artifacts: ['runs/run-1/a.png'],
+      failing: ['one entry (3×): saw 2'], artifacts: ['runs/run-1/a.png'], carried: false,
     }]);
   });
 

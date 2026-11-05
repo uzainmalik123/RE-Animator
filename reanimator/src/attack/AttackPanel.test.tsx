@@ -24,7 +24,7 @@ describe('AttackPanel', () => {
   it('lists each wound as real text', () => {
     const state: AttackState = {
       ...QUIET, status: 'finished', counts: COUNTS,
-      wounds: [{ criterion: '1.2', text: 'THE Guestbook SHALL record only one entry.', persona: 'wraith', reason: 'two entries after a double click', steps: [], expected: [], failing: [], artifacts: [] }],
+      wounds: [{ criterion: '1.2', text: 'THE Guestbook SHALL record only one entry.', persona: 'wraith', reason: 'two entries after a double click', steps: [], expected: [], failing: [], artifacts: [], carried: false }],
     };
     const html = renderToStaticMarkup(<AttackPanel attack={attack(state)} />);
     expect(html).toContain('1 wound');

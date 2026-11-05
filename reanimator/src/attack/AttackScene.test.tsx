@@ -18,7 +18,7 @@ describe('AttackScene', () => {
       ...QUIET,
       status: 'finished',
       ghosts: { g1: ghost({ x: 640, y: 360, done: true }) },
-      wounds: [{ criterion: '1.2', text: 't', persona: 'wraith', reason: 'r', steps: [], expected: [], failing: [], artifacts: [] }],
+      wounds: [{ criterion: '1.2', text: 't', persona: 'wraith', reason: 'r', steps: [], expected: [], failing: [], artifacts: [], carried: false }],
     };
     const html = renderToStaticMarkup(<AttackScene attackId="a1" state={state} />);
     expect(html).toMatch(/<ol class="attack-wounds"[^>]*><li style="left:50%;top:50%"[^>]*>1\.2 · wraith<\/li>/);

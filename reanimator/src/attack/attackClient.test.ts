@@ -48,7 +48,7 @@ describe('connectAttack', () => {
     const events: AttackEvent[] = [];
     connectAttack('a 1', { onEvent: (e) => events.push(e), onLost: vi.fn() }, (url) => (src = new FakeSource(url)));
     expect(src!.url).toBe('/api/attacks/a%201/events');
-    src!.send({ type: 'summoned', origin: 'o', only: null });
+    src!.send({ type: 'summoned', origin: 'o', only: null, heal: null, body: '/b', wounds: [], healed: [] });
     expect(src!.close).not.toHaveBeenCalled();
     src!.send({ type: 'failed', reason: 'boom' });
     expect(events).toHaveLength(2);

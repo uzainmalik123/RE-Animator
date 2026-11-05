@@ -51,7 +51,7 @@ export class Attacks {
     const engine = this.o.engine ?? runEngine;
     const read = this.o.read ?? readWounds;
     cur.finished = (async () => {
-      emit({ type: 'summoned', origin: risen.origin, only: only ?? null });
+      emit({ type: 'summoned', origin: risen.origin, only: only ?? null, heal: null, body: risen.revivedDir, wounds: [], healed: [] });
       try {
         const prep = await prepareAttack({ fixture: risen.fixture, revivedDir: risen.revivedDir, origin: risen.origin, homeRoot: this.o.homeRoot });
         const r = await engine({
@@ -67,7 +67,7 @@ export class Attacks {
         if (r.code !== 0 && r.code !== 1) return emit({ type: 'failed', reason: r.error ?? 'the engine failed' });
         // Exit 1 with no run is a crash, and the spec folder may still hold an earlier run's report.
         if (r.runId === null) return emit({ type: 'failed', reason: `the engine wrote no readable report: ${r.error ?? 'no run'}` });
-        emit({ type: 'finished', ...(await read(r.reportPath, r.runId)) });
+        emit({ type: 'finished', ...(await read(r.reportPath, r.runId)), healed: [], heal: null });
       } catch (e) {
         emit({ type: 'failed', reason: signal.aborted ? STOPPED : e instanceof Error ? e.message : String(e) });
       }

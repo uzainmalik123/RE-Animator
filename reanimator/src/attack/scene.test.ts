@@ -20,7 +20,7 @@ import {
 } from './scene';
 
 const ghost = (id: string, o: Partial<Ghost> = {}): Ghost => ({ ghostId: id, criterion: '1.2', persona: 'wraith', rep: 1, trail: [], done: false, ...o });
-const WOUND: Wound = { criterion: '1.2', text: 't', persona: 'wraith', reason: 'r', steps: [], expected: [], failing: [], artifacts: [] };
+const WOUND: Wound = { criterion: '1.2', text: 't', persona: 'wraith', reason: 'r', steps: [], expected: [], failing: [], artifacts: [], carried: false };
 const state = (o: Partial<AttackState>): AttackState => ({ ...QUIET, ...o });
 
 describe('sprites', () => {

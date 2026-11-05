@@ -8,7 +8,7 @@ import type { runEngine } from './engine.js';
 import { PRACTICE_CORPSE, loadFixture } from './fixtures.js';
 
 const COUNTS: Counts = { haunted: 1, flaky: 0, inconclusive: 0, clean: 5, notApplicable: 0, notRun: 0 };
-const WOUND: Wound = { criterion: '1.2', text: 'record only one entry', persona: 'wraith', reason: 'two entries', steps: [], expected: [], failing: [], artifacts: [] };
+const WOUND: Wound = { criterion: '1.2', text: 'record only one entry', persona: 'wraith', reason: 'two entries', steps: [], expected: [], failing: [], artifacts: [], carried: false };
 
 type Engine = typeof runEngine;
 
@@ -44,9 +44,9 @@ describe('Attacks', () => {
     const { a, read } = await make(engine);
     const log = await settle(a, begin(a, ['1.2']));
     expect(log).toEqual([
-      { type: 'summoned', origin: 'http://127.0.0.1:5001', only: ['1.2'] },
+      { type: 'summoned', origin: 'http://127.0.0.1:5001', only: ['1.2'], heal: null, body: expect.any(String), wounds: [], healed: [] },
       { type: 'engine', event: { type: 'run.started', criteria: ['1.2'], personas: ['wraith'], reps: 3 } },
-      { type: 'finished', counts: COUNTS, wounds: [WOUND] },
+      { type: 'finished', counts: COUNTS, wounds: [WOUND], healed: [], heal: null },
     ]);
     const call = engine.mock.calls[0]![0];
     expect(call.cli).toBe('/cli.js');

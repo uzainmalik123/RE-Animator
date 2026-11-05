@@ -109,7 +109,7 @@ describe('createApp', () => {
 
   describe('attacks', () => {
     const ATTACK_LOG: AttackEvent[] = [
-      { type: 'summoned', origin: 'http://127.0.0.1:5001', only: null },
+      { type: 'summoned', origin: 'http://127.0.0.1:5001', only: null, heal: null, body: '/b', wounds: [], healed: [] },
       { type: 'failed', reason: 'boom' },
     ];
     function fakeAttacks(answer: ReturnType<AttacksApi['start']>) {

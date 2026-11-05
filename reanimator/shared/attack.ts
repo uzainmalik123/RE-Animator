@@ -1,6 +1,8 @@
 // Death's attack protocol (R3, D-R17): what the backend streams while the Poltergeist engine attacks
 // the revived app, and the one reducer both sides fold it with. A wound is a haunted pair from a
-// real report (D-R11); progress is the engine's own events, never a timer.
+// real report (D-R11); progress is the engine's own events, never a timer. R5 (D-R20) adds the
+// heal: a re-run on one wound, after the body is re-raised on real vitals (its pulses).
+import type { VitalResult } from './ritual.js';
 
 // A finding that reproduced: one criterion broken by one of Death's minions (a persona).
 export interface Wound {
@@ -12,7 +14,13 @@ export interface Wound {
   expected: string[];
   failing: string[];
   artifacts: string[];
+  // From an earlier run, merged into this report (Poltergeist F14): it reproduced then.
+  carried: boolean;
 }
+
+// The wound a heal re-runs: one criterion × the persona that broke it.
+export type HealTarget = { criterion: string; persona: string };
+export const woundKey = (w: HealTarget): string => `${w.criterion}::${w.persona}`;
 
 export type Counts = Record<'haunted' | 'flaky' | 'inconclusive' | 'clean' | 'notApplicable' | 'notRun', number>;
 
@@ -47,9 +55,13 @@ export interface Ghost {
 const TRAIL = 3;
 
 export type AttackEvent =
-  | { type: 'summoned'; origin: string; only: string[] | null }
+  // `body` is the revived dir (the brief points Kiro at it); `wounds` are those open before this run.
+  | { type: 'summoned'; origin: string; only: string[] | null; heal: HealTarget | null; body: string; wounds: Wound[]; healed: Wound[] }
+  | { type: 'pulse'; result: VitalResult }
+  | { type: 'reraised'; origin: string }
   | { type: 'engine'; event: EngineEvent }
-  | { type: 'finished'; counts: Counts; wounds: Wound[] }
+  // `heal.verdict` is the targeted pair's verdict in this run ('notRun' if it was carried or missing).
+  | { type: 'finished'; counts: Counts; wounds: Wound[]; healed: Wound[]; heal: (HealTarget & { verdict: string }) | null }
   | { type: 'failed'; reason: string };
 
 export interface AttackState {
@@ -63,6 +75,11 @@ export interface AttackState {
   counts: Counts | null;
   wounds: Wound[];
   failure: string | null;
+  heal: HealTarget | null;
+  body: string | null;
+  pulses: VitalResult[];
+  healed: Wound[];
+  healVerdict: string | null;
 }
 
 export const QUIET: AttackState = {
@@ -76,6 +93,11 @@ export const QUIET: AttackState = {
   counts: null,
   wounds: [],
   failure: null,
+  heal: null,
+  body: null,
+  pulses: [],
+  healed: [],
+  healVerdict: null,
 };
 
 export const attackOver = (e: AttackEvent): boolean => e.type === 'finished' || e.type === 'failed';
@@ -112,11 +134,15 @@ function reduceEngine(s: AttackState, e: EngineEvent): AttackState {
 export function reduceAttack(s: AttackState, e: AttackEvent): AttackState {
   switch (e.type) {
     case 'summoned':
-      return { ...QUIET, status: 'attacking', origin: e.origin };
+      return { ...QUIET, status: 'attacking', origin: e.origin, heal: e.heal, body: e.body, wounds: e.wounds, healed: e.healed };
+    case 'pulse':
+      return { ...s, pulses: [...s.pulses, e.result] };
+    case 'reraised':
+      return { ...s, origin: e.origin };
     case 'engine':
       return reduceEngine(s, e.event);
     case 'finished':
-      return { ...s, status: 'finished', counts: e.counts, wounds: e.wounds };
+      return { ...s, status: 'finished', counts: e.counts, wounds: e.wounds, healed: e.healed, healVerdict: e.heal?.verdict ?? null };
     case 'failed':
       return { ...s, status: 'failed', failure: e.reason };
   }
