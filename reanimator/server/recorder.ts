@@ -107,8 +107,8 @@ export function recordApis(apis: Apis, rec: Recorder): Apis {
     rituals: {
       events: (id, after) => rituals.events(id, after),
       subscribe: (id, fn) => rituals.subscribe(id, fn),
-      start: () => {
-        const s = rituals.start();
+      start: (req) => {
+        const s = rituals.start(req);
         rec.watch('ritual', s.id, rituals);
         return s;
       },

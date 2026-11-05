@@ -1,10 +1,13 @@
 // A stranger's grave (R9, D-R23): a dead repo named by its GitHub URL, cloned shallow into the
 // ritual's work dir. The URL is checked strictly before anything runs; the clone never runs hooks,
 // fetches submodules or prompts for a password, and a grave too big to raise is refused.
-import { readdir, readFile, stat } from 'node:fs/promises';
+import { mkdir, readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { childEnv } from './env.js';
 import type { runCommand } from './exec.js';
+import type { Fixture } from './fixtures.js';
+import { applyRites } from './rites.js';
+import { bwrapSandbox, hasBwrap } from './sandbox.js';
 
 export const MAX_GRAVE_BYTES = 104_857_600;
 const CLONE_TIMEOUT_MS = 60_000;
@@ -66,4 +69,38 @@ export async function cloneGrave(
   const diedIn = Number.parseInt(log.output.trim(), 10);
   if (log.code !== 0 || !Number.isInteger(diedIn)) return { ok: false, reason: `clone: no last commit (${firstLine(log.output) || 'git log failed'})` };
   return { ok: true, diedIn, licence: await licenceOf(dest) };
+}
+
+// A grave that can't be opened (no sandbox, a failed clone): the ritual fails in the corpse phase.
+export class GraveError extends Error {}
+
+export const NO_SANDBOX = "no sandbox: install bubblewrap (bwrap) to raise a stranger's repo";
+
+// Open a grave into the ritual's work dir: clone it to <workdir>/grave, give it a home of its own,
+// and make it a fixture whose remedy is the rites and whose every command runs in the sandbox.
+export async function graveFixture(
+  url: string,
+  workdir: string,
+  o: { run: typeof runCommand; signal?: AbortSignal; bwrap?: string; name?: string },
+): Promise<Fixture> {
+  if (!(await hasBwrap(o.bwrap))) throw new GraveError(NO_SANDBOX);
+  const corpseDir = join(workdir, 'grave');
+  const r = await cloneGrave(url, corpseDir, o);
+  if (!r.ok) throw new GraveError(r.reason);
+  await mkdir(join(workdir, 'home'));
+  const parsed = parseGraveUrl(url);
+  return {
+    name: o.name ?? (parsed ? `${parsed.owner}/${parsed.repo}` : url),
+    diedIn: r.diedIn,
+    licence: r.licence,
+    serve: null,
+    dir: corpseDir,
+    corpseDir,
+    chartDir: null,
+    sandbox: bwrapSandbox(workdir, { bwrap: o.bwrap }),
+    remedy: async (revived) => {
+      const rites = await applyRites(revived);
+      return { files: rites.length, rites };
+    },
+  };
 }

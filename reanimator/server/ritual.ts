@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import type { RitualEvent, VitalResult } from '../shared/ritual.js';
 import type { RunningApp } from './exec.js';
 import type { Fixture } from './fixtures.js';
+import { GraveError } from './grave.js';
 import { runVitals, type VitalDeps } from './vitals.js';
 
 const firstLine = (s: string) => s.split('\n').find((l) => l.trim() !== '')?.trim() ?? '';
@@ -15,6 +16,12 @@ const firstLine = (s: string) => s.split('\n').find((l) => l.trim() !== '')?.tri
 async function countFiles(dir: string): Promise<number> {
   const entries = await readdir(dir, { recursive: true, withFileTypes: true });
   return entries.filter((e) => e.isFile()).length;
+}
+
+async function layRemedy(fixture: Fixture, revived: string): Promise<{ files: number }> {
+  if (!fixture.remedyDir) throw new Error(`fixture ${fixture.name} has no remedy`);
+  await cp(fixture.remedyDir, revived, { recursive: true, force: true });
+  return { files: await countFiles(fixture.remedyDir) };
 }
 
 // `signal` stops the ritual early (the backend shutting down, or a new ritual replacing it).
@@ -40,8 +47,13 @@ export async function performRitual(
   }
   const revived = join(workdir, 'revived');
   await cp(fixture.corpseDir, revived, { recursive: true });
-  await cp(fixture.remedyDir, revived, { recursive: true, force: true });
-  emit({ type: 'remedy', files: await countFiles(fixture.remedyDir) });
+  const remedy: { files: number; rites?: string[] } = fixture.remedy ? await fixture.remedy(revived) : await layRemedy(fixture, revived);
+  emit({ type: 'remedy', ...remedy });
+  // A grave no rite fits would only die the same way again (D-R11: no raise is pretended).
+  if (remedy.rites?.length === 0) {
+    emit({ type: 'failed', phase: 'revived', reason: 'no rite fits this death' });
+    return null;
+  }
   let lastDetail = '';
   const raise = await runVitals('revived', revived, fixture, deps, (e) => {
     if (e.type === 'vital') lastDetail = e.result.detail;
@@ -69,17 +81,23 @@ interface Current {
   finished: Promise<void>;
 }
 
+// What the user asked to raise: a grave's URL (R9), or nothing for our own corpse.
+export interface RitualRequest {
+  repo?: string;
+}
+
 const terminal = (e: RitualEvent) => e.type === 'risen' || e.type === 'failed';
 
 export class Rituals {
   private current: Current | null = null;
-  private readonly fixture: () => Promise<Fixture>;
+  private readonly fixture: (req: RitualRequest, workdir: string, signal: AbortSignal) => Promise<Fixture>;
   private readonly deps: VitalDeps;
   private readonly workRoot: string;
   private readonly onRelease: () => Promise<void>;
 
   // `onRelease` runs first whenever a ritual is let go (Death's attack stops before its target does).
-  constructor(o: { fixture: () => Promise<Fixture>; deps: VitalDeps; workRoot?: string; onRelease?: () => Promise<void> }) {
+  // `fixture` may clone into the work dir (a grave, R9); the signal stops it when the ritual is let go.
+  constructor(o: { fixture: (req: RitualRequest, workdir: string, signal: AbortSignal) => Promise<Fixture>; deps: VitalDeps; workRoot?: string; onRelease?: () => Promise<void> }) {
     this.fixture = o.fixture;
     this.deps = o.deps;
     this.workRoot = o.workRoot ?? tmpdir();
@@ -87,7 +105,7 @@ export class Rituals {
   }
 
   // A busy answer carries the running ritual's id, so a reloaded page can reattach to it.
-  start(): { id: string } | { busy: true; id: string } {
+  start(req: RitualRequest = {}): { id: string } | { busy: true; id: string } {
     if (this.current && !this.current.done) return { busy: true, id: this.current.id };
     const previous = this.current;
     const cur: Current = { id: randomUUID(), log: [], done: false, listeners: new Set(), workdir: null, fixture: null, app: null, port: null, abort: new AbortController(), finished: Promise.resolve() };
@@ -103,11 +121,12 @@ export class Rituals {
       try {
         await stopping;
         cur.workdir = await mkdtemp(join(this.workRoot, 'reanimator-'));
-        cur.fixture = await this.fixture();
+        cur.fixture = await this.fixture(req, cur.workdir, cur.abort.signal);
         cur.app = await performRitual(cur.fixture, this.deps, cur.workdir, emit, cur.abort.signal);
         cur.port = cur.app?.port ?? null;
       } catch (e) {
-        emit({ type: 'failed', phase: 'revived', reason: e instanceof Error ? e.message : String(e) });
+        // A grave that can't be opened never reached its corpse's vitals.
+        emit({ type: 'failed', phase: e instanceof GraveError ? 'corpse' : 'revived', reason: e instanceof Error ? e.message : String(e) });
       }
     })();
     return { id: cur.id };

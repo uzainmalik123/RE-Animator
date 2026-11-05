@@ -103,8 +103,9 @@ export interface RunningApp {
 }
 
 // Start the revived app on 127.0.0.1:<port> (PORT and HOST in its env, D-R7) and leave it running.
-export function startApp(argv: string[], o: { cwd: string; port: number }): RunningApp {
-  const { child, exited } = launch(argv, o.cwd, childEnv(process.env, { PORT: String(o.port), HOST: '127.0.0.1' }));
+// `env` replaces the whole env (a sandboxed grave brings its own, PORT and HOST included).
+export function startApp(argv: string[], o: { cwd: string; port: number; env?: NodeJS.ProcessEnv }): RunningApp {
+  const { child, exited } = launch(argv, o.cwd, o.env ?? childEnv(process.env, { PORT: String(o.port), HOST: '127.0.0.1' }));
   const output = tail(child);
   return {
     origin: `http://127.0.0.1:${o.port}`,
