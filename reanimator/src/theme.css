@@ -326,3 +326,11 @@ body,
   border: 1px solid var(--dim);
   font: inherit;
 }
+
+/* R11: a replay's panel is one disabled fieldset; it must not look like a form. */
+.replay-lock {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}

@@ -1,13 +1,14 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useContext, useLayoutEffect, useRef, useState } from 'react';
 import type { AttackState } from '../../shared/attack';
 import { sampleLuminance } from '../render';
 import { useDotCanvas } from '../render/useDotCanvas';
 import { containRect } from '../render/viewport';
-import { frameUrl } from './attackClient';
 import { arrival, bodyLuminance, closingPoint, closingRemain, bodyRect, deathLayer, deathRect, idleSpot, memoByKey, placeOnBody, sceneLabel, watchedGhost, woundPoints, type Minion, type Rect } from './scene';
+import { art } from '../art';
+import { FrameUrlContext } from '../frames';
 import { useImage, useSize } from './useImage';
 
-const DEATH_ART = '/art/death.svg';
+const DEATH_ART = art('death.svg');
 const MAX_MINIONS = 12;
 const ARRIVED = 0.6;
 const LINGER = 0.35;
@@ -25,6 +26,7 @@ export function AttackScene({ state, attackId }: { state: AttackState; attackId:
   const bodyRef = useRef<HTMLCanvasElement>(null);
   const deathRef = useRef<HTMLCanvasElement>(null);
   const [summonedAt] = useState(() => (typeof performance === 'undefined' ? 0 : performance.now()));
+  const frameUrl = useContext(FrameUrlContext);
   const watched = watchedGhost(state);
   const g = watched ? state.ghosts[watched] : undefined;
   const frame = useImage(attackId && g?.frame !== undefined ? frameUrl(attackId, g.ghostId, g.frame) : null);

@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { sizeCanvas } from './canvas';
 import { DotRenderer, drawLevelsAsGlyphs, ditherLevels, GLYPH_RAMP, gridSize, luminanceGrid } from './render';
 import { breath, containRect, pitchFor, readPalette } from './render/viewport';
+import { art } from './art';
 
-const SAMPLE_SRC = '/art/sample-headstone.svg';
+const SAMPLE_SRC = art('sample-headstone.svg');
 const PITCHES = [2, 3, 4, 6] as const;
 const GLYPH_PITCH_FACTOR = 4;
 const FRAME_MS = 1000 / 30;
