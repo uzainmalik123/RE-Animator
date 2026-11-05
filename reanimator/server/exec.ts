@@ -3,6 +3,7 @@
 // (npm forks node, node may fork more).
 import { spawn, type ChildProcess } from 'node:child_process';
 import { createServer } from 'node:net';
+import { StringDecoder } from 'node:string_decoder';
 import { childEnv } from './env.js';
 
 export const TAIL_BYTES = 4096;
@@ -53,13 +54,23 @@ function launch(argv: string[], cwd: string, env: NodeJS.ProcessEnv): { child: C
 }
 
 // `signal` aborts the command (a ritual being stopped): its whole group is killed and it reports 'stopped'.
+// `onOutput` gets stdout as it arrives (R7 reads Kiro's stream from it), a split character kept whole.
 export async function runCommand(
   argv: string[],
-  o: { cwd: string; timeoutMs: number; env?: NodeJS.ProcessEnv; signal?: AbortSignal },
+  o: { cwd: string; timeoutMs: number; env?: NodeJS.ProcessEnv; signal?: AbortSignal; onOutput?: (text: string) => void },
 ): Promise<CommandResult> {
   const t0 = Date.now();
   const { child, exited } = launch(argv, o.cwd, o.env ?? childEnv(process.env));
   const output = tail(child);
+  const onOutput = o.onOutput;
+  if (onOutput) {
+    const decoder = new StringDecoder('utf8');
+    child.stdout?.on('data', (chunk: Buffer) => onOutput(decoder.write(chunk)));
+    child.stdout?.once('end', () => {
+      const rest = decoder.end();
+      if (rest) onOutput(rest);
+    });
+  }
   let timedOut = false;
   const timer = setTimeout(() => {
     timedOut = true;
