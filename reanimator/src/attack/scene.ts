@@ -193,3 +193,28 @@ export function woundPoints(s: AttackState): WoundPoint[] {
     return { key, label, fx: 0.85, fy: Math.min(0.95, Math.round((0.15 + 0.12 * i) * 100) / 100) };
   });
 }
+
+// The stage is Death's from the moment an attack exists, before its first event lands, so it never
+// flashes back to the raise on a re-summon.
+export const showsAttack = (a: { id: string | null; state: AttackState }): boolean => a.id !== null || a.state.status !== 'idle';
+
+// The frame's luminance (sampled at the body's size) placed into a cols×rows grid, letterboxed.
+export function bodyLuminance(sample: (w: number, h: number) => Float32Array, frameW: number, frameH: number, cols: number, rows: number): Float32Array {
+  const out = new Float32Array(cols * rows);
+  if (cols === 0 || rows === 0) return out;
+  const b = bodyRect(frameW, frameH, cols, rows);
+  if (b.w === 0 || b.h === 0) return out;
+  const lum = sample(b.w, b.h);
+  for (let y = 0; y < b.h; y++) out.set(lum.subarray(y * b.w, (y + 1) * b.w), (b.y + y) * cols + b.x);
+  return out;
+}
+
+// Remembers the last value made, until the key changes: the 30fps loops sample an image only when it
+// or the grid changes.
+export function memoByKey<T>(): (key: string, make: () => T) => T {
+  let last: { key: string; value: T } | null = null;
+  return (key, make) => {
+    if (last?.key !== key) last = { key, value: make() };
+    return last.value;
+  };
+}

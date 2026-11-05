@@ -3,6 +3,7 @@ import { VITALS, beats, flatlined, type RitualState, type VitalResult } from '..
 import type { AttackState } from '../../shared/attack';
 import { AttackPanel } from '../attack/AttackPanel';
 import { AttackScene } from '../attack/AttackScene';
+import { showsAttack } from '../attack/scene';
 import { useAttack } from '../attack/useAttack';
 import { useDotCanvas } from '../render/useDotCanvas';
 import { circleLuminance, monitorLuminance } from './scene';
@@ -34,6 +35,25 @@ function VitalLine({ name, result }: { name: string; result: VitalResult | undef
   );
 }
 
+// The raise's stage: its own component, so its canvas loops live exactly as long as its canvases
+// (they stop while Death holds the stage, and draw afresh when it comes back).
+function RaiseStage({ state }: { state: RitualState }) {
+  const circleRef = useRef<HTMLCanvasElement>(null);
+  const monitorRef = useRef<HTMLCanvasElement>(null);
+  const power = circlePower(state);
+  const beating = beats(state) > 0;
+
+  useDotCanvas(circleRef, 'magic', (c, r, t) => circleLuminance(c, r, { tMs: t, power }), [power]);
+  useDotCanvas(monitorRef, beating ? 'magic' : 'death', (c, r, t) => monitorLuminance(c, r, { tMs: t, beating }), [beating]);
+
+  return (
+    <div className="raise-stage">
+      <canvas ref={circleRef} className="raise-circle" aria-label={`Spell circle, ${state.status === 'idle' ? 'unlit' : `burning at ${Math.round(power * 100)}%`}`} />
+      <canvas ref={monitorRef} className="raise-monitor" aria-label={monitorLabel(state)} />
+    </div>
+  );
+}
+
 // R2: the ritual. A spell circle (magic) that burns brighter with each real vital, and a heart
 // monitor that is a red flatline until the revived repo's first vital truly passes. All the facts
 // are real text in the panel.
@@ -42,23 +62,13 @@ export function RaiseScene({ initial }: { initial?: RitualState } = {}) {
   const state = initial ?? live.state;
   const attack = useAttack(live.id);
   const attackState: AttackState = attack.state;
-  const circleRef = useRef<HTMLCanvasElement>(null);
-  const monitorRef = useRef<HTMLCanvasElement>(null);
-  const n = beats(state);
-  const power = circlePower(state);
-  const beating = n > 0;
   const running = state.status === 'examining' || state.status === 'raising';
 
-  useDotCanvas(circleRef, 'magic', (c, r, t) => circleLuminance(c, r, { tMs: t, power }), [power]);
-  useDotCanvas(monitorRef, beating ? 'magic' : 'death', (c, r, t) => monitorLuminance(c, r, { tMs: t, beating }), [beating]);
 
   return (
     <div className="raise">
-      {attackState.status === 'idle' ? (
-        <div className="raise-stage">
-          <canvas ref={circleRef} className="raise-circle" aria-label={`Spell circle, ${state.status === 'idle' ? 'unlit' : `burning at ${Math.round(power * 100)}%`}`} />
-          <canvas ref={monitorRef} className="raise-monitor" aria-label={monitorLabel(state)} />
-        </div>
+      {!showsAttack({ id: attack.id, state: attackState }) ? (
+        <RaiseStage state={state} />
       ) : (
         // R4: once Death is summoned, the stage is his (a fresh scene per attack).
         <AttackScene key={attack.id ?? 'none'} state={attackState} attackId={attack.id} />

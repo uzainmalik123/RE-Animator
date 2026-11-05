@@ -3,7 +3,10 @@ import { QUIET, type AttackState, type Ghost, type Wound } from '../../shared/at
 import {
   MINION_SPRITES,
   arrival,
+  bodyLuminance,
   bodyRect,
+  memoByKey,
+  showsAttack,
   deathLayer,
   deathRect,
   idleSpot,
@@ -134,5 +137,32 @@ describe('woundPoints', () => {
       { key: '1.2-wraith', label: '1.2 · wraith', fx: 0.5, fy: 0.25 },
       { key: '2.1-wraith', label: '2.1 · wraith', fx: 0.85, fy: 0.27 },
     ]);
+  });
+});
+
+describe('review fixes', () => {
+  it('keeps the attack on the stage from the moment Death is summoned (no flash back to the raise)', () => {
+    expect(showsAttack({ id: 'a1', state: QUIET })).toBe(true);
+    expect(showsAttack({ id: null, state: QUIET })).toBe(false);
+  });
+
+  it('places the sampled frame into its letterboxed body rect', () => {
+    const sample = (_w: number, _h: number) => new Float32Array(_w * _h).fill(1);
+    const out = bodyLuminance(sample, 640, 360, 10, 10);
+    // bodyRect(640, 360, 10, 10) = { x: 0, y: 2, w: 10, h: 6 }
+    expect(out[1 * 10]).toBe(0);
+    expect(out[2 * 10]).toBe(1);
+    expect(out[7 * 10 + 9]).toBe(1);
+    expect(out[8 * 10]).toBe(0);
+    expect(bodyLuminance(sample, 640, 360, 0, 10)).toHaveLength(0);
+  });
+
+  it('computes a keyed value once until the key changes', () => {
+    const memo = memoByKey<number>();
+    let made = 0;
+    const make = () => ++made;
+    expect(memo('a', make)).toBe(1);
+    expect(memo('a', make)).toBe(1);
+    expect(memo('b', make)).toBe(2);
   });
 });

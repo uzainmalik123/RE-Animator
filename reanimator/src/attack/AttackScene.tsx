@@ -1,10 +1,10 @@
-import { useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import type { AttackState } from '../../shared/attack';
 import { sampleLuminance } from '../render';
 import { useDotCanvas } from '../render/useDotCanvas';
 import { containRect } from '../render/viewport';
 import { frameUrl } from './attackClient';
-import { arrival, bodyRect, deathLayer, deathRect, idleSpot, placeOnBody, sceneLabel, watchedGhost, woundPoints, type Minion, type Rect } from './scene';
+import { arrival, bodyLuminance, bodyRect, deathLayer, deathRect, idleSpot, memoByKey, placeOnBody, sceneLabel, watchedGhost, woundPoints, type Minion, type Rect } from './scene';
 import { useImage, useSize } from './useImage';
 
 const DEATH_ART = '/art/death.svg';
@@ -30,42 +30,44 @@ export function AttackScene({ state, attackId }: { state: AttackState; attackId:
   const frame = useImage(attackId && g?.frame !== undefined ? frameUrl(attackId, g.ghostId, g.frame) : null);
   const death = useImage(DEATH_ART);
   const size = useSize(stage);
-  const deathCache = useRef<{ key: string; lum: Float32Array } | null>(null);
+  const [bodyMemo] = useState(() => memoByKey<Float32Array>());
+  const [deathMemo] = useState(() => memoByKey<Float32Array>());
   const wounds = woundPoints(state);
+  // The red layer's loop reads the latest state through a ref, so a ghost's step doesn't rebuild the
+  // canvas; with reduced motion it must redraw its still on every change, so then state is a dep.
+  const latest = useRef({ state, wounds });
+  useLayoutEffect(() => {
+    latest.current = { state, wounds };
+  });
+  const still = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   useDotCanvas(
     bodyRef,
     'bone',
-    (cols, rows) => {
-      const out = new Float32Array(cols * rows);
-      if (!frame || cols === 0 || rows === 0) return out;
-      const b = bodyIn(frame, cols, rows);
-      const lum = sampleLuminance(frame, b.w, b.h);
-      for (let y = 0; y < b.h; y++) out.set(lum.subarray(y * b.w, (y + 1) * b.w), (b.y + y) * cols + b.x);
-      return out;
-    },
+    (cols, rows) =>
+      frame ? bodyMemo(`${frame.src} ${cols}x${rows}`, () => bodyLuminance((w, h) => sampleLuminance(frame, w, h), frame.naturalWidth, frame.naturalHeight, cols, rows)) : new Float32Array(cols * rows),
     [frame],
   );
 
   useDotCanvas(
     deathRef,
     'death',
-    (cols, rows, t, still) => {
+    (cols, rows, t, reduce) => {
+      const { state: s, wounds: ws } = latest.current;
       const body = bodyIn(frame, cols, rows);
       const dr = deathRect(cols, rows);
-      const key = `${dr.w}x${dr.h}`;
-      if (death && deathCache.current?.key !== key) deathCache.current = { key, lum: sampleLuminance(death, dr.w, dr.h) };
-      const live = state.status === 'attacking' ? Object.values(state.ghosts).filter((x) => !x.done).slice(0, MAX_MINIONS) : [];
+      const deathLum = death ? deathMemo(`${dr.w}x${dr.h}`, () => sampleLuminance(death, dr.w, dr.h)) : null;
+      const live = s.status === 'attacking' ? Object.values(s.ghosts).filter((x) => !x.done).slice(0, MAX_MINIONS) : [];
       const minions: Minion[] = live.map((m, i) => {
         if (m.x === undefined || m.y === undefined) return { ...idleSpot(i, cols, rows), persona: m.persona, trail: [] };
-        const trail = still ? [] : m.trail.map((p) => placeOnBody(body, m.persona, p.x, p.y));
+        const trail = reduce ? [] : m.trail.map((p) => placeOnBody(body, m.persona, p.x, p.y));
         return { ...placeOnBody(body, m.persona, m.x, m.y), persona: m.persona, trail };
       });
-      const cells = wounds.map((w) => ({ col: body.x + Math.min(body.w - 1, Math.floor(w.fx * body.w)), row: body.y + Math.min(body.h - 1, Math.floor(w.fy * body.h)) }));
-      const strength = state.status === 'attacking' ? ARRIVED * arrival(t, summonedAt, still) : LINGER;
-      return deathLayer(cols, rows, { strength, minions, wounds: cells, death: death ? deathCache.current!.lum : null, deathRect: death ? dr : null });
+      const cells = ws.map((w) => ({ col: body.x + Math.min(body.w - 1, Math.floor(w.fx * body.w)), row: body.y + Math.min(body.h - 1, Math.floor(w.fy * body.h)) }));
+      const strength = s.status === 'attacking' ? ARRIVED * arrival(t, summonedAt, reduce) : LINGER;
+      return deathLayer(cols, rows, { strength, minions, wounds: cells, death: deathLum, deathRect: deathLum ? dr : null });
     },
-    [state, frame, death],
+    [frame, death, still ? state : state.status],
   );
 
   // The labels sit on the same body fractions, in CSS space (the frame is letterboxed in the stage).
