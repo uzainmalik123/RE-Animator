@@ -5,9 +5,10 @@ import { randomUUID } from 'node:crypto';
 import { cp, mkdtemp, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { RitualEvent, VitalResult } from '../shared/ritual.js';
+import type { RitualEvent, VitalName, VitalResult } from '../shared/ritual.js';
 import type { RunningApp } from './exec.js';
 import type { Fixture } from './fixtures.js';
+import { buildAutopsy } from './autopsy.js';
 import { GraveError } from './grave.js';
 import { runVitals, type VitalDeps } from './vitals.js';
 
@@ -31,11 +32,17 @@ export async function performRitual(
   workdir: string,
   emit: (e: RitualEvent) => void,
   signal?: AbortSignal,
+  autopsy: typeof buildAutopsy = buildAutopsy,
 ): Promise<RunningApp | null> {
   emit({ type: 'started', repo: fixture.name, diedIn: fixture.diedIn });
   const corpse = join(workdir, 'corpse');
   await cp(fixture.corpseDir, corpse, { recursive: true });
-  const exam = await runVitals('corpse', corpse, fixture, deps, emit, signal);
+  // The corpse's first real failure is the flatline the autopsy explains (R8).
+  let flatline: { vital: VitalName; detail: string } | null = null;
+  const exam = await runVitals('corpse', corpse, fixture, deps, (e) => {
+    if (e.type === 'vital' && !e.result.ok && !flatline) flatline = { vital: e.result.vital, detail: e.result.detail };
+    emit(e);
+  }, signal);
   if (signal?.aborted) {
     emit({ type: 'failed', phase: 'corpse', reason: 'stopped: the ritual was stopped' });
     return null;
@@ -49,6 +56,13 @@ export async function performRitual(
   await cp(fixture.corpseDir, revived, { recursive: true });
   const remedy: { files: number; rites?: string[] } = fixture.remedy ? await fixture.remedy(revived) : await layRemedy(fixture, revived);
   emit({ type: 'remedy', ...remedy });
+  // R8: why it died and what the remedy changed. The baseline is the pristine corpse, not the copy the
+  // vitals ran in (npm and the build leave files there). A failed reading must never stop the raise.
+  try {
+    emit({ type: 'autopsy', autopsy: await autopsy(fixture.corpseDir, revived, flatline) });
+  } catch {
+    // The raise goes on without it.
+  }
   // A grave no rite fits would only die the same way again (D-R11: no raise is pretended).
   if (remedy.rites?.length === 0) {
     emit({ type: 'failed', phase: 'revived', reason: 'no rite fits this death' });
@@ -96,14 +110,16 @@ export class Rituals {
   private readonly deps: VitalDeps;
   private readonly workRoot: string;
   private readonly onRelease: () => Promise<void>;
+  private readonly autopsy: typeof buildAutopsy;
 
   // `onRelease` runs first whenever a ritual is let go (Death's attack stops before its target does).
   // `fixture` may clone into the work dir (a grave, R9); the signal stops it when the ritual is let go.
-  constructor(o: { fixture: (req: RitualRequest, workdir: string, signal: AbortSignal) => Promise<Fixture>; deps: VitalDeps; workRoot?: string; onRelease?: () => Promise<void> }) {
+  constructor(o: { fixture: (req: RitualRequest, workdir: string, signal: AbortSignal) => Promise<Fixture>; deps: VitalDeps; workRoot?: string; onRelease?: () => Promise<void>; autopsy?: typeof buildAutopsy }) {
     this.fixture = o.fixture;
     this.deps = o.deps;
     this.workRoot = o.workRoot ?? tmpdir();
     this.onRelease = o.onRelease ?? (() => Promise.resolve());
+    this.autopsy = o.autopsy ?? buildAutopsy;
   }
 
   // A busy answer carries the running ritual's id, so a reloaded page can reattach to it.
@@ -124,7 +140,7 @@ export class Rituals {
         await stopping;
         cur.workdir = await mkdtemp(join(this.workRoot, 'reanimator-'));
         cur.fixture = await this.fixture(req, cur.workdir, cur.abort.signal);
-        cur.app = await performRitual(cur.fixture, this.deps, cur.workdir, emit, cur.abort.signal);
+        cur.app = await performRitual(cur.fixture, this.deps, cur.workdir, emit, cur.abort.signal, this.autopsy);
         cur.port = cur.app?.port ?? null;
       } catch (e) {
         // A grave that can't be opened never reached its corpse's vitals.

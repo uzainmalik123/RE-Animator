@@ -66,3 +66,17 @@ describe('advance (R11)', () => {
     expect(advance(end, ls, schedule(ls))).toBe(end);
   });
 });
+
+describe('the autopsy in a recording (R8)', () => {
+  const autopsy = { diedAt: 'build' as const, symptom: 'boom', skipped: 0, causes: [] };
+  const run = (...events: RecordedLine['event'][]): RecordedLine[] => events.map((event, i) => ({ t: i * 10, stream: 'ritual', id: 'r', event }));
+
+  it('folds a recorded autopsy into the ritual state', () => {
+    const s = foldTo(run({ type: 'started', repo: 'x', diedIn: 2015 }, { type: 'autopsy', autopsy }), 2);
+    expect(s.ritual?.state.autopsy).toEqual(autopsy);
+  });
+
+  it('an older recording without one folds to null', () => {
+    expect(foldTo(lines, lines.length).ritual?.state.autopsy).toBeNull();
+  });
+});

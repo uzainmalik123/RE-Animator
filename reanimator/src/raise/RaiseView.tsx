@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { VITALS, beats, flatlined, type RitualState, type VitalResult } from '../../shared/ritual';
 import type { AttackState } from '../../shared/attack';
 import { AttackPanel } from '../attack/AttackPanel';
+import { Autopsy } from '../autopsy/Autopsy';
 import { AttackScene } from '../attack/AttackScene';
 import { showsAttack } from '../attack/scene';
 import type { AttackHandle } from '../attack/useAttack';
@@ -117,6 +118,7 @@ export function RaiseView({ ritual, attack, grimoire, replay, onLeave }: { ritua
               </ol>
             </>
           )}
+          {state.autopsy && <Autopsy repo={state.repo} autopsy={state.autopsy} />}
           {state.rites.length > 0 && (
             <>
               <h2>The rites</h2>
