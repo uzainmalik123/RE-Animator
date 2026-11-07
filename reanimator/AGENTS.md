@@ -86,8 +86,8 @@ Before you hand back, if anything changed:
 
 - `npm install` once.
 - `npm run dev` → the UI at http://localhost:5173 (a dark canvas until R1 draws on it).
-- Secrets and switches: copy `.env.example` to `.env` (gitignored) and fill in every key. `npm run server`, `attack:check` and `e2b:up` load it, and the shell or Doppler wins over it. **Never put a value in `.env.example`**: CI's `env-files` check blocks the PR, with no bypass (D-R29).
-- **One-line setups (D-R28):** `npm run server:free` (free LLM + fake Kiro, spends nothing; `-- groq` / `-- ollama` to switch) and `npm run server:paid` (Claude on Bedrock + real Kiro; `-- claude` for the Anthropic API). `e2b:free` / `e2b:paid` host the same on E2B. Each checks `.env` first and lists what's missing.
+- Secrets and switches: the repo has **one** env file, `../.env` at the repo root (copy `../.env.example`; gitignored). Fill in every key. `npm run server`, `attack:check`, `e2b:up` and the profiles load it (`server/dotenv.ts`, D-R30), and the shell or Doppler wins over it. **Never put a value in `.env.example`**: CI's `env-files` check blocks the PR, with no bypass (D-R29).
+- **One-line setups (D-R28):** `npm run server:free` (free LLM + fake Kiro, spends nothing; `-- groq` / `-- ollama` to switch) and `npm run server:paid` (Claude on Bedrock + real Kiro; `-- claude` for the Anthropic API). `e2b:free` / `e2b:paid` host the same on E2B. Each checks the root `.env` first and lists what's missing.
 - `npm run server` → the backend at http://127.0.0.1:7070 (`/api/health`, `POST /api/rituals`). The UI proxies `/api` to it. Ctrl-C also stops the revived app.
 - `npx playwright-core install chromium` once per machine: the render vital and its integration test need it.
 - `npm run health` → typecheck + lint + test.
@@ -96,7 +96,7 @@ Before you hand back, if anything changed:
 - The grimoire (R7) runs `kiro-cli` (installed and logged in; override it with `REANIMATOR_KIRO`). To try it without spending Kiro tokens, run `REANIMATOR_KIRO=$PWD/server/fixtures/fake-kiro.mjs npm run server`.
 - **Cheap testing (D-R27):** Death's LLM is `REANIMATOR_LLM` (`anthropic` default, `bedrock`, or the free `gemini`/`groq`/`ollama`) plus `REANIMATOR_LLM_MODEL`, e.g. `GEMINI_API_KEY=… REANIMATOR_LLM=gemini REANIMATOR_LLM_MODEL=<a Gemini model> npm run server`. Free models are for wiring checks; the demo uses Claude.
 - R6: the app opens on the graveyard (`GET /api/graveyard` lists `fixtures/*`); pick a headstone and Kiro fetches it into the raise. Add a grave by dropping a fixture folder in `fixtures/`.
-- **Live host on E2B (D-R26):** put `E2B_API_KEY` in `reanimator/.env` (gitignored) or the env, then `npm run e2b:up` (add `-- --minutes 30` to change its life). It prints a keyed public link; `npm run e2b:down -- <id>` kills it. Only the LLM settings from your env are forwarded (`ANTHROPIC_*`, `AWS_*`, `GEMINI_*`, `GROQ_*`, `REANIMATOR_LLM*`). The grimoire uses the fake Kiro there by default (`--kiro fake`, no tokens); `-- --kiro real` uploads your `kiro-cli` and prints a device-flow code to approve (D-R27).
+- **Live host on E2B (D-R26):** put `E2B_API_KEY` in the root `.env` (gitignored) or the env, then `npm run e2b:up` (add `-- --minutes 30` to change its life). It prints a keyed public link; `npm run e2b:down -- <id>` kills it. Only the LLM settings from your env are forwarded (`ANTHROPIC_*`, `AWS_*`, `GEMINI_*`, `GROQ_*`, `REANIMATOR_LLM*`). The grimoire uses the fake Kiro there by default (`--kiro fake`, no tokens); `-- --kiro real` uploads your `kiro-cli` and prints a device-flow code to approve (D-R27).
 - R9: paste a GitHub URL in **Dig a new grave** (Name a grave) to raise a stranger's repo. It needs `git` and `bwrap` (bubblewrap) on the machine; every command of that repo runs in the sandbox (D-R23). Death can't attack it without a chart.
 
 ## Health check (after every implementation)

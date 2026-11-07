@@ -125,9 +125,10 @@ npx playwright-core install chromium   # once per machine
 npm run health
 
 # the product
-cd ../reanimator
+cd ..
+cp .env.example .env                    # the repo's one env file; fill in your keys (see below)
+cd reanimator
 npm ci
-cp .env.example .env                    # then fill in your keys (see below)
 npm run server:free   # backend on http://127.0.0.1:7070, spending nothing
 npm run dev      # UI on http://localhost:5173 (second terminal)
 ```
@@ -136,7 +137,7 @@ Open http://localhost:5173, pick a grave, then press **Begin the ritual**, **Sum
 
 ### One command per setup
 
-Put every key you have in `reanimator/.env` once ([`.env.example`](reanimator/.env.example) lists them all), then swap setups with one command. Each command checks `.env` first and lists anything missing before it starts.
+Put every key you have in **`.env` at the repo root** once ([`.env.example`](.env.example) lists them all; it's the only one), then swap setups with one command. Each command checks `.env` first and lists anything missing before it starts.
 
 | Command | Death plans with | The grimoire | Spends |
 |---|---|---|---|
@@ -157,7 +158,7 @@ The free providers need a model id in `.env` (`GEMINI_MODEL`, `GROQ_MODEL`, `OLL
 
 ### A live demo on E2B
 
-`npm run e2b:up` (in `reanimator/`, with `E2B_API_KEY` in `.env`) boots the whole thing in an [E2B](https://e2b.dev) sandbox and prints a **secret link**. Only people holding that link get in.
+`npm run e2b:up` (in `reanimator/`, with `E2B_API_KEY` in the root `.env`) boots the whole thing in an [E2B](https://e2b.dev) sandbox and prints a **secret link**. Only people holding that link get in.
 
 ```sh
 npm run e2b:free                       # free LLM + the fake Kiro: nothing spent
