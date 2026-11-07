@@ -14,6 +14,7 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Sandbox } from 'e2b';
+import { loadDotEnv } from '../dotenv.js';
 
 const HOME = '/home/user';
 const NODE_MAJOR = 22;
@@ -132,9 +133,9 @@ export async function up(minutes: number, kiro: KiroMode): Promise<void> {
 
 async function main(): Promise<void> {
   const [cmd, ...rest] = process.argv.slice(2);
-  if (existsSync('.env')) process.loadEnvFile('.env');
+  loadDotEnv();
   if (!process.env.E2B_API_KEY) {
-    console.error('Set E2B_API_KEY first: in reanimator/.env (gitignored), or `doppler run -- npm run e2b:up`.');
+    console.error('Set E2B_API_KEY first: in .env at the repo root (gitignored), or `doppler run -- npm run e2b:up`.');
     process.exit(1);
   }
   if (cmd === 'down') {

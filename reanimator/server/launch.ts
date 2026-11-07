@@ -1,13 +1,13 @@
-// One-line launch profiles (D-R27): check reanimator/.env for what the profile needs, then start the
+// One-line launch profiles (D-R28): check the repo's .env (D-R30) for what the profile needs, then start the
 // backend (or the E2B host) with Death's LLM and the grimoire's Kiro set.
 //   npm run server:free [-- groq]    free LLM (REANIMATOR_FREE_LLM, default gemini) + the fake Kiro
 //   npm run server:paid [-- claude]  Claude (REANIMATOR_PAID_LLM, default bedrock) + the real Kiro
 //   npm run e2b:free / e2b:paid [-- <provider>] [-- --minutes 30]   the same, hosted on E2B
 // The profile always wins over REANIMATOR_LLM / REANIMATOR_LLM_MODEL / REANIMATOR_KIRO in .env.
 import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadDotEnv } from './dotenv.js';
 
 export type Tier = 'free' | 'paid';
 export type Where = 'local' | 'e2b';
@@ -72,14 +72,12 @@ async function main(): Promise<void> {
   if ((where !== 'local' && where !== 'e2b') || (tier !== 'free' && tier !== 'paid')) {
     throw new Error('usage: tsx server/launch.ts <local|e2b> <free|paid> [provider] [--minutes N]');
   }
-  const envFile = fileURLToPath(new URL('../.env', import.meta.url));
-  if (existsSync(envFile)) process.loadEnvFile(envFile);
-  else console.warn('No reanimator/.env: reading your shell only (cp .env.example .env to start one).');
+  if (!loadDotEnv()) console.warn('No .env at the repo root: reading your shell only (cp .env.example .env there to start one).');
 
   const provider = rest[0] && !rest[0].startsWith('--') ? rest[0] : undefined;
   const launch = resolveProfile({ tier, ...(provider ? { provider } : {}), where, env: process.env, hasKiro: hasKiroCli() });
   if (launch.errors.length) {
-    console.error(`Can't start ${tier}${provider ? ` (${provider})` : ''}. Fix in reanimator/.env:`);
+    console.error(`Can't start ${tier}${provider ? ` (${provider})` : ''}. Fix in .env at the repo root:`);
     for (const e of launch.errors) console.error(`  ✗ ${e}`);
     process.exit(1);
   }

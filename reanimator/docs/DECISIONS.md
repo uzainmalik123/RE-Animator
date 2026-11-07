@@ -28,9 +28,10 @@
 | D-R24 | The R6 graveyard: headstones are the prepared fixtures on disk, three of them, raised by id; Kiro's walk is only a transition | Accepted |
 | D-R25 | The autopsy (R8): a computed reading of the real corpse and remedy, as one `autopsy` ritual event | Accepted |
 | D-R26 | A live Reanimator hosted in an E2B sandbox (`npm run e2b:up`), behind a keyed gate; the backend's loopback guard is unchanged | Accepted |
-| D-R27 | Cheap testing: `REANIMATOR_LLM`/`REANIMATOR_LLM_MODEL` pick Death's LLM (free Gemini/Groq/Ollama via Poltergeist D-50, Claude for real runs); `e2b:up --kiro fake` (default) casts with the fake Kiro, `--kiro real` uploads kiro-cli and logs in by device flow | Accepted |
-| D-R28 | One-line launch profiles: `server:free` / `server:paid` (and `e2b:free` / `e2b:paid`) check `.env` for what they need, then start with Death's LLM and Kiro set; free never spends, paid is Claude + real Kiro | Accepted |
+| D-R27 | Cheap testing (env file location superseded by D-R30): `REANIMATOR_LLM`/`REANIMATOR_LLM_MODEL` pick Death's LLM (free Gemini/Groq/Ollama via Poltergeist D-50, Claude for real runs); `e2b:up --kiro fake` (default) casts with the fake Kiro, `--kiro real` uploads kiro-cli and logs in by device flow | Accepted |
+| D-R28 | One-line launch profiles (env file location superseded by D-R30): `server:free` / `server:paid` (and `e2b:free` / `e2b:paid`) check `.env` for what they need, then start with Death's LLM and Kiro set; free never spends, paid is Claude + real Kiro | Accepted |
 | D-R29 | Secrets guard: CI job `env-files` fails a PR that fills in an `.env.example`, holds a token-shaped string in a committed env file, or commits a real `.env`; required on `main` with no bypass for anyone | Accepted |
+| D-R30 | One env file for the whole repo: `.env` at the root, templated by the root `.env.example`; Reanimator loads it (`server/dotenv.ts`), Poltergeist never does. Supersedes the `reanimator/.env` location in D-R27/D-R28 | Accepted |
 | D-R21 | The R7 grimoire drives the real Kiro agent: one headless `kiro-cli chat` turn per spell in the revived body, file tools only, never while Death attacks; the user still dares Death | Accepted |
 
 ---
@@ -301,3 +302,11 @@
   - CI workflow **Secrets guard**, job **`env-files`**, runs on every PR and push to `main` (no path filter: a required check that never reports would block every PR).
   - The **"Protect main"** ruleset requires `health` and `env-files`, a PR, and blocks force pushes and deletion, with **no bypass actors**: the earlier admin pull-request bypass is removed, so nobody, owner included, can merge past a red check.
 - **Consequences:** a leaked key still has to be rotated: the guard stops the merge, but the PR's commits are already public on GitHub. Repo admins can still edit the ruleset itself (GitHub allows that); doing so is a team decision, not a shortcut. Neither `health` check is path-filtered either.
+
+### D-R30: One env file for the whole repo
+- **Context:** (2026-11-07) There were two templates, `reanimator/.env.example` and `poltergeist/.env.example`, with mostly the same keys. The team wants one place to keep every key.
+- **Decision:**
+  - The repo has **one** template, `<root>/.env.example`, and one real file, `<root>/.env` (gitignored by the root `.gitignore`). `poltergeist/.env.example` is deleted; its only unique entry, `CANDY_SWAP_PASSWORD`, moved to the root template.
+  - Reanimator loads it through `server/dotenv.ts` (`loadDotEnv()`, `ENV_FILE`) in `main.ts`, `attack-check.ts`, `launch.ts` and `e2b/up.ts`. The shell or Doppler still wins.
+  - **Poltergeist never reads the file.** Reanimator passes the engine only its LLM keys (`engineEnv`); an engine that loaded the whole file would undo that filter. Run alone, it's `set -a && . ../.env && set +a` first, or Doppler.
+- **Consequences:** supersedes the `reanimator/.env` location in D-R27 and D-R28 (their behaviour is unchanged). `e2b:up` uploads only `reanimator/` and `poltergeist/`, so the root `.env` never leaves the machine.

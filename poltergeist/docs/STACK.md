@@ -21,7 +21,7 @@
 | Font | **JetBrains Mono** (Google Fonts, OFL) | Good box-drawing glyphs for the wordmark and frames |
 | Séance Room UI | **Vite + React + TypeScript**, Tailwind CSS using the costume tokens | A static build for live and replay. No SSR needed |
 | Demo target (Candy Swap) | **Hono** (server-side JSX) + **better-sqlite3**, generated and built in **Kiro** | Tiny, fast reset, and realistic enough for real race and validation bugs |
-| Secrets | **Doppler** (`doppler run -- …`), `.env.example` fallback | Same workflow as Reanimator |
+| Secrets | **Doppler** (`doppler run -- …`), or the repo's one root `.env` (template `../.env.example`, Reanimator D-R30) | Same workflow as Reanimator |
 | CI | GitHub Actions on Node 22: `npm ci`, `npx playwright-core install --with-deps chromium`, `npm run health` | Same command as local. No secrets on PRs |
 
 ## SaaS used

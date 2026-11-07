@@ -117,7 +117,7 @@ Each PRD feature (or KNOWN_ISSUES item) goes through this cycle. The skills are 
   - `fixtures/candy-swap` (Hono + better-sqlite3, built in Kiro)
 - **Libraries:** playwright-core (Chromium), zod 4, unified/remark-parse, fast-check, `@anthropic-ai/sdk` (default `claude-sonnet-5-5`), `@modelcontextprotocol/sdk`, ws.
 - **Ports:** 4000 Candy Swap · 6660 runner WebSocket · 6661 Séance.
-- **Secrets:** Doppler (`doppler run -- …`), `.env.example` fallback. Never commit keys.
+- **Secrets:** Doppler (`doppler run -- …`), or the repo's one `.env` at the root (template `../.env.example`, Reanimator D-R30). The engine never reads it itself: Reanimator passes only the LLM keys; alone, load it first (`set -a && . ../.env && set +a`). Never commit keys.
 - **SaaS:** Anthropic API, GitHub, Doppler, Kiro, YouTube and Devpost are required. Google Fonts too. Vercel is Med (D-12 open) and Fly.io is Low.
 - **AWS:** only Bedrock, as an optional provider (F19, built, D-47).
 - **Free LLMs for testing (D-50):** Gemini, Groq or a local Ollama through `provider`; never the submission model.

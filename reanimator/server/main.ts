@@ -1,10 +1,10 @@
 import { serve } from '@hono/node-server';
-import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createApp } from './app.js';
 import { Attacks } from './attack.js';
+import { loadDotEnv } from './dotenv.js';
 import { DEFAULT_CLI } from './engine.js';
 import { freePort, runCommand, startApp, waitForHttp } from './exec.js';
 import { PRACTICE_CORPSE, loadFixture } from './fixtures.js';
@@ -17,9 +17,8 @@ import { renderCheck } from './render-check.js';
 import { Recorder, recordApis, secretValues } from './recorder.js';
 import { Rituals } from './ritual.js';
 
-// reanimator/.env (gitignored; see .env.example) fills in what the shell or Doppler didn't set (D-R27).
-const envFile = fileURLToPath(new URL('../.env', import.meta.url));
-if (existsSync(envFile)) process.loadEnvFile(envFile);
+// The repo's .env fills in what the shell or Doppler didn't set (D-R30).
+loadDotEnv();
 
 // Loopback only: this backend runs install/build/serve commands, so it must never face the LAN.
 const hostname = '127.0.0.1';

@@ -1,19 +1,18 @@
 // R3's Done-when, by hand (KI-R15): raise the practice corpse, let Death attack it with the real
 // engine and a real LLM key, and print the wounds. Exits 0 only when at least one finding reproduced.
-//   doppler run -- npm run attack:check   (or with the keys in reanimator/.env)
-import { existsSync } from 'node:fs';
+//   doppler run -- npm run attack:check   (or with the keys in the repo's .env)
 import { fileURLToPath } from 'node:url';
 import { reduceAttack, QUIET, type AttackEvent } from '../shared/attack.js';
 import type { RitualEvent } from '../shared/ritual.js';
 import { Attacks } from './attack.js';
+import { loadDotEnv } from './dotenv.js';
 import { DEFAULT_CLI } from './engine.js';
 import { freePort, runCommand, startApp, waitForHttp } from './exec.js';
 import { PRACTICE_CORPSE, loadFixture } from './fixtures.js';
 import { renderCheck } from './render-check.js';
 import { Rituals } from './ritual.js';
 
-const envFile = fileURLToPath(new URL('../.env', import.meta.url));
-if (existsSync(envFile)) process.loadEnvFile(envFile);
+loadDotEnv();
 
 async function until<E>(read: () => { log: E[]; done: boolean } | null): Promise<E[]> {
   for (;;) {
