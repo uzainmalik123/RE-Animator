@@ -22,12 +22,28 @@ describe('requestRitual', () => {
 
   it('names the grave to raise (R9)', async () => {
     const fetchFn = vi.fn(json(202, { id: 'r1' }));
-    expect(await requestRitual(fetchFn, 'https://github.com/a/b')).toEqual({ id: 'r1' });
+    expect(await requestRitual(fetchFn, { repo: 'https://github.com/a/b' })).toEqual({ id: 'r1' });
     expect(fetchFn).toHaveBeenCalledWith('/api/rituals', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ repo: 'https://github.com/a/b' }) });
   });
 
   it('passes on why a grave was refused', async () => {
-    expect(await requestRitual(json(400, { error: 'repo must be https://github.com/<owner>/<repo>' }), 'x')).toEqual({ error: 'repo must be https://github.com/<owner>/<repo>' });
+    expect(await requestRitual(json(400, { error: 'repo must be https://github.com/<owner>/<repo>' }), { repo: 'x' })).toEqual({ error: 'repo must be https://github.com/<owner>/<repo>' });
+  });
+
+  it('names a prepared grave by id (R6)', async () => {
+    const fetchFn = vi.fn(json(202, { id: 'r1' }));
+    expect(await requestRitual(fetchFn, { grave: 'tally-2014' })).toEqual({ id: 'r1' });
+    expect(fetchFn).toHaveBeenCalledWith('/api/rituals', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ grave: 'tally-2014' }) });
+  });
+
+  it('passes on why a grave is not there (404)', async () => {
+    expect(await requestRitual(json(404, { error: 'no such grave' }), { grave: 'nope' })).toEqual({ error: 'no such grave' });
+  });
+
+  it('refuses to swap a named grave for the ritual already running', async () => {
+    const busy = json(409, { error: 'a ritual is already running', id: 'r0' });
+    expect(await requestRitual(busy, { grave: 'tally-2014' })).toEqual({ error: 'a ritual is already running; wait for it to finish' });
+    expect(await requestRitual(busy, { repo: 'https://github.com/a/b' })).toEqual({ error: 'a ritual is already running; wait for it to finish' });
   });
 
   it('explains a refusal', async () => {

@@ -81,9 +81,11 @@ interface Current {
   finished: Promise<void>;
 }
 
-// What the user asked to raise: a grave's URL (R9), or nothing for our own corpse.
+// What the user asked to raise: a prepared grave by id (R6), a GitHub grave's URL (R9), or nothing
+// for our own practice corpse. At most one of the two is set.
 export interface RitualRequest {
   repo?: string;
+  grave?: string;
 }
 
 const terminal = (e: RitualEvent) => e.type === 'risen' || e.type === 'failed';

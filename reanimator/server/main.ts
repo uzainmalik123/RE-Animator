@@ -8,6 +8,7 @@ import { DEFAULT_CLI } from './engine.js';
 import { freePort, runCommand, startApp, waitForHttp } from './exec.js';
 import { PRACTICE_CORPSE, loadFixture } from './fixtures.js';
 import { graveFixture } from './grave.js';
+import { graveDir, listGraves } from './graveyard.js';
 import { Grimoire } from './grimoire.js';
 import { DEFAULT_KIRO } from './kiro.js';
 import { resolvePort } from './port.js';
@@ -23,7 +24,14 @@ const port = resolvePort(process.env.REANIMATOR_PORT);
 // folder (D-R14). A named grave (R9, D-R23) is cloned into the ritual's work dir and sandboxed.
 // Death's attack and Kiro's spell stop before the app does (onRelease), on a new ritual or shutdown.
 const rituals: Rituals = new Rituals({
-  fixture: (req, workdir, signal) => (req.repo ? graveFixture(req.repo, workdir, { run: runCommand, signal }) : loadFixture(PRACTICE_CORPSE)),
+  fixture: async (req, workdir, signal) => {
+    if (req.repo) return graveFixture(req.repo, workdir, { run: runCommand, signal });
+    if (!req.grave) return loadFixture(PRACTICE_CORPSE);
+    // R6: a prepared grave, by id; the API already checked it, this is the last gate before a path.
+    const dir = await graveDir(req.grave);
+    if (!dir) throw new Error('no such grave');
+    return loadFixture(dir);
+  },
   deps: { runCommand, startApp, freePort, waitForHttp, renderCheck },
   onRelease: () => Promise.all([attacks.stop(), grimoire.stop()]).then(() => undefined),
 });
@@ -41,10 +49,11 @@ const grimoire: Grimoire = new Grimoire({ rituals, attacking: () => attacks.busy
 
 // R11 (D-R22): REANIMATOR_RECORD=<dir> records this session for the hosted replay.
 const recordDir = process.env.REANIMATOR_RECORD;
+const graveyard = { list: () => listGraves() };
 const apis = recordDir ? recordApis({ rituals, attacks, grimoire }, new Recorder({ dir: resolve(recordDir), home: homedir(), secrets: secretValues(process.env) })) : { rituals, attacks, grimoire };
 if (recordDir) console.log(`Recording this session to ${resolve(recordDir)}`);
 
-serve({ fetch: createApp(apis).fetch, hostname, port }, (info) => {
+serve({ fetch: createApp({ ...apis, graveyard }).fetch, hostname, port }, (info) => {
   console.log(`Reanimator backend listening on http://${hostname}:${info.port}`);
 });
 

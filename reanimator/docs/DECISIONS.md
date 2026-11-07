@@ -25,6 +25,7 @@
 | D-R17 | The attack protocol: `POST /api/rituals/:id/attack` + SSE, a wound = a haunted pair, one attack at a time, a new ritual stops it first | Accepted |
 | D-R19 | The R4 attack scene: live ghosts and the engine's own frames, Death + minions + wounds on a red layer over a bone body | Accepted |
 | D-R20 | The R5 heal loop: a brief per wound for Kiro (the user hands it over), a re-raise on real vitals before every attack but the first, a one-wound re-run, the merged report as ledger, and a wound closes only on a clean pair that really ran | Accepted (one bullet amended by D-R21) |
+| D-R24 | The R6 graveyard: headstones are the prepared fixtures on disk, three of them, raised by id; Kiro's walk is only a transition | Accepted |
 | D-R21 | The R7 grimoire drives the real Kiro agent: one headless `kiro-cli chat` turn per spell in the revived body, file tools only, never while Death attacks; the user still dares Death | Accepted |
 
 ---
@@ -238,3 +239,14 @@
   - **npm is probed inside the sandbox before the clone.** Without it, every vital would fail and a living repo would be called dead, so the ritual fails with "no npm in the sandbox …" instead.
 - **Consequences:** resolves KI-R8 within the limits in KI-R26. The R9 Done-when (an unprepared, permissively licensed repo raised live) is KI-R25; the sandbox's limits are KI-R26. A grave's Node is the system's (`/usr/bin/node`), not the user's shell Node.
 
+
+### D-R24: The graveyard (R6)
+- **Context:** R6's grill (2026-11-07), built in Kiro (D-R18) with the recommended answer at every question. The app opened on one button that always raised the practice corpse.
+- **Decision:**
+  - **The list is the disk.** `GET /api/graveyard` lists `fixtures/*` whose manifest loads (oldest death first). No second hand-kept list that could drift. A grave is raised by directory id (`POST /api/rituals {grave}`); the id must be a plain name (`^[a-z0-9][a-z0-9-]{0,63}$`) and listed, so nothing from the wire becomes a path (400 malformed, 404 unlisted, 400 if `repo` is also named).
+  - **Three prepared graves, three deaths:** `guestbook-2016` (install: `engine-strict` pin), `sundial-2015` (build: `util.print`), `tally-2014` (serve: `process.EventEmitter`). All ours, MIT, each with a chart, each proved by a real integration test (D-R11). Strangers' repos stay the R9 field, moved into the graveyard as "Dig a new grave"; an empty field no longer raises the practice corpse.
+  - **The walk is a transition, not a result.** The ritual starts the moment a grave is chosen; Kiro's ~1.2 s walk delays nothing and claims nothing. Skipped under `prefers-reduced-motion`; not played when the backend refuses; a URL grave has no stone, so it goes straight to the raise.
+  - **Two canvases, two inks** (stones/fog `--bone`, Kiro `--magic`); no red. The headstones are also real buttons with full accessible names.
+  - **Back to the graveyard** is disabled while a ritual runs; it closes the ritual's stream and the attack and spell views. The backend keeps the old body until the next ritual.
+  - The replay (R11) is untouched: a recording starts at the first ritual event.
+- **Consequences:** the raise panel no longer starts rituals. The real demo repo (KI-R1), when picked, is one more `fixtures/` folder and appears as a headstone. R8 (cause of death) will hang off the headstone.

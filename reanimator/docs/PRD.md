@@ -43,7 +43,7 @@
 | 6 | R7 | The grimoire: the agent/chat surface | Med | Built; live Kiro cast pending KI-R21 |
 | 7 | R11 | Hosted demo / replay | Med | Built (recording owed, KI-R23) |
 | 8 | R9 | Arbitrary GitHub URL + real clone & revive | Low | Built (live run owed, KI-R25) |
-| 9 | R6 | 🔒 **Built in Kiro.** The graveyard: pick a dead repo | Med | TBD (Kiro only, D-R18) |
+| 9 | R6 | 🔒 **Built in Kiro.** The graveyard: pick a dead repo | Med | Built (D-R24) |
 | 10 | R8 | 🔒 **Built in Kiro.** Autopsy: why it died | Med | TBD (Kiro only, D-R18) |
 | 11 | R10 | 🔒 **Built in Kiro.** Sound & atmosphere | Low | TBD (Kiro only, D-R18) |
 
@@ -186,7 +186,7 @@
 
 These are built **in Kiro, not Claude Code**, so the entry really uses Kiro's spec workflow on the product itself. In the batched Kiro session: open `reanimator/` in Kiro, create a spec for the feature (Kiro writes `requirements.md`, `design.md` and `tasks.md`), let Kiro implement the tasks, run `npm run health`, and commit Kiro's output as it is. **Claude Code sessions must not grill, plan, implement or review these.** If asked to, stop and remind the user (D-R18). Their scopes stay as below.
 
-### R6: The graveyard (pick a repo) · Med · TBD · 🔒 Kiro only
+### R6: The graveyard (pick a repo) · Med · Built (D-R24) · 🔒 Kiro only
 **Owns:** the opening scene: a graveyard of dead repos to choose from (a curated list in v1), Kiro walking out to fetch the chosen one.
 - **User story:** As the necromancer, I choose which dead project to raise.
 - **Constraints:** curated list of prepared repos in v1; no live GitHub search yet (that's R9).
@@ -223,3 +223,4 @@ These are built **in Kiro, not Claude Code**, so the entry really uses Kiro's sp
 - 2026-11-05: R7 Built (D-R21, plan `docs/plans/2026-11-05-R7-grimoire.md`): the grimoire drives the real Kiro agent through `kiro-cli chat --output-format stream-json` (one turn per spell, fs tools only, never during Death), drawn as spell, quill, margin notes, ruled boxes, candle and seal. A wound can be cast from its brief, and a sealed heal dares Death again. Tested against a fake kiro-cli. The live cast is KI-R21.
 - 2026-11-05: R11 Built (D-R22, plan `docs/plans/2026-11-05-R11-replay.md`). The backend records a session (`REANIMATOR_RECORD`), and the real UI replays it from static files with a "RECORDED RUN" banner and locked controls. `npm run build:replay` plus a hand-run GitHub Pages workflow host it. Resolves KI-R7. The hero recording is KI-R23.
 - 2026-11-05: R9 Built (D-R23, plan `docs/plans/2026-11-05-R9-any-grave.md`). Name a GitHub grave; it's cloned shallow, proven dead and raised inside a bubblewrap sandbox, with four fixed rites as its remedy. Resolves KI-R8. The live run on a real repo is KI-R25; the sandbox's limits are KI-R26.
+- 2026-11-07: R6 Built in Kiro (D-R24, spec `.kiro/specs/r6-graveyard/`, plan `docs/plans/2026-11-07-R6-graveyard.md`). The app opens on a graveyard of three prepared graves (each dies at a different vital); Kiro walks to the chosen stone, then the raise takes over; "Back to the graveyard" returns.

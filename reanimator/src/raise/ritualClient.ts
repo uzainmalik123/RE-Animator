@@ -5,17 +5,23 @@ import type { RitualEvent } from '../../shared/ritual';
 export type FetchLike = (url: string, init: { method: string; headers?: Record<string, string>; body?: string }) => Promise<Response>;
 
 // Start a ritual, or attach to the one already running (409 carries its id, so a reload mid-ritual
-// rejoins it instead of being locked out). `repo` names a grave on GitHub (R9).
-export async function requestRitual(fetchFn: FetchLike, repo?: string): Promise<{ id: string } | { error: string }> {
+// rejoins it instead of being locked out). The target is a grave on GitHub (R9, `repo`), a prepared
+// grave of the graveyard (R6, `grave`, its id), or nothing for our own practice corpse.
+export type RitualTarget = { repo: string } | { grave: string };
+
+export async function requestRitual(fetchFn: FetchLike, target?: RitualTarget): Promise<{ id: string } | { error: string }> {
   let res: Response;
   try {
-    res = await fetchFn('/api/rituals', repo === undefined ? { method: 'POST' } : { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ repo }) });
+    res = await fetchFn('/api/rituals', target === undefined ? { method: 'POST' } : { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(target) });
   } catch {
     return { error: 'the backend is not answering (npm run server)' };
   }
   const body = (await res.json().catch(() => ({}))) as { id?: unknown; error?: unknown };
-  if ((res.status === 202 || res.status === 409) && typeof body.id === 'string') return { id: body.id };
-  if (res.status === 400 && typeof body.error === 'string') return { error: body.error };
+  if (res.status === 202 && typeof body.id === 'string') return { id: body.id };
+  // A grave that was named is never swapped for the ritual already running: that would raise another repo.
+  if (res.status === 409 && target !== undefined) return { error: 'a ritual is already running; wait for it to finish' };
+  if (res.status === 409 && typeof body.id === 'string') return { id: body.id };
+  if ((res.status === 400 || res.status === 404) && typeof body.error === 'string') return { error: body.error };
   return { error: `the backend refused the ritual (HTTP ${res.status})` };
 }
 

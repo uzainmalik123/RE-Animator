@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { Headstone } from '../shared/graveyard.js';
 import type { RitualEvent } from '../shared/ritual.js';
 import type { AttackEvent } from '../shared/attack.js';
 import type { SpellEvent } from '../shared/grimoire.js';
@@ -81,6 +82,66 @@ describe('createApp', () => {
       expect(res.status).toBe(400);
       expect(await res.json()).toEqual({ error: 'repo must be https://github.com/<owner>/<repo>' });
       expect(calls).toEqual([]);
+    });
+  });
+
+  describe('the graveyard (R6)', () => {
+    const STONES: Headstone[] = [
+      { id: 'tally-2014', name: 'tally-2014', diedIn: 2014, licence: 'MIT', chart: true },
+      { id: 'practice-corpse', name: 'guestbook-2016', diedIn: 2016, licence: 'MIT', chart: true },
+    ];
+    const graveyard = { list: async () => STONES };
+    const recording = () => {
+      const calls: unknown[] = [];
+      const rituals: RitualsApi = { ...fakeRituals(), start: (req) => (calls.push(req), { id: 'r1' }) };
+      return { app: createApp({ rituals, graveyard }), calls };
+    };
+    const post = (app: ReturnType<typeof createApp>, body?: unknown) =>
+      app.request(`${BASE}/api/rituals`, body === undefined ? { method: 'POST' } : { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+
+    it('lists the graves', async () => {
+      const res = await createApp({ graveyard }).request(`${BASE}/api/graveyard`);
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ graves: STONES });
+    });
+
+    it('is behind the loopback guard', async () => {
+      const res = await createApp({ graveyard }).request('http://evil.example/api/graveyard');
+      expect(res.status).not.toBe(200);
+    });
+
+    it('starts the ritual on the chosen grave', async () => {
+      const { app, calls } = recording();
+      const res = await post(app, { grave: 'tally-2014' });
+      expect(res.status).toBe(202);
+      expect(await res.json()).toEqual({ id: 'r1' });
+      expect(calls).toEqual([{ grave: 'tally-2014' }]);
+    });
+
+    it('refuses a grave that is not listed with a 404', async () => {
+      const { app, calls } = recording();
+      const res = await post(app, { grave: 'nope' });
+      expect(res.status).toBe(404);
+      expect(await res.json()).toEqual({ error: 'no such grave' });
+      expect(calls).toEqual([]);
+    });
+
+    it.each([{ grave: 5 }, { grave: '../x' }, { grave: '' }, { grave: 'a/b' }, { grave: null }, { grave: 'a', repo: 'https://github.com/a/b' }])('refuses %o with a 400', async (body) => {
+      const { app, calls } = recording();
+      expect((await post(app, body)).status).toBe(400);
+      expect(calls).toEqual([]);
+    });
+
+    it('still raises our own corpse when nothing is named', async () => {
+      const { app, calls } = recording();
+      await post(app);
+      expect(calls).toEqual([{}]);
+    });
+
+    it('answers 404 to a grave when no graveyard is wired', async () => {
+      const rituals = fakeRituals();
+      const res = await post(createApp({ rituals }), { grave: 'tally-2014' });
+      expect(res.status).toBe(404);
     });
   });
 

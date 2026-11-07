@@ -26,8 +26,9 @@ Work one PRD feature at a time, through the grill → plan → implement → rev
 - [x] 8. R11 hosted replay (built, D-R22; the real hero recording is KI-R23); then R9 (arbitrary URLs)
   - _Requirements: as per PRD_
   - _R9 built (D-R23): a GitHub URL is cloned, sandboxed in bubblewrap and raised by fixed rites; the live run on a real repo is KI-R25._
-- [ ] 9. 🔒 Built in Kiro (D-R18): R6 Graveyard (pick a repo)
+- [x] 9. 🔒 Built in Kiro (D-R18): R6 Graveyard (pick a repo)
   - _Requirements: 5.1, 5.3_
+  - _Built (D-R24); spec `.kiro/specs/r6-graveyard/`._
 - [ ] 10. 🔒 Built in Kiro (D-R18): R8 Autopsy (why it died)
   - _Requirements: as per PRD_
 - [ ] 11. 🔒 Built in Kiro (D-R18): R10 Sound & atmosphere

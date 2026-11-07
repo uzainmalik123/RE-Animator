@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { IDLE, reduceRitual, type RitualState } from '../../shared/ritual';
-import { connectRitual, requestRitual, type EventSourceLike } from './ritualClient';
+import { connectRitual, requestRitual, type EventSourceLike, type RitualTarget } from './ritualClient';
 
 // Start (or rejoin) a ritual on the backend and fold its SSE stream into state (D-R15).
-export type RitualHandle = { state: RitualState; id: string | null; start: (repo?: string) => Promise<void>; error: string | null };
+// `start` resolves true once the backend accepted (or rejoined) a ritual, false when it refused one
+// (the reason is in `error`). `reset` lets a finished ritual go, back to the idle graveyard (R6).
+export type RitualHandle = { state: RitualState; id: string | null; start: (target?: RitualTarget) => Promise<boolean>; reset: () => void; error: string | null };
 
 export function useRitual(): RitualHandle {
   const [state, setState] = useState<RitualState>(IDLE);
@@ -13,12 +15,12 @@ export function useRitual(): RitualHandle {
 
   useEffect(() => () => source.current?.close(), []);
 
-  const start = useCallback(async (repo?: string) => {
+  const start = useCallback(async (target?: RitualTarget) => {
     setError(null);
-    const r = await requestRitual((url, init) => fetch(url, init), repo);
+    const r = await requestRitual((url, init) => fetch(url, init), target);
     if ('error' in r) {
       setError(r.error);
-      return;
+      return false;
     }
     source.current?.close();
     setState(IDLE);
@@ -31,7 +33,16 @@ export function useRitual(): RitualHandle {
         setState((s) => (s.status === 'examining' || s.status === 'raising' ? { ...s, status: 'failed', failure: reason } : s));
       },
     });
+    return true;
   }, []);
 
-  return { state, id, start, error };
+  const reset = useCallback(() => {
+    source.current?.close();
+    source.current = null;
+    setState(IDLE);
+    setId(null);
+    setError(null);
+  }, []);
+
+  return { state, id, start, reset, error };
 }
