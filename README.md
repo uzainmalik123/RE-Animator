@@ -111,7 +111,7 @@ scripts/       repo-wide checks (the secrets guard on committed env files)
 |---|---|---|
 | **Node ≥ 22** and `git` | everything | |
 | **Chromium for Playwright** | the render vital and Death's ghosts | `npx playwright-core install chromium`. Skip `--with-deps`: it calls `apt-get`, so it only works on Debian/Ubuntu. Other distros just need the usual browser libraries, which a desktop already has |
-| **An LLM for Death** | Poltergeist's ghost compiler | Claude (Anthropic API or **Amazon Bedrock**) for real runs, or a **free** Gemini / Groq / local Ollama for testing. Only the first run of a chart calls it; plans are cached |
+| **An LLM for Death** | Poltergeist's ghost compiler | Claude (Anthropic API or **Amazon Bedrock**) for real runs, or a **free** Groq / local Ollama for testing. Only the first run of a chart calls it; plans are cached |
 | **`kiro-cli`**, installed and logged in | the grimoire | Or use the fake Kiro to test without spending credit |
 | **`bwrap`** (bubblewrap) | raising a stranger's GitHub repo | Not needed for the bundled graves |
 
@@ -141,11 +141,11 @@ Put every key you have in **`.env` at the repo root** once ([`.env.example`](.en
 
 | Command | Death plans with | The grimoire | Spends |
 |---|---|---|---|
-| `npm run server:free` | Gemini (`-- groq` or `-- ollama` to switch) | the fake Kiro | nothing |
+| `npm run server:free` | Groq (`-- ollama` to switch) | the fake Kiro | nothing |
 | `npm run server:paid` | Claude on Amazon Bedrock (`-- claude` for the Anthropic API) | real Kiro | LLM + Kiro credit |
 | `npm run e2b:free` / `e2b:paid` | the same, hosted live on E2B | the same | the same |
 
-The free providers need a model id in `.env` (`GEMINI_MODEL`, `GROQ_MODEL`, `OLLAMA_MODEL`). Free models are for checking the wiring: they write weaker plans, so judge Death's quality with Claude. Plain `npm run server` still works, reading `REANIMATOR_LLM` and `REANIMATOR_LLM_MODEL` by hand.
+The free providers need a model id in `.env` (`GROQ_MODEL`, `OLLAMA_MODEL`). Free models are for checking the wiring: they write weaker plans, so judge Death's quality with Claude. Plain `npm run server` still works, reading `REANIMATOR_LLM` and `REANIMATOR_LLM_MODEL` by hand.
 
 > **Never put a real value in an `.env.example`.** CI's `env-files` check blocks the PR, and `main` has no bypass for anyone. If a key was ever pushed, rotate it: it's in git history.
 
@@ -167,7 +167,7 @@ npm run e2b:free -- --minutes 30       # sandbox lifetime (default 60 min)
 npm run e2b:down -- <sandbox id>       # kill it early
 ```
 
-Only the LLM settings (`ANTHROPIC_*`, `AWS_*`, `GEMINI_*`, `GROQ_*`, `REANIMATOR_LLM*`) are sent into the sandbox. Anyone holding the link can spend them, and your Kiro credit with `--kiro real`, until the sandbox dies, so share it with care.
+Only the LLM settings (`ANTHROPIC_*`, `AWS_*`, `GROQ_*`, `REANIMATOR_LLM*`) are sent into the sandbox. Anyone holding the link can spend them, and your Kiro credit with `--kiro real`, until the sandbox dies, so share it with care.
 
 ## Safety
 
@@ -177,7 +177,7 @@ Death only attacks the app you just revived, on loopback. Poltergeist refuses an
 
 Built inside the Kiroween 2026 hacking window, from fresh code. Both projects keep `npm run health` (typecheck, lint, tests) green in CI.
 
-- **Built:** the dot-matrix renderer, the raise with real vitals, any GitHub grave in a sandbox, Death's attack via Poltergeist, the attack scene, the heal loop, the Kiro grimoire, and the recorded replay. The Poltergeist engine is built through its CLI, MCP server, `init` hook installer, house rules, Kiro Power, extra personas, Bedrock provider, free testing providers (Gemini, Groq, Ollama) and replay. Reanimator can also be hosted live on E2B behind a keyed gate.
+- **Built:** the dot-matrix renderer, the raise with real vitals, any GitHub grave in a sandbox, Death's attack via Poltergeist, the attack scene, the heal loop, the Kiro grimoire, and the recorded replay. The Poltergeist engine is built through its CLI, MCP server, `init` hook installer, house rules, Kiro Power, extra personas, Bedrock provider, free testing providers (Groq, Ollama) and replay. Reanimator can also be hosted live on E2B behind a keyed gate.
 - **Still to come:** the features built in Kiro (graveyard, autopsy, atmosphere, Candy Swap), the live heal session with Kiro, and the hero recording.
 
 Progress, decisions and open risks are tracked in each project's `docs/PRD.md`, `docs/DECISIONS.md` and `docs/KNOWN_ISSUES.md`.

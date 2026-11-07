@@ -109,9 +109,8 @@ export function createBedrockClient(opts: { awsRegion?: string; mantle?: Message
   return messagesClient(make, { ...opts, mapModel: bedrockModelId });
 }
 
-/** The OpenAI-compatible providers (D-50): free tiers for testing, Claude for the real run. */
+/** The OpenAI-compatible providers (D-50; Gemini removed by D-51): free tiers for testing, Claude for the real run. */
 export const OPENAI_COMPATIBLE = {
-  gemini: { baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', keyVar: 'GEMINI_API_KEY' },
   groq: { baseUrl: 'https://api.groq.com/openai/v1', keyVar: 'GROQ_API_KEY' },
   ollama: { baseUrl: 'http://127.0.0.1:11434/v1', keyVar: undefined },
 } as const;

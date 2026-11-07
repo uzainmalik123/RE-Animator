@@ -49,8 +49,8 @@ export const ForbiddenSchema = z.strictObject({
   path: routePath,
 });
 
-/** Where the compiler's calls go: Claude (Anthropic, or Bedrock F19, D-47), or an OpenAI-compatible API (D-50). */
-export const LLM_PROVIDERS = ['anthropic', 'bedrock', 'gemini', 'groq', 'ollama'] as const;
+/** Where the compiler's calls go: Claude (Anthropic, or Bedrock F19, D-47), or an OpenAI-compatible API (D-50, D-51). */
+export const LLM_PROVIDERS = ['anthropic', 'bedrock', 'groq', 'ollama'] as const;
 export type LlmProvider = (typeof LLM_PROVIDERS)[number];
 
 /** `poltergeist.config.json` (D-17, design §3). Unknown keys are errors at every level. */

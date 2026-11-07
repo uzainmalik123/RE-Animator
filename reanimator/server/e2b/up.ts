@@ -4,7 +4,7 @@
 // The sandbox gets this repo's reanimator/ and poltergeist/ (tracked + untracked, never ignored
 // files such as .env), installs and builds them, starts the backend on loopback and the gate on
 // :8080, and prints the gate's public link with its key. Only the LLM settings are forwarded (D-R27):
-// ANTHROPIC_* / AWS_* (Claude), GEMINI_* / GROQ_* (the free testing providers) and REANIMATOR_LLM*.
+// ANTHROPIC_* / AWS_* (Claude), GROQ_* (the free testing provider) and REANIMATOR_LLM*.
 // The grimoire (D-R27): --kiro fake (default) casts with fake-kiro.mjs, no Kiro tokens; --kiro real uploads
 // this machine's kiro-cli and logs it in with the device flow (you approve the code in your browser).
 import { execFileSync } from 'node:child_process';
@@ -37,7 +37,7 @@ function packCheckout(root: string): Buffer {
   }
 }
 
-const FORWARDED = ['ANTHROPIC_', 'AWS_', 'GEMINI_', 'GROQ_', 'REANIMATOR_LLM'];
+const FORWARDED = ['ANTHROPIC_', 'AWS_', 'GROQ_', 'REANIMATOR_LLM'];
 
 export function forwardedEnv(env: NodeJS.ProcessEnv): Record<string, string> {
   const out: Record<string, string> = {};

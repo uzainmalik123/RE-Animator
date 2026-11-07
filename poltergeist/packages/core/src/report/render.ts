@@ -67,7 +67,7 @@ export type RenderedReport = { markdown: string; json: ReportJson };
 type Verdict = ReportVerdict;
 type JsonPair = ReportJson['criteria'][number]['pairs'][number];
 
-const PROVIDER_NAMES: Record<Exclude<LlmProvider, 'anthropic'>, string> = { bedrock: 'Bedrock', gemini: 'Gemini', groq: 'Groq', ollama: 'Ollama' };
+const PROVIDER_NAMES: Record<Exclude<LlmProvider, 'anthropic'>, string> = { bedrock: 'Bedrock', groq: 'Groq', ollama: 'Ollama' };
 
 /** Pure: the report's markdown and JSON for one run (Req 8, D-35). */
 export function renderReport(input: ReportInput): RenderedReport {

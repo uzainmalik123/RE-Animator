@@ -34,7 +34,8 @@ export const ReportJsonSchema = z.strictObject({
   runId: z.string(),
   target: z.string(),
   model: z.string(),
-  /** Written for any provider but Anthropic (F19 D-47, D-50); absent means Anthropic. */
+  /** Written for any provider but Anthropic (F19 D-47, D-50); absent means Anthropic. `gemini` is no longer
+   * written (D-51) but still read, so a report from before keeps merging (F14). */
   provider: z.enum(['bedrock', 'gemini', 'groq', 'ollama']).optional(),
   reps: z.int(),
   /** ISO 8601, from the run's start. */

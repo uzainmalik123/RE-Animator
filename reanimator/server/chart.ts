@@ -15,7 +15,7 @@ const REPS = 3;
 export const chartDir = (revivedDir: string): string => join(revivedDir, '.kiro', 'specs', 'chart');
 
 // Which LLM plans Death's attacks (D-R27): REANIMATOR_LLM picks Poltergeist's provider (anthropic, bedrock,
-// gemini, groq, ollama) and REANIMATOR_LLM_MODEL its model. Unset keeps the engine's default (Claude).
+// groq, ollama) and REANIMATOR_LLM_MODEL its model. Unset keeps the engine's default (Claude).
 export type LlmChoice = { provider?: string; model?: string };
 export function llmChoice(env: NodeJS.ProcessEnv): LlmChoice {
   return { ...(env.REANIMATOR_LLM ? { provider: env.REANIMATOR_LLM } : {}), ...(env.REANIMATOR_LLM_MODEL ? { model: env.REANIMATOR_LLM_MODEL } : {}) };

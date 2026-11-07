@@ -27,9 +27,9 @@ describe('renderReport: markdown', () => {
   });
 
   it('names an OpenAI-compatible provider in the run line and the JSON (D-50)', () => {
-    const gemini = renderReport(input({ run: { ...RUN, model: 'gemini-x', provider: 'gemini' } }));
-    expect(gemini.markdown).toContain('· 3 reps · gemini-x via Gemini · 2026-11-01');
-    expect(gemini.json.provider).toBe('gemini');
+    const groq = renderReport(input({ run: { ...RUN, model: 'groq-x', provider: 'groq' } }));
+    expect(groq.markdown).toContain('· 3 reps · groq-x via Groq · 2026-11-01');
+    expect(groq.json.provider).toBe('groq');
   });
 
   it('lists every criterion on the board in spec order', () => {
