@@ -8,7 +8,7 @@ import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { attackOver, woundKey, type AttackEvent, type HealTarget, type Wound } from '../shared/attack.js';
-import { chartDir, prepareAttack } from './chart.js';
+import { chartDir, llmChoice, prepareAttack } from './chart.js';
 import { runEngine } from './engine.js';
 import { engineEnv } from './env.js';
 import { EventLog } from './event-log.js';
@@ -95,7 +95,7 @@ export class Attacks {
           emit({ type: 'reraised', origin });
         }
         if (origin === null) return emit({ type: 'failed', reason: 'the body is down' });
-        const prep = await prepareAttack({ fixture: body.fixture, revivedDir: body.revivedDir, origin, homeRoot: this.o.homeRoot });
+        const prep = await prepareAttack({ fixture: body.fixture, revivedDir: body.revivedDir, origin, homeRoot: this.o.homeRoot, llm: llmChoice(this.o.env) });
         const r = await engine({
           cli: this.o.cli,
           ...prep,

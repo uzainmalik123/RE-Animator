@@ -56,6 +56,7 @@
 | D-47 | F19 Bedrock provider (refines D-12, D-32): flat `provider` + optional `awsRegion` config keys (not `llm.provider`), `@anthropic-ai/bedrock-sdk` `AnthropicBedrockMantle` behind the same `LlmClient`, `claude-*` → `anthropic.claude-*`, provider in the cache key only for Bedrock, Bedrock named in `run.json` / report only when used; fixture Done-when, live check KI-67 | Accepted |
 | D-48 | F20 Changeling (extends D-13, D-32, D-44): keyboard-only persona with a Changeling-only `focus` step (the runner Tabs to the target; the LLM never counts Tabs), `fill` that Tabs and types, `press` limited to Tab/Enter/Space; a visible, enabled control the walk goes round the page without reaching is a failed `reachable` app assertion; hidden/disabled/missing or 100 Tabs is a plan error; `PROMPT_VERSION` `f20-1`; all six personas run by default | Accepted |
 | D-49 | F21 becomes a headless Sandbox (extends D-39, D-40, D-43): `poltergeist sandbox` serves `POST /runs`, `GET /runs[/<id>]`, `GET /health` and the live feed on `ws /runs/<id>/live` (`:6662`, loopback by default); cached plans only through `cacheOnlyLlm()` (no API key; a miss is `uncompilable`); one run at a time (409), per-client hourly limit (429), run timeout, newest `keep` runs kept and older sandbox run folders deleted; no local paths or error text to visitors; container and public deploy are R11's (KI-70) | Accepted |
+| D-50 | OpenAI-compatible providers for cheap testing (extends D-47): `provider` also takes `gemini`, `groq` or `ollama` over plain `fetch` Chat Completions; they need their own `model`; the plan schema goes as `response_format` and in the system message; 429/5xx retried with backoff; Claude stays the default and the submission model | Accepted |
 
 ---
 
@@ -782,3 +783,13 @@
   - KI-09's live option exists in the engine; whether judges get it depends on R11 hosting it (KI-70).
   - A criterion whose text or routes changed since the warm-up runs as `uncompilable` until the operator re-warms the cache.
   - Fly.io in STACK moves to R11.
+
+### D-50: OpenAI-compatible providers for cheap testing
+- **Context:** (2026-11-07) The team has no Anthropic credit to spare for testing, and only $200 of Bedrock credit for the real runs. Every first compile of a chart costs real calls (about 30–36 pairs per Reanimator fixture), while the free tiers of Gemini and Groq, or a local Ollama, cost nothing.
+- **Decision:**
+  - `provider` (D-47) also takes **`gemini`**, **`groq`** and **`ollama`**. `createOpenAiCompatibleClient` (`compiler/llm.ts`) posts Chat Completions with plain `fetch` (no new dependency) to the provider's fixed base URL, with `GEMINI_API_KEY` / `GROQ_API_KEY` as a bearer key (Ollama needs none, on `127.0.0.1:11434`). A missing key is a setup `CompilerError` before any request.
+  - These providers **need their own `model`**: the Claude default is a config error with them.
+  - The plan format reaches the model **twice**: as `response_format: json_schema` (the same schema Anthropic gets) and appended to the system message, because some models ignore `response_format`. `prompt.ts` and `PROMPT_VERSION` are unchanged, so Claude's cache is untouched. Our validation and single retry still decide (D-32).
+  - Free tiers rate-limit hard, so a **408/429/5xx is retried** here (5 attempts, `Retry-After` or 2 s doubling, capped at 60 s; an abort stops the wait). 401/403 is the credentials `CompilerError`; any other failure makes the pair `uncompilable`. `finish_reason: length` is the compiler's `max_tokens` (truncated), and a `refusal` or `content_filter` is a refusal.
+  - The provider is in the cache key (as Bedrock's already was), `run.json` and the report name it (`via Gemini`), and the reset command never sees `GEMINI_API_KEY` / `GROQ_API_KEY` (KI-29).
+- **Consequences:** testing costs nothing; the hero run and submission still use Claude (Anthropic or Bedrock), which re-plans once because the cache key differs. Free models plan worse, so more pairs may come back `uncompilable`; a free run says nothing about Claude's plan quality. The live free-provider check is KI-72.

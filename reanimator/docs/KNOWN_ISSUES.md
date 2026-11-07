@@ -32,6 +32,8 @@
 | KI-R27 | R9 review minors: a non-object `dependencies` crashes the rites, the size cap is checked only after the clone (and a host git-lfs filter can fetch first), `files` holds the rite count, the abort test stops at the factory | Minor | none | Open |
 | KI-R29 | R6 minors: the graveyard list is read from disk on every request; the three graves are ours, not a real dead repo (KI-R1) | Minor | none | Open |
 | KI-R30 | R8 autopsy evidence is repo file text; it reaches a published recording | Minor | R8, R11 | Open |
+| KI-R31 | The E2B host (D-R26) hasn't been run live: apt/sudo, Node 22, Chromium deps and bubblewrap inside E2B's VM are unproven | Major | D-R26 | Open |
+| KI-R32 | D-R27 unproven live: a free-LLM Death run, the fake grimoire on E2B, and `--kiro real` (the uploaded binary runs there, the device-flow login works non-interactively) | Major | the live demo | Open |
 | KI-R24 | R11 review minors: pause/speed restart a gap, Pause shown after the end, late frames dropped across back-to-back attacks, the Pages build skips typecheck, no test that a replay makes no /api calls, UTC banner date, README in the Pages build | Minor | none | Open |
 | KI-R13 | R1 demo-page polish from review: void flash on pitch/mode click, resize jank, late web font, breath jump, no OffscreenCanvas fallback, fractional-DPR cell seams | Minor | R4 (seams) | Open |
 | KI-R28 | `npm run health` fails on native Windows: 19 backend tests fail because `server/exec.ts` spawns and kills processes the POSIX way (`npm` without `.cmd`, scripts without an interpreter, `process.kill(-pid)` process-group kills) | Major | local health gate on Windows (CI on Ubuntu is unaffected) | Open |
@@ -262,3 +264,12 @@
 - **Context:** R8 (D-R25) copies up to 40 changed lines per cause (12 causes) from the corpse and the remedied body into the `autopsy` event, so arbitrary repo text, secrets included, also lands in `events.ndjson` when a session is recorded (R11). `redact` only removes the backend's own secrets and the home directory, not a secret sitting in a stranger's repo (R9). Control and bidi characters are stripped, but nothing scrubs secrets.
 - **Next action:** before recording a session on a grave (KI-R23, KI-R25), read the `autopsy` lines of `events.ndjson` by hand, or leave graves out of recordings. The prepared fixtures hold nothing sensitive. A real stranger's repo will mostly show `other` until the cause table grows (KI-R25).
 - **Also (review minors, accepted):** a file whose only change is a line ending is not shown; `readText` checks a file with `lstat` then reads it (a symlink swapped in between by the sandbox could be followed; the autopsy runs before the body does).
+
+### KI-R31: The E2B host hasn't been run live yet · Major · Open
+- **What:** `npm run e2b:up` (D-R26) is tested only through the gate's unit tests. Not yet proven on a real sandbox: the base template's apt and sudo, the Node 22 install, Chromium's system deps, and whether bubblewrap's user namespaces work inside E2B's VM (if not, graves are refused with `NO_SANDBOX` and the practice corpse still rises).
+- **Next:** run it once with a real `E2B_API_KEY`, raise the practice corpse through the link, and note what broke.
+
+### KI-R32: Cheap testing and the real Kiro on E2B haven't been run live · Major · Open
+- **What:** D-R27 is unit-tested only (`chart.test.ts`, `env.test.ts`, `e2b/up.test.ts`). Unproven: a free-LLM Death run on a fixture (Poltergeist KI-72), the fake grimoire through the gate on E2B, and `--kiro real`: that the uploaded `kiro-cli` runs on E2B's image, that `kiro-cli login --license free --use-device-flow` prints its code without a TTY and doesn't stop at an interactive prompt, and that `kiro-cli chat` then finds its login.
+- **Next action:** in order, cheapest first: (1) locally, `REANIMATOR_LLM=gemini REANIMATOR_LLM_MODEL=<model> npm run server`, raise the practice corpse, Summon Death; (2) `npm run e2b:up` (fake Kiro, free LLM) and do the same plus a grimoire cast through the link; (3) once, `npm run e2b:up -- --kiro real` and one real cast. If the device flow needs a TTY, fall back to copying a logged-in Kiro data dir into the sandbox and log it here.
+- **Also:** KI-R16's "no Bedrock selection" is now covered: `REANIMATOR_LLM=bedrock`.

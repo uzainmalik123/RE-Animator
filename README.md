@@ -99,42 +99,84 @@ poltergeist/   THE ENGINE (headless): Kiro spec reader, safety allowlist, route 
   packages/cli    `poltergeist summon | init | power | export | replay | sandbox`
   packages/mcp    `poltergeist-mcp`, the Kiro MCP server
   integrations/kiro   MCP, hook, steering and Power templates for Kiro
-.github/       CI: `npm run health` for both projects, plus a hand-run Pages deploy of the replay
+.github/       CI: `npm run health` for both projects, the secrets guard, and a hand-run Pages deploy of the replay
+scripts/       repo-wide checks (the secrets guard on committed env files)
 ```
 
 ## Run it
 
-Requirements: **Node ≥ 22**, `git`, Chromium for Playwright, an **Anthropic API key** (or Amazon Bedrock) for Poltergeist's compiler, **`kiro-cli`** installed and logged in for the grimoire, and **`bwrap`** (bubblewrap) to raise a stranger's repo.
+### Requirements
+
+| Need | For | Notes |
+|---|---|---|
+| **Node ≥ 22** and `git` | everything | |
+| **Chromium for Playwright** | the render vital and Death's ghosts | `npx playwright-core install chromium`. Skip `--with-deps`: it calls `apt-get`, so it only works on Debian/Ubuntu. Other distros just need the usual browser libraries, which a desktop already has |
+| **An LLM for Death** | Poltergeist's ghost compiler | Claude (Anthropic API or **Amazon Bedrock**) for real runs, or a **free** Gemini / Groq / local Ollama for testing. Only the first run of a chart calls it; plans are cached |
+| **`kiro-cli`**, installed and logged in | the grimoire | Or use the fake Kiro to test without spending credit |
+| **`bwrap`** (bubblewrap) | raising a stranger's GitHub repo | Not needed for the bundled graves |
+
+### Setup
 
 ```sh
 # the engine
 cd poltergeist
 npm ci
-npx playwright-core install --with-deps chromium
+npx playwright-core install chromium   # once per machine
 npm run health
 
 # the product
 cd ../reanimator
 npm ci
-npm run server   # backend on http://127.0.0.1:7070
-npm run dev      # UI on http://localhost:5173
+cp .env.example .env                    # then fill in your keys (see below)
+npm run server:free   # backend on http://127.0.0.1:7070, spending nothing
+npm run dev      # UI on http://localhost:5173 (second terminal)
 ```
 
-Then press **Begin the ritual**, **Summon Death**, and cast a heal in the grimoire.
+Open http://localhost:5173, pick a grave, then press **Begin the ritual**, **Summon Death**, and cast a heal in the grimoire. Poltergeist has no server of its own: Reanimator runs it when you summon Death.
+
+### One command per setup
+
+Put every key you have in `reanimator/.env` once ([`.env.example`](reanimator/.env.example) lists them all), then swap setups with one command. Each command checks `.env` first and lists anything missing before it starts.
+
+| Command | Death plans with | The grimoire | Spends |
+|---|---|---|---|
+| `npm run server:free` | Gemini (`-- groq` or `-- ollama` to switch) | the fake Kiro | nothing |
+| `npm run server:paid` | Claude on Amazon Bedrock (`-- claude` for the Anthropic API) | real Kiro | LLM + Kiro credit |
+| `npm run e2b:free` / `e2b:paid` | the same, hosted live on E2B | the same | the same |
+
+The free providers need a model id in `.env` (`GEMINI_MODEL`, `GROQ_MODEL`, `OLLAMA_MODEL`). Free models are for checking the wiring: they write weaker plans, so judge Death's quality with Claude. Plain `npm run server` still works, reading `REANIMATOR_LLM` and `REANIMATOR_LLM_MODEL` by hand.
+
+> **Never put a real value in an `.env.example`.** CI's `env-files` check blocks the PR, and `main` has no bypass for anyone. If a key was ever pushed, rotate it: it's in git history.
+
+### Handy switches
 
 - **Try the grimoire without spending Kiro tokens:** `REANIMATOR_KIRO=$PWD/server/fixtures/fake-kiro.mjs npm run server`
 - **Record a session:** `REANIMATOR_RECORD=public/recording npm run server`, then open `?replay` or run `npm run build:replay` for the static site.
+- **Check Death end to end from the terminal:** `npm run attack:check` raises the practice corpse, attacks it and prints the wounds.
 - **Use Poltergeist from Kiro directly:** see [`poltergeist/integrations/kiro/README.md`](poltergeist/integrations/kiro/README.md).
+
+### A live demo on E2B
+
+`npm run e2b:up` (in `reanimator/`, with `E2B_API_KEY` in `.env`) boots the whole thing in an [E2B](https://e2b.dev) sandbox and prints a **secret link**. Only people holding that link get in.
+
+```sh
+npm run e2b:free                       # free LLM + the fake Kiro: nothing spent
+npm run e2b:paid                       # Claude + real Kiro: approve a device-flow login code in your browser
+npm run e2b:free -- --minutes 30       # sandbox lifetime (default 60 min)
+npm run e2b:down -- <sandbox id>       # kill it early
+```
+
+Only the LLM settings (`ANTHROPIC_*`, `AWS_*`, `GEMINI_*`, `GROQ_*`, `REANIMATOR_LLM*`) are sent into the sandbox. Anyone holding the link can spend them, and your Kiro credit with `--kiro real`, until the sandbox dies, so share it with care.
 
 ## Safety
 
-Death only attacks the app you just revived, on loopback. Poltergeist refuses any target that isn't `localhost`/`127.0.0.1`. This is QA and robustness testing of code you own, not an exploit tool. Strangers' repos are cloned without hooks or submodules, size-capped, and every command runs in a bubblewrap sandbox with a minimal environment.
+Death only attacks the app you just revived, on loopback. Poltergeist refuses any target that isn't `localhost`/`127.0.0.1`. In Reanimator, Death's target is always the revived app's loopback address: no request or LLM choice can change it. This is QA and robustness testing of code you own, not an exploit tool. Strangers' repos are cloned without hooks or submodules, size-capped, and every command runs in a bubblewrap sandbox with a minimal environment. The backend only answers callers on its own machine. On E2B, a keyed gate sits in front of it, and the backend's loopback guard stays as it is.
 
 ## Status
 
 Built inside the Kiroween 2026 hacking window, from fresh code. Both projects keep `npm run health` (typecheck, lint, tests) green in CI.
 
-- **Built:** the dot-matrix renderer, the raise with real vitals, any GitHub grave in a sandbox, Death's attack via Poltergeist, the attack scene, the heal loop, the Kiro grimoire, and the recorded replay. The Poltergeist engine is built through its CLI, MCP server, `init` hook installer, house rules, Kiro Power, extra personas, Bedrock provider and replay.
+- **Built:** the dot-matrix renderer, the raise with real vitals, any GitHub grave in a sandbox, Death's attack via Poltergeist, the attack scene, the heal loop, the Kiro grimoire, and the recorded replay. The Poltergeist engine is built through its CLI, MCP server, `init` hook installer, house rules, Kiro Power, extra personas, Bedrock provider, free testing providers (Gemini, Groq, Ollama) and replay. Reanimator can also be hosted live on E2B behind a keyed gate.
 - **Still to come:** the features built in Kiro (graveyard, autopsy, atmosphere, Candy Swap), the live heal session with Kiro, and the hero recording.
 
 Progress, decisions and open risks are tracked in each project's `docs/PRD.md`, `docs/DECISIONS.md` and `docs/KNOWN_ISSUES.md`.

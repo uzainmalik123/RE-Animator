@@ -86,13 +86,17 @@ Before you hand back, if anything changed:
 
 - `npm install` once.
 - `npm run dev` → the UI at http://localhost:5173 (a dark canvas until R1 draws on it).
+- Secrets and switches: copy `.env.example` to `.env` (gitignored) and fill in every key. `npm run server`, `attack:check` and `e2b:up` load it, and the shell or Doppler wins over it. **Never put a value in `.env.example`**: CI's `env-files` check blocks the PR, with no bypass (D-R29).
+- **One-line setups (D-R28):** `npm run server:free` (free LLM + fake Kiro, spends nothing; `-- groq` / `-- ollama` to switch) and `npm run server:paid` (Claude on Bedrock + real Kiro; `-- claude` for the Anthropic API). `e2b:free` / `e2b:paid` host the same on E2B. Each checks `.env` first and lists what's missing.
 - `npm run server` → the backend at http://127.0.0.1:7070 (`/api/health`, `POST /api/rituals`). The UI proxies `/api` to it. Ctrl-C also stops the revived app.
 - `npx playwright-core install chromium` once per machine: the render vital and its integration test need it.
 - `npm run health` → typecheck + lint + test.
 - `doppler run -- npm run attack:check` → raise the practice corpse and let Death (the real Poltergeist engine, needs an LLM key) attack it; prints the wounds (R3, KI-R15). The backend's **Summon Death** button does the same from the UI, and each wound's **Dare Death again** re-raises the body and re-runs Death on that wound only (R5). `../poltergeist` must be installed (`npm ci` there).
 - **The hosted replay (R11, D-R22):** `REANIMATOR_RECORD=public/recording npm run server` records the session (events + frames) while you use the app; `?replay` on the dev server plays `public/recording/`; `npm run build:replay` builds the static site, and the hand-run **Reanimator replay (GitHub Pages)** workflow publishes it. Only a real run goes in `public/recording/` (KI-R23).
 - The grimoire (R7) runs `kiro-cli` (installed and logged in; override it with `REANIMATOR_KIRO`). To try it without spending Kiro tokens, run `REANIMATOR_KIRO=$PWD/server/fixtures/fake-kiro.mjs npm run server`.
+- **Cheap testing (D-R27):** Death's LLM is `REANIMATOR_LLM` (`anthropic` default, `bedrock`, or the free `gemini`/`groq`/`ollama`) plus `REANIMATOR_LLM_MODEL`, e.g. `GEMINI_API_KEY=… REANIMATOR_LLM=gemini REANIMATOR_LLM_MODEL=<a Gemini model> npm run server`. Free models are for wiring checks; the demo uses Claude.
 - R6: the app opens on the graveyard (`GET /api/graveyard` lists `fixtures/*`); pick a headstone and Kiro fetches it into the raise. Add a grave by dropping a fixture folder in `fixtures/`.
+- **Live host on E2B (D-R26):** put `E2B_API_KEY` in `reanimator/.env` (gitignored) or the env, then `npm run e2b:up` (add `-- --minutes 30` to change its life). It prints a keyed public link; `npm run e2b:down -- <id>` kills it. Only the LLM settings from your env are forwarded (`ANTHROPIC_*`, `AWS_*`, `GEMINI_*`, `GROQ_*`, `REANIMATOR_LLM*`). The grimoire uses the fake Kiro there by default (`--kiro fake`, no tokens); `-- --kiro real` uploads your `kiro-cli` and prints a device-flow code to approve (D-R27).
 - R9: paste a GitHub URL in **Dig a new grave** (Name a grave) to raise a stranger's repo. It needs `git` and `bwrap` (bubblewrap) on the machine; every command of that repo runs in the sandbox (D-R23). Death can't attack it without a chart.
 
 ## Health check (after every implementation)
