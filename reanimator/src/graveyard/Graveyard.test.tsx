@@ -31,15 +31,25 @@ describe('Graveyard', () => {
     expect(out).toContain('died 2014 · MIT');
     expect(out).toContain('Death can attack it');
     expect(out).toContain('no chart: Death cannot attack it');
-    expect(out).toContain('aria-label="tally-2014, died 2014, MIT. Death can attack it."');
-    expect(out).toContain('aria-label="sundial-2015, died 2015, MIT. No chart: Death cannot attack it."');
+    // The accessible name is the visible text (label-in-name), so no aria-label overrides it.
+    expect(out).not.toMatch(/<button[^>]*aria-label/);
   });
 
   it('gives every canvas an aria-label', () => {
     const canvases = html().match(/<canvas[^>]*>/g) ?? [];
     expect(canvases).toHaveLength(2);
-    for (const c of canvases) expect(c).toMatch(/aria-label="[^"]+"/);
+    for (const c of canvases) {
+      expect(c).toMatch(/aria-label="[^"]+"/);
+      expect(c).toContain('role="img"');
+    }
     expect(html()).toContain('The graveyard: 3 headstones, Kiro waits');
+  });
+
+  it('announces only its status and errors, not the whole panel', () => {
+    const out = html({ error: 'nope' });
+    expect(out).not.toContain('aria-live');
+    expect(out).toContain('role="alert"');
+    expect(html({ graves: null })).toContain('role="status"');
   });
 
   it('says it is waking while the list loads, with no buttons to press', () => {

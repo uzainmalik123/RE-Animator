@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { VITALS, beats, flatlined, type RitualState, type VitalResult } from '../../shared/ritual';
 import type { AttackState } from '../../shared/attack';
 import { AttackPanel } from '../attack/AttackPanel';
@@ -80,6 +80,12 @@ export function RaiseView({ ritual, attack, grimoire, replay, onLeave }: { ritua
   const [draft, setDraft] = useState<Draft | null>(null);
   const casting = grimoire.state.status === 'casting';
   const running = state.status === 'examining' || state.status === 'raising';
+  // Live, arriving from the graveyard: keyboard focus follows the scene change (R6).
+  const heading = useRef<HTMLHeadingElement>(null);
+  const arrived = onLeave !== undefined;
+  useEffect(() => {
+    if (arrived) heading.current?.focus();
+  }, [arrived]);
 
   return (
     <div className="raise">
@@ -91,10 +97,12 @@ export function RaiseView({ ritual, attack, grimoire, replay, onLeave }: { ritua
       )}
       <section className="raise-panel" aria-live="polite">
         <Locked when={replay !== undefined}>
-          <h1>{state.repo ?? 'A dead repo waits'}</h1>
+          <h1 ref={heading} tabIndex={-1}>
+            {state.repo ?? 'A dead repo waits'}
+          </h1>
           {state.diedIn !== null && <p className="died">died {state.diedIn}</p>}
           {onLeave && (
-            <button type="button" disabled={running} onClick={onLeave}>
+            <button type="button" disabled={running || attackState.status === 'attacking' || casting} onClick={onLeave}>
               Back to the graveyard
             </button>
           )}

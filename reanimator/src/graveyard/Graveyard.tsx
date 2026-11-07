@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { Headstone } from '../../shared/graveyard';
 import { useDotCanvas } from '../render/useDotCanvas';
 import type { RitualTarget } from '../raise/ritualClient';
@@ -8,10 +8,6 @@ import { kiroLuminance, stonesLuminance } from './scene';
 export function graveRequest(text: string): string | null {
   const t = text.trim();
   return t === '' ? null : t;
-}
-
-function stoneLabel(g: Headstone): string {
-  return `${g.name}, died ${g.diedIn}, ${g.licence}. ${g.chart ? 'Death can attack it.' : 'No chart: Death cannot attack it.'}`;
 }
 
 export interface GraveyardProps {
@@ -25,13 +21,19 @@ export interface GraveyardProps {
   chosen: string | null;
   // A ritual is being started, or Kiro is walking: nothing else can be chosen.
   busy: boolean;
+  // Coming back from a raise: put keyboard focus on the heading, not on a vanished button.
+  focusHeading?: boolean;
   onRaise: (target: RitualTarget) => void;
 }
 
 // The opening scene (R6, THEME §5.1): the dead repos as headstones in the fog, Kiro waiting at the
 // edge, and the same choices as real buttons beneath. The canvases are the costume; the buttons and
 // the text are what can be read, focused and pressed.
-export function Graveyard({ graves, loadError, error, chosen, busy, onRaise }: GraveyardProps) {
+export function Graveyard({ graves, loadError, error, chosen, busy, focusHeading, onRaise }: GraveyardProps) {
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (focusHeading) heading.current?.focus();
+  }, [focusHeading]);
   const stonesRef = useRef<HTMLCanvasElement>(null);
   const kiroRef = useRef<HTMLCanvasElement>(null);
   // When the walk began, in the animation clock: the first frame drawn after a stone is chosen.
@@ -64,20 +66,22 @@ export function Graveyard({ graves, loadError, error, chosen, busy, onRaise }: G
   return (
     <div className="raise graveyard">
       <div className="graveyard-stage">
-        <canvas ref={stonesRef} className="graveyard-canvas" aria-label={scene} />
-        <canvas ref={kiroRef} className="graveyard-canvas" aria-label="Kiro, your familiar" />
+        <canvas ref={stonesRef} className="graveyard-canvas" role="img" aria-label={scene} />
+        <canvas ref={kiroRef} className="graveyard-canvas" role="img" aria-label="Kiro, your familiar" />
       </div>
-      <section className="raise-panel" aria-live="polite">
-        <h1>The graveyard</h1>
+      <section className="raise-panel">
+        <h1 ref={heading} tabIndex={-1}>
+          The graveyard
+        </h1>
         <p className="died">Choose a dead repo. Kiro will fetch the body.</p>
-        {loadError && <p className="graveyard-note">{loadError}</p>}
-        {!loadError && graves === null && <p className="graveyard-note">The graveyard is waking…</p>}
+        {loadError && <p className="graveyard-note" role="alert">{loadError}</p>}
+        {!loadError && graves === null && <p className="graveyard-note" role="status">The graveyard is waking…</p>}
         {graves !== null && n === 0 && <p className="graveyard-note">No one is buried here yet.</p>}
         {n > 0 && (
           <ul className="stones">
             {list.map((g) => (
               <li key={g.id}>
-                <button type="button" className={g.id === chosen ? 'stone chosen' : 'stone'} disabled={busy} aria-label={stoneLabel(g)} onClick={() => onRaise({ grave: g.id })}>
+                <button type="button" className={g.id === chosen ? 'stone chosen' : 'stone'} disabled={busy} onClick={() => onRaise({ grave: g.id })}>
                   <span className="stone-name">{g.name}</span>
                   <span className="stone-meta">
                     died {g.diedIn} · {g.licence}
@@ -88,7 +92,11 @@ export function Graveyard({ graves, loadError, error, chosen, busy, onRaise }: G
             ))}
           </ul>
         )}
-        {error && <p className="graveyard-note">{error}</p>}
+        {error && (
+          <p className="graveyard-note" role="alert">
+            {error}
+          </p>
+        )}
         <h2>Dig a new grave</h2>
         <form onSubmit={dig}>
           <label className="grave">

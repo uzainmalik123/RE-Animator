@@ -69,6 +69,13 @@ describe('RaiseView (R6)', () => {
     }
   });
 
+  it('locks the way back while Death attacks or Kiro casts', () => {
+    const attacking = { ...handles, ritual: { ...handles.ritual, state: risen }, attack: { ...handles.attack, state: { ...QUIET, status: 'attacking' as const } } };
+    expect(renderToStaticMarkup(<RaiseView {...attacking} onLeave={() => {}} />)).toMatch(/<button type="button" disabled="">Back to the graveyard/);
+    const casting = { ...handles, grimoire: { ...handles.grimoire, state: { ...BLANK, status: 'casting' as const } } };
+    expect(renderToStaticMarkup(<RaiseView {...casting} onLeave={() => {}} />)).toMatch(/<button type="button" disabled="">Back to the graveyard/);
+  });
+
   it('has no way back in a replay, or when nothing can leave', () => {
     expect(back(risen)).not.toContain('Back to the graveyard');
     const replay = renderToStaticMarkup(<RaiseView {...handles} replay={{ recordedAt: '2026-11-20T10:00:00Z' }} />);

@@ -40,6 +40,12 @@ describe('requestRitual', () => {
     expect(await requestRitual(json(404, { error: 'no such grave' }), { grave: 'nope' })).toEqual({ error: 'no such grave' });
   });
 
+  it('refuses to swap a named grave for the ritual already running', async () => {
+    const busy = json(409, { error: 'a ritual is already running', id: 'r0' });
+    expect(await requestRitual(busy, { grave: 'tally-2014' })).toEqual({ error: 'a ritual is already running; wait for it to finish' });
+    expect(await requestRitual(busy, { repo: 'https://github.com/a/b' })).toEqual({ error: 'a ritual is already running; wait for it to finish' });
+  });
+
   it('explains a refusal', async () => {
     expect(await requestRitual(json(403, { error: 'forbidden' }))).toEqual({ error: 'the backend refused the ritual (HTTP 403)' });
   });

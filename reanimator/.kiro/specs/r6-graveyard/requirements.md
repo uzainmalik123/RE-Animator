@@ -24,7 +24,7 @@ The grill (answered with the recommended option each time) settled these choices
 1. WHEN the app opens, THE Graveyard SHALL show one headstone for every prepared grave the backend lists, in order of the year they died, then by name.
 2. THE Headstone SHALL show the repo's name, the year it died, its licence, and whether Death has a chart to attack it with, all as real text.
 3. WHEN the necromancer chooses a headstone, THE Graveyard SHALL start a ritual for that grave, and THE ritual SHALL raise that repo and no other.
-4. IF the backend refuses the ritual (busy, unknown grave, not answering), THEN THE Graveyard SHALL stay open, show the reason, and not play the walk.
+4. IF the backend refuses the ritual (busy, unknown grave, not answering); a busy backend never swaps the chosen grave for the ritual already running, THEN THE Graveyard SHALL stay open, show the reason, and not play the walk.
 5. WHILE the graveyard list is loading or the backend is not answering, THE Graveyard SHALL say so in text instead of showing an empty field.
 
 ### Requirement 2: Kiro fetches the body
@@ -54,7 +54,7 @@ The grill (answered with the recommended option each time) settled these choices
 
 #### Acceptance Criteria
 
-1. WHILE a ritual is examining or raising, THE "Back to the graveyard" button SHALL be disabled.
+1. WHILE a ritual is examining or raising, or Death is attacking, or Kiro is casting, THE "Back to the graveyard" button SHALL be disabled.
 2. WHEN the necromancer chooses "Back to the graveyard" after a ritual has risen or failed, THE app SHALL close that ritual's stream and attack and spell views, and show the graveyard again.
 3. THE backend SHALL keep the old revived app until the next ritual starts, as before.
 

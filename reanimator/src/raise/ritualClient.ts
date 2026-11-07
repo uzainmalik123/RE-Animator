@@ -17,7 +17,10 @@ export async function requestRitual(fetchFn: FetchLike, target?: RitualTarget): 
     return { error: 'the backend is not answering (npm run server)' };
   }
   const body = (await res.json().catch(() => ({}))) as { id?: unknown; error?: unknown };
-  if ((res.status === 202 || res.status === 409) && typeof body.id === 'string') return { id: body.id };
+  if (res.status === 202 && typeof body.id === 'string') return { id: body.id };
+  // A grave that was named is never swapped for the ritual already running: that would raise another repo.
+  if (res.status === 409 && target !== undefined) return { error: 'a ritual is already running; wait for it to finish' };
+  if (res.status === 409 && typeof body.id === 'string') return { id: body.id };
   if ((res.status === 400 || res.status === 404) && typeof body.error === 'string') return { error: body.error };
   return { error: `the backend refused the ritual (HTTP ${res.status})` };
 }

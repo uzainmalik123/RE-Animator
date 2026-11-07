@@ -16,8 +16,9 @@ export function RaiseScene({ initial }: { initial?: RitualState } = {}) {
   const live = useRitual();
   const attack = useAttack(live.id);
   const grimoire = useGrimoire(live.id);
-  const graveyard = useGraveyard();
   const [view, setView] = useState<View>(initial ? RAISE : GRAVEYARD);
+  const [returned, setReturned] = useState(false);
+  const graveyard = useGraveyard(view.at === 'graveyard');
   const [starting, setStarting] = useState(false);
   const walking = walkingTo(view);
 
@@ -37,10 +38,11 @@ export function RaiseScene({ initial }: { initial?: RitualState } = {}) {
   };
 
   if (view.at === 'graveyard') {
-    return <Graveyard graves={graveyard.graves} loadError={graveyard.error} error={live.error} chosen={walking} busy={starting || walking !== null} onRaise={(t) => void raise(t)} />;
+    return <Graveyard graves={graveyard.graves} loadError={graveyard.error} error={live.error} chosen={walking} busy={starting || walking !== null} focusHeading={returned} onRaise={(t) => void raise(t)} />;
   }
   const leave = () => {
     live.reset();
+    setReturned(true);
     setView(GRAVEYARD);
   };
   return <RaiseView ritual={{ ...live, state: initial ?? live.state }} attack={attack} grimoire={grimoire} onLeave={leave} />;
