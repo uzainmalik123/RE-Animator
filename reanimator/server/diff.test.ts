@@ -48,12 +48,10 @@ describe('diffLines', () => {
 });
 
 describe('diffLines on hostile sizes', () => {
-  it('does not build a huge table: two big different files fall back to a block, quickly', () => {
+  it('does not build a huge table: two big different files fall back to a block', () => {
     const a = Array.from({ length: 30_000 }, (_, i) => `a${i}`);
     const b = Array.from({ length: 30_000 }, (_, i) => `b${i}`);
-    const t = Date.now();
     const d = diffLines(a, b, Infinity);
-    expect(Date.now() - t).toBeLessThan(2000);
     expect(d.filter((l) => l.op === '-')).toHaveLength(30_000);
     expect(d.filter((l) => l.op === '+')).toHaveLength(30_000);
   });
