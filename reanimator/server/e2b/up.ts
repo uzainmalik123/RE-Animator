@@ -74,15 +74,21 @@ async function installRealKiro(sbx: Sandbox): Promise<void> {
 
 async function step(sbx: Sandbox, label: string, cmd: string, o: { cwd?: string; envs?: Record<string, string>; minutes?: number } = {}): Promise<void> {
   console.log(`· ${label}`);
-  const tail: string[] = [];
+  // The last 8 KB of output, not the last N chunks: npm's progress output floods the chunks and pushed
+  // the real error out of an earlier 40-chunk tail.
+  let tail = '';
   const keep = (d: string) => {
-    tail.push(d);
-    if (tail.length > 40) tail.shift();
+    tail = (tail + d).slice(-8000);
   };
   try {
     await sbx.commands.run(cmd, { cwd: o.cwd, envs: o.envs, timeoutMs: (o.minutes ?? 10) * 60_000, onStdout: keep, onStderr: keep });
   } catch (err) {
-    console.error(tail.join(''));
+    console.error(tail);
+    // npm writes the real cause to its debug log; show its end too.
+    const log = await sbx.commands
+      .run(`f=$(ls -t ${HOME}/.npm/_logs/*.log 2>/dev/null | head -1); [ -n "$f" ] && tail -40 "$f"`)
+      .then((r) => r.stdout, () => '');
+    if (log.trim()) console.error(`--- npm debug log ---\n${log}`);
     throw new Error(`${label} failed: ${(err as Error).message}`);
   }
 }
@@ -104,6 +110,9 @@ export async function up(minutes: number, kiro: KiroMode): Promise<void> {
       `set -e
        if ! node -v 2>/dev/null | grep -q '^v${NODE_MAJOR}\\.'; then
          f=$(curl -fsSL https://nodejs.org/dist/latest-v${NODE_MAJOR}.x/SHASUMS256.txt | grep -o 'node-v[0-9.]*-linux-x64.tar.xz' | head -1)
+         # The base image ships Node 20 + npm 10.1 in /usr/local; extracting over it leaves a mixed npm that
+         # exits 1 without a word (KI-R31), so the old npm and corepack go first.
+         sudo rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack
          curl -fsSL https://nodejs.org/dist/latest-v${NODE_MAJOR}.x/$f | sudo tar -xJ -C /usr/local --strip-components=1
        fi
        sudo apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq git bubblewrap >/dev/null`,
