@@ -86,6 +86,7 @@ Before you hand back, if anything changed:
 
 - `npm install` once.
 - `npm run dev` → the UI at http://localhost:5173 (a dark canvas until R1 draws on it).
+- Secrets and switches: copy `.env.example` to `.env` (gitignored). `npm run server`, `attack:check` and `e2b:up` load it, and the shell or Doppler wins over it.
 - `npm run server` → the backend at http://127.0.0.1:7070 (`/api/health`, `POST /api/rituals`). The UI proxies `/api` to it. Ctrl-C also stops the revived app.
 - `npx playwright-core install chromium` once per machine: the render vital and its integration test need it.
 - `npm run health` → typecheck + lint + test.
