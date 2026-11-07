@@ -7,10 +7,17 @@ const vital = (v: 'install' | 'build' | 'serve' | 'render', ok = true, detail = 
 const base: RitualState = { ...IDLE, repo: 'guestbook-2016', diedIn: 2016, corpse: [vital('install', false, 'npm error code EBADENGINE')] };
 
 describe('RaiseScene', () => {
-  it('idles with the button, labelled canvases and no app yet', () => {
+  it('opens on the graveyard, not the raise (R6)', () => {
     const html = renderToStaticMarkup(<RaiseScene />);
+    expect(html).toContain('The graveyard');
+    expect(html).not.toContain('Spell circle');
+    expect(html).not.toContain('Back to the graveyard');
+  });
+
+  it('idles with a way back, labelled canvases and no app yet', () => {
+    const html = renderToStaticMarkup(<RaiseScene initial={IDLE} />);
     expect(html).not.toContain('Summon Death');
-    expect(html).toContain('Begin the ritual');
+    expect(html).toContain('Back to the graveyard');
     expect(html).toMatch(/<canvas[^>]*aria-label="Spell circle[^"]*"/);
     expect(html).toMatch(/<canvas[^>]*aria-label="Heart monitor: flatline[^"]*"/);
     expect(html).not.toContain('<iframe');

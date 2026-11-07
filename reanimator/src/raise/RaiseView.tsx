@@ -57,12 +57,6 @@ function RaiseStage({ state }: { state: RitualState }) {
   );
 }
 
-// R9: what the grave field sends; an empty field raises our own corpse.
-export function graveRequest(text: string): string | undefined {
-  const t = text.trim();
-  return t === '' ? undefined : t;
-}
-
 // In a replay nothing can be pressed: one disabled fieldset locks every button and field inside.
 function Locked({ when, children }: { when: boolean; children: ReactNode }) {
   return when ? (
@@ -78,12 +72,12 @@ function Locked({ when, children }: { when: boolean; children: ReactNode }) {
 // monitor that is a red flatline until the revived repo's first vital truly passes. All the facts
 // are real text in the panel. A pure view of its handles: live they are the backend's streams, in a
 // replay (R11) the recording's, with every control locked and no live app to frame.
-export function RaiseView({ ritual, attack, grimoire, replay }: { ritual: RitualHandle; attack: AttackHandle; grimoire: GrimoireHandle; replay?: { recordedAt: string } }) {
+// `onLeave` (live only, R6) goes back to the graveyard once the ritual is over.
+export function RaiseView({ ritual, attack, grimoire, replay, onLeave }: { ritual: RitualHandle; attack: AttackHandle; grimoire: GrimoireHandle; replay?: { recordedAt: string }; onLeave?: () => void }) {
   const state = ritual.state;
   const attackState: AttackState = attack.state;
   // R7: the grimoire on the same ritual; a wound's brief becomes the spell's draft.
   const [draft, setDraft] = useState<Draft | null>(null);
-  const [grave, setGrave] = useState('');
   const casting = grimoire.state.status === 'casting';
   const running = state.status === 'examining' || state.status === 'raising';
 
@@ -99,13 +93,11 @@ export function RaiseView({ ritual, attack, grimoire, replay }: { ritual: Ritual
         <Locked when={replay !== undefined}>
           <h1>{state.repo ?? 'A dead repo waits'}</h1>
           {state.diedIn !== null && <p className="died">died {state.diedIn}</p>}
-          <label className="grave">
-            Name a grave (GitHub URL)
-            <input type="url" value={grave} placeholder="https://github.com/owner/repo" disabled={running} onChange={(e) => setGrave(e.target.value)} />
-          </label>
-          <button type="button" disabled={running} onClick={() => void ritual.start(graveRequest(grave))}>
-            Begin the ritual
-          </button>
+          {onLeave && (
+            <button type="button" disabled={running} onClick={onLeave}>
+              Back to the graveyard
+            </button>
+          )}
           {ritual.error && <p className="flat">{ritual.error}</p>}
           {state.corpse.length > 0 && (
             <>

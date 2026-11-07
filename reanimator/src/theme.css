@@ -417,3 +417,66 @@ body,
   font: 13px/1.5 'JetBrains Mono', ui-monospace, monospace;
   color: var(--bone);
 }
+
+/* R6: the graveyard. The raise's shell: two stacked canvases (bone stones, magic Kiro) beside the
+   real-text panel. No red here: it is Death's and the wounds' only. */
+.graveyard-stage {
+  position: relative;
+  min-height: 0;
+}
+
+.graveyard-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.graveyard .stones {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.raise-panel button.stone {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  color: var(--bone);
+  border-color: var(--dim);
+}
+
+.raise-panel button.stone:hover:not(:disabled),
+.raise-panel button.stone:focus-visible,
+.raise-panel button.stone.chosen {
+  border-color: var(--magic);
+  outline: none;
+}
+
+.raise-panel button.stone:disabled {
+  cursor: wait;
+}
+
+.stone-name {
+  font-size: 15px;
+}
+
+.stone-meta {
+  color: var(--dim);
+}
+
+.graveyard-note {
+  margin: 0 0 8px;
+  color: var(--bone);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  .graveyard-stage {
+    height: 50vh;
+  }
+}

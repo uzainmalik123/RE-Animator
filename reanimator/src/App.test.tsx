@@ -3,8 +3,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { App } from './App';
 
 describe('App', () => {
-  it('opens on the raise scene', () => {
-    expect(renderToStaticMarkup(<App />)).toContain('Begin the ritual');
+  it('opens on the graveyard (R6)', () => {
+    const html = renderToStaticMarkup(<App />);
+    expect(html).toContain('The graveyard');
+    expect(html).toContain('Dig a new grave');
   });
 
   it('opens on the replay at ?replay (R11)', () => {

@@ -5,6 +5,7 @@ import { loadRecording, recordingBase, replayFrameUrl, type Loaded } from './loa
 import { SPEEDS, usePlayer, type Player } from './usePlayer';
 
 const noop = async () => {};
+const refuse = async () => false;
 
 // R11 (D-R22): a recorded real run, played in the real UI. It says it is a replay, every control is
 // locked, and with no recording published it says so instead of playing anything (D-R11).
@@ -51,7 +52,7 @@ export function ReplayView({ loaded, player }: { loaded: Loaded | null; player?:
       </header>
       <FrameUrlContext.Provider value={replayFrameUrl(recordingBase())}>
         <RaiseView
-          ritual={{ id: session.ritual.id, state: session.ritual.state, start: noop, error: null }}
+          ritual={{ id: session.ritual.id, state: session.ritual.state, start: refuse, reset: () => {}, error: null }}
           attack={{ id: session.attack.id, state: session.attack.state, summon: noop, error: null }}
           grimoire={{ id: session.spell.id, state: session.spell.state, cast: noop, stop: noop, error: null }}
           replay={{ recordedAt: loaded.manifest.recordedAt }}
