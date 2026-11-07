@@ -86,7 +86,7 @@ async function step(sbx: Sandbox, label: string, cmd: string, o: { cwd?: string;
   }
 }
 
-async function up(minutes: number, kiro: KiroMode): Promise<void> {
+export async function up(minutes: number, kiro: KiroMode): Promise<void> {
   const root = repoRoot();
   const tgz = packCheckout(root);
   const secrets = forwardedEnv(process.env);

@@ -7,7 +7,9 @@ const ENGINE_KEYS = ['PLAYWRIGHT_BROWSERS_PATH', 'XDG_CACHE_HOME', 'GEMINI_API_K
 
 function pick(base: NodeJS.ProcessEnv, keep: (key: string) => boolean): NodeJS.ProcessEnv {
   const out: NodeJS.ProcessEnv = {};
-  for (const [k, v] of Object.entries(base)) if (v !== undefined && keep(k)) out[k] = v;
+  // An empty value is dropped: a copied .env.example is full of them, and e.g. an empty AWS_PROFILE
+  // would steer the AWS SDK's credential chain wrong.
+  for (const [k, v] of Object.entries(base)) if (v !== undefined && v !== '' && keep(k)) out[k] = v;
   return out;
 }
 

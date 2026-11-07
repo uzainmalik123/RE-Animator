@@ -99,7 +99,8 @@ poltergeist/   THE ENGINE (headless): Kiro spec reader, safety allowlist, route 
   packages/cli    `poltergeist summon | init | power | export | replay | sandbox`
   packages/mcp    `poltergeist-mcp`, the Kiro MCP server
   integrations/kiro   MCP, hook, steering and Power templates for Kiro
-.github/       CI: `npm run health` for both projects, plus a hand-run Pages deploy of the replay
+.github/       CI: `npm run health` for both projects, the secrets guard, and a hand-run Pages deploy of the replay
+scripts/       repo-wide checks (the secrets guard on committed env files)
 ```
 
 ## Run it
@@ -126,26 +127,26 @@ npm run health
 # the product
 cd ../reanimator
 npm ci
-cp .env.example .env                    # then fill in the LLM you use (see below)
-npm run server   # backend on http://127.0.0.1:7070
+cp .env.example .env                    # then fill in your keys (see below)
+npm run server:free   # backend on http://127.0.0.1:7070, spending nothing
 npm run dev      # UI on http://localhost:5173 (second terminal)
 ```
 
 Open http://localhost:5173, pick a grave, then press **Begin the ritual**, **Summon Death**, and cast a heal in the grimoire. Poltergeist has no server of its own: Reanimator runs it when you summon Death.
 
-### Choosing Death's LLM
+### One command per setup
 
-Set these in `reanimator/.env`, in your shell, or in Doppler (`doppler run -- npm run server`). [`reanimator/.env.example`](reanimator/.env.example) lists every setting.
+Put every key you have in `reanimator/.env` once ([`.env.example`](reanimator/.env.example) lists them all), then swap setups with one command. Each command checks `.env` first and lists anything missing before it starts.
 
-| `REANIMATOR_LLM` | Key | Use |
-|---|---|---|
-| *(unset)* or `anthropic` | `ANTHROPIC_API_KEY` | Claude, the default |
-| `bedrock` | AWS credentials + `AWS_REGION` | Claude in your AWS account |
-| `gemini` | `GEMINI_API_KEY` | Free tier, for testing |
-| `groq` | `GROQ_API_KEY` | Free tier, for testing |
-| `ollama` | none (`ollama serve` running) | Local and free |
+| Command | Death plans with | The grimoire | Spends |
+|---|---|---|---|
+| `npm run server:free` | Gemini (`-- groq` or `-- ollama` to switch) | the fake Kiro | nothing |
+| `npm run server:paid` | Claude on Amazon Bedrock (`-- claude` for the Anthropic API) | real Kiro | LLM + Kiro credit |
+| `npm run e2b:free` / `e2b:paid` | the same, hosted live on E2B | the same | the same |
 
-Gemini, Groq and Ollama also need `REANIMATOR_LLM_MODEL`, set to a model from that provider. Free models are for checking the wiring: they write weaker plans, so judge Death's quality with Claude.
+The free providers need a model id in `.env` (`GEMINI_MODEL`, `GROQ_MODEL`, `OLLAMA_MODEL`). Free models are for checking the wiring: they write weaker plans, so judge Death's quality with Claude. Plain `npm run server` still works, reading `REANIMATOR_LLM` and `REANIMATOR_LLM_MODEL` by hand.
+
+> **Never put a real value in an `.env.example`.** CI's `env-files` check blocks the PR, and `main` has no bypass for anyone. If a key was ever pushed, rotate it: it's in git history.
 
 ### Handy switches
 
@@ -159,9 +160,9 @@ Gemini, Groq and Ollama also need `REANIMATOR_LLM_MODEL`, set to a model from th
 `npm run e2b:up` (in `reanimator/`, with `E2B_API_KEY` in `.env`) boots the whole thing in an [E2B](https://e2b.dev) sandbox and prints a **secret link**. Only people holding that link get in.
 
 ```sh
-npm run e2b:up                         # grimoire on the fake Kiro: no Kiro tokens spent
-npm run e2b:up -- --kiro real          # real Kiro: approve a device-flow login code in your browser
-npm run e2b:up -- --minutes 30         # sandbox lifetime (default 60 min)
+npm run e2b:free                       # free LLM + the fake Kiro: nothing spent
+npm run e2b:paid                       # Claude + real Kiro: approve a device-flow login code in your browser
+npm run e2b:free -- --minutes 30       # sandbox lifetime (default 60 min)
 npm run e2b:down -- <sandbox id>       # kill it early
 ```
 

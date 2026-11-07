@@ -24,6 +24,13 @@ describe('engineEnv', () => {
   });
 });
 
+describe('empty values (D-R28)', () => {
+  it('are never passed to a child, so an empty AWS_PROFILE from .env.example cannot steer the SDK', () => {
+    const env = engineEnv({ PATH: '/b', AWS_PROFILE: '', AWS_ACCESS_KEY_ID: '', AWS_BEARER_TOKEN_BEDROCK: 'b', GEMINI_API_KEY: '' });
+    expect(env).toEqual({ PATH: '/b', AWS_BEARER_TOKEN_BEDROCK: 'b', NO_COLOR: '1' });
+  });
+});
+
 describe('kiroEnv', () => {
   it('passes what Kiro needs to find its login, and no secrets', () => {
     const env = kiroEnv({ PATH: '/b', HOME: '/h', XDG_CONFIG_HOME: '/c', XDG_DATA_HOME: '/d', ANTHROPIC_API_KEY: 'k', AWS_SECRET_ACCESS_KEY: 's', DOPPLER_TOKEN: 'd' });

@@ -29,6 +29,8 @@
 | D-R25 | The autopsy (R8): a computed reading of the real corpse and remedy, as one `autopsy` ritual event | Accepted |
 | D-R26 | A live Reanimator hosted in an E2B sandbox (`npm run e2b:up`), behind a keyed gate; the backend's loopback guard is unchanged | Accepted |
 | D-R27 | Cheap testing: `REANIMATOR_LLM`/`REANIMATOR_LLM_MODEL` pick Death's LLM (free Gemini/Groq/Ollama via Poltergeist D-50, Claude for real runs); `e2b:up --kiro fake` (default) casts with the fake Kiro, `--kiro real` uploads kiro-cli and logs in by device flow | Accepted |
+| D-R28 | One-line launch profiles: `server:free` / `server:paid` (and `e2b:free` / `e2b:paid`) check `.env` for what they need, then start with Death's LLM and Kiro set; free never spends, paid is Claude + real Kiro | Accepted |
+| D-R29 | Secrets guard: CI job `env-files` fails a PR that fills in an `.env.example`, holds a token-shaped string in a committed env file, or commits a real `.env`; required on `main` with no bypass for anyone | Accepted |
 | D-R21 | The R7 grimoire drives the real Kiro agent: one headless `kiro-cli chat` turn per spell in the revived body, file tools only, never while Death attacks; the user still dares Death | Accepted |
 
 ---
@@ -282,3 +284,20 @@
   - `e2b:up` forwards only the LLM settings: `ANTHROPIC_*`, `AWS_*`, `GEMINI_*`, `GROQ_*`, `REANIMATOR_LLM*`.
   - **`reanimator/.env`** (gitignored; `.env.example` lists every setting) is loaded by `npm run server` and `attack:check` as well as `e2b:up`, with `process.loadEnvFile`, so the shell or Doppler still wins.
 - **Consequences:** a fake-Kiro, free-LLM run proves the wiring, not the demo: a full dress rehearsal with `--kiro real` and Claude, recorded (R11) as a fallback, comes before judging. The keyed gate is the only spending guard, so anyone holding the link can spend the forwarded LLM key and (with `--kiro real`) Kiro credit until the sandbox dies. Ollama only works locally (no GPU or model in E2B). Live checks: KI-R32.
+
+### D-R28: One-line launch profiles
+- **Context:** (2026-11-07) The team keeps every key in one `reanimator/.env` and swaps between spending nothing (testing) and the real thing (demo). Setting `REANIMATOR_LLM`, `REANIMATOR_LLM_MODEL` and `REANIMATOR_KIRO` by hand each time is error-prone, and a wrong mix could spend credit during a test.
+- **Decision:**
+  - **`npm run server:free`** = a free LLM (`REANIMATOR_FREE_LLM`, default `gemini`; or `-- groq` / `-- ollama`) + the fake Kiro. **`npm run server:paid`** = Claude (`REANIMATOR_PAID_LLM`, default `bedrock`; or `-- claude` for the Anthropic API) + the real `kiro-cli`. **`e2b:free` / `e2b:paid`** do the same through `up()` (D-R26, D-R27), with `--kiro` following the tier.
+  - `server/launch.ts` loads `.env`, and the pure `resolveProfile` lists **everything missing at once** (key, `<PROVIDER>_MODEL`, Bedrock region and credentials, `kiro-cli` on PATH, `E2B_API_KEY`), naming variables and never values, then exits 1. A paid provider on `free` (or the reverse) is refused, so a test can't spend by accident. Ollama is refused on E2B.
+  - Models live per provider in `.env` (`GEMINI_MODEL`, `GROQ_MODEL`, `OLLAMA_MODEL`, optional `CLAUDE_MODEL`). The profile always sets `REANIMATOR_LLM`, `REANIMATOR_LLM_MODEL` and (locally) `REANIMATOR_KIRO`, as empty strings rather than deletes, because the backend loads `.env` again and an unset key would come back from it.
+  - `env.ts` drops empty values before any child sees them, since a copied `.env.example` is full of them (an empty `AWS_PROFILE` would steer the AWS SDK wrong).
+- **Consequences:** plain `npm run server` still works in manual mode. The free and paid model ids are the team's to choose, since free tiers' model names change often.
+
+### D-R29: Secrets guard, required on main with no bypass
+- **Context:** (2026-11-07) With one `.env` holding every key and a teammate editing `.env.example` beside it, a key pasted into the template is one `git add` away from a public repo.
+- **Decision:**
+  - `scripts/check-env-files.mjs` (repo root, plain Node, tests in `check-env-files.test.mjs`) scans every tracked env file. It fails on a secret-named variable (`KEY`, `TOKEN`, `SECRET`, `PASSWORD`, `CREDENTIAL`, `PRIVATE`, `AUTH`) with a value in a template, **commented-out lines included** (only empty or `<placeholder>` passes); on a token-shaped string anywhere (Anthropic, OpenAI-style, Google, Groq, AWS, Bedrock, E2B, GitHub, Doppler, Slack, private keys); and on any committed real `.env` / `.env.*` other than `.env.example` and `.env.replay`. It names `file line N` and never prints the value.
+  - CI workflow **Secrets guard**, job **`env-files`**, runs on every PR and push to `main` (no path filter: a required check that never reports would block every PR).
+  - The **"Protect main"** ruleset requires `health` and `env-files`, a PR, and blocks force pushes and deletion, with **no bypass actors**: the earlier admin pull-request bypass is removed, so nobody, owner included, can merge past a red check.
+- **Consequences:** a leaked key still has to be rotated: the guard stops the merge, but the PR's commits are already public on GitHub. Repo admins can still edit the ruleset itself (GitHub allows that); doing so is a team decision, not a shortcut. Neither `health` check is path-filtered either.
