@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { attackOver, type HealTarget } from '../shared/attack.js';
+import { isGraveId, type Headstone } from '../shared/graveyard.js';
 import { spellOver } from '../shared/grimoire.js';
 import type { RitualEvent } from '../shared/ritual.js';
 import type { Attacks } from './attack.js';
@@ -12,6 +13,7 @@ import { streamLog } from './sse.js';
 export type RitualsApi = Pick<Rituals, 'start' | 'events' | 'subscribe'>;
 export type AttacksApi = Pick<Attacks, 'start' | 'events' | 'subscribe' | 'frame'>;
 export type GrimoireApi = Pick<Grimoire, 'start' | 'events' | 'subscribe' | 'stop'>;
+export type GraveyardApi = { list(): Promise<Headstone[]> };
 
 const MAX_SPELL = 20_000;
 
@@ -23,24 +25,34 @@ const terminal = (e: RitualEvent) => e.type === 'risen' || e.type === 'failed';
 
 // The backend's routes. Every /api route is loopback-only (KI-R12). R2 adds the ritual: POST starts
 // one, and its events stream as resumable SSE (sse.ts). R3 adds Death's attack on a risen ritual,
-// R7 the grimoire's spells (Kiro on the revived body), never both at once.
-export function createApp(o: { rituals?: RitualsApi; attacks?: AttacksApi; grimoire?: GrimoireApi } = {}): Hono {
+// R7 the grimoire's spells (Kiro on the revived body), never both at once. R6 adds the graveyard:
+// the prepared graves to choose from, raised by id.
+export function createApp(o: { rituals?: RitualsApi; attacks?: AttacksApi; grimoire?: GrimoireApi; graveyard?: GraveyardApi } = {}): Hono {
   const app = new Hono();
   app.use('/api/*', loopbackGuard());
   app.get('/api/health', (c) => c.json({ ok: true, name: 'reanimator' }));
 
+  const graveyard = o.graveyard;
+  if (graveyard) app.get('/api/graveyard', async (c) => c.json({ graves: await graveyard.list() }));
+
   const rituals = o.rituals;
   if (!rituals) return app;
 
-  // R9: {repo} names a grave on GitHub; no repo raises our own corpse.
+  // R9: {repo} names a grave on GitHub. R6: {grave} names a prepared one by id. Neither raises our
+  // own practice corpse. Naming both, or a malformed one, is a 400; an id nobody listed is a 404.
   app.post('/api/rituals', async (c) => {
     const body: unknown = await c.req.json().catch(() => ({}));
-    const repo = typeof body === 'object' && body !== null ? (body as { repo?: unknown }).repo : undefined;
+    const { repo, grave } = typeof body === 'object' && body !== null ? (body as { repo?: unknown; grave?: unknown }) : {};
     let req = {};
+    if (repo !== undefined && grave !== undefined) return c.json({ error: 'name a repo or a grave, not both' }, 400);
     if (repo !== undefined) {
-      const grave = typeof repo === 'string' ? parseGraveUrl(repo) : null;
-      if (!grave) return c.json({ error: 'repo must be https://github.com/<owner>/<repo>' }, 400);
-      req = { repo: grave.url };
+      const parsed = typeof repo === 'string' ? parseGraveUrl(repo) : null;
+      if (!parsed) return c.json({ error: 'repo must be https://github.com/<owner>/<repo>' }, 400);
+      req = { repo: parsed.url };
+    } else if (grave !== undefined) {
+      if (!isGraveId(grave)) return c.json({ error: 'grave must be a grave id' }, 400);
+      if (!graveyard || !(await graveyard.list()).some((s) => s.id === grave)) return c.json({ error: 'no such grave' }, 404);
+      req = { grave };
     }
     const s = rituals.start(req);
     if ('busy' in s) return c.json({ error: 'a ritual is already running', id: s.id }, 409);

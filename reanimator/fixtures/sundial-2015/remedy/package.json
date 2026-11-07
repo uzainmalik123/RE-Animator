@@ -1,0 +1,14 @@
+{
+  "name": "sundial",
+  "version": "0.2.0",
+  "description": "What time is it? A sundial for the web.",
+  "main": "server.js",
+  "scripts": {
+    "build": "node build.js",
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT"
+}

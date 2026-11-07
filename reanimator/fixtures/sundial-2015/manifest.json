@@ -1,0 +1,6 @@
+{
+  "name": "sundial-2015",
+  "diedIn": 2015,
+  "licence": "MIT",
+  "serve": ["node", "server.js"]
+}
