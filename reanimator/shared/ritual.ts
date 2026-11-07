@@ -2,6 +2,8 @@
 // one pure reducer both the server and the UI fold them with. Nothing here is animated or timed;
 // every beat is a real vital result (D-R11).
 
+import type { Autopsy } from './autopsy.js';
+
 export const VITALS = ['install', 'build', 'serve', 'render'] as const;
 export type VitalName = (typeof VITALS)[number];
 
@@ -20,6 +22,8 @@ export type RitualEvent =
   | { type: 'vital'; phase: Phase; result: VitalResult }
   // rites: the fixed cures a grave's remedy applied (R9); absent for a prepared remedy.
   | { type: 'remedy'; files: number; rites?: string[] }
+  // R8: why it died and what the remedy changed, computed from the real corpse and remedy.
+  | { type: 'autopsy'; autopsy: Autopsy }
   | { type: 'risen'; origin: string }
   | { type: 'failed'; phase: Phase; reason: string };
 
@@ -32,6 +36,7 @@ export interface RitualState {
   corpse: VitalResult[];
   revived: VitalResult[];
   rites: string[];
+  autopsy: Autopsy | null;
   origin: string | null;
   failure: string | null;
 }
@@ -43,6 +48,7 @@ export const IDLE: RitualState = {
   corpse: [],
   revived: [],
   rites: [],
+  autopsy: null,
   origin: null,
   failure: null,
 };
@@ -55,6 +61,8 @@ export function reduceRitual(s: RitualState, e: RitualEvent): RitualState {
       return e.phase === 'corpse' ? { ...s, corpse: [...s.corpse, e.result] } : { ...s, revived: [...s.revived, e.result] };
     case 'remedy':
       return { ...s, status: 'raising', rites: e.rites ?? [] };
+    case 'autopsy':
+      return { ...s, autopsy: e.autopsy };
     case 'risen':
       return { ...s, status: 'risen', origin: e.origin };
     case 'failed':

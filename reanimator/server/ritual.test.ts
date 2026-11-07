@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { RitualEvent } from '../shared/ritual.js';
 import type { CommandResult, RunningApp } from './exec.js';
 import { PRACTICE_CORPSE, loadFixture, type Fixture } from './fixtures.js';
+import { buildAutopsy } from './autopsy.js';
 import { GraveError } from './grave.js';
 import { Rituals, type RitualRequest } from './ritual.js';
 import type { VitalDeps } from './vitals.js';
@@ -62,6 +63,7 @@ describe('Rituals', () => {
       'started',
       'corpse:install:false',
       'remedy',
+      'autopsy',
       'revived:install:true',
       'revived:build:true',
       'revived:serve:true',
@@ -227,6 +229,49 @@ describe('Rituals', () => {
       expect(r.body('nope')).toBeNull();
       expect(await r.reraise('nope', () => {})).toEqual({ failed: 'the ritual has not risen' });
     });
+  });
+});
+
+describe('Rituals: the autopsy (R8)', () => {
+  const makeWith = async (autopsy?: typeof buildAutopsy) => {
+    const { deps } = fakeDeps();
+    const workRoot = await mkdtemp(join(tmpdir(), 'rituals-'));
+    return new Rituals({ fixture: () => loadFixture(PRACTICE_CORPSE), deps, workRoot, autopsy });
+  };
+
+  it('emits the autopsy right after the remedy, tied to the corpse\'s real failing vital', async () => {
+    const { r } = await make();
+    const log = await settle(r, start(r));
+    const i = log.findIndex((e) => e.type === 'remedy');
+    const e = log[i + 1];
+    expect(e?.type).toBe('autopsy');
+    if (e?.type !== 'autopsy') return;
+    expect(e.autopsy.diedAt).toBe('install');
+    expect(e.autopsy.symptom).toBe('npm error code EBADENGINE');
+    expect(e.autopsy.causes.map((c) => [c.kind, c.file])).toEqual([
+      ['engine-pin', 'package.json'],
+      ['removed-api', 'server.js'],
+    ]);
+    expect(e.autopsy.causes[0]!.seen).toBe(true);
+    await r.dispose();
+  });
+
+  it('still raises when the autopsy throws', async () => {
+    const r = await makeWith(async () => {
+      throw new Error('boom');
+    });
+    const log = await settle(r, start(r));
+    expect(log.some((e) => e.type === 'autopsy')).toBe(false);
+    expect(log.at(-1)?.type).toBe('risen');
+    await r.dispose();
+  });
+
+  it('a grave no rite fits still gets its reading before it stops', async () => {
+    const { deps } = fakeDeps();
+    const r = new Rituals({ fixture: async () => ({ ...(await loadFixture(PRACTICE_CORPSE)), remedy: async () => ({ files: 0, rites: [] }) }), deps, workRoot: await mkdtemp(join(tmpdir(), 'rituals-')) });
+    const log = await settle(r, start(r));
+    expect(log.map((e) => e.type)).toEqual(['started', 'vital', 'remedy', 'autopsy', 'failed']);
+    await r.dispose();
   });
 });
 

@@ -13,6 +13,13 @@ describe('recording format (R11)', () => {
     expect(() => parseLines('{"t":0,"stream":"x","id":"a","event":{"type":"y"}}')).toThrow('bad recording line 1');
   });
 
+  it('accepts a well-formed autopsy line and refuses a malformed one (R8)', () => {
+    const line = (autopsy: unknown) => JSON.stringify({ t: 0, stream: 'ritual', id: 'r', event: { type: 'autopsy', autopsy } });
+    expect(parseLines(line({ diedAt: null, symptom: '', skipped: 0, causes: [] }))).toHaveLength(1);
+    expect(() => parseLines(line({ diedAt: null, symptom: '', skipped: 0 }))).toThrow('bad recording line 1');
+    expect(() => parseLines(line(null))).toThrow('bad recording line 1');
+  });
+
   it('refuses a line that is not JSON', () => {
     expect(() => parseLines('{"t":0}\nnope')).toThrow('bad recording line 1');
   });

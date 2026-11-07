@@ -1,5 +1,6 @@
 // A recorded session (R11, D-R22): every event the backend streamed during a real run, stamped with
 // when it was sent, so a static page can replay the real UI on it. Frames sit beside it as jpgs.
+import { isAutopsy } from './autopsy.js';
 import type { AttackEvent } from './attack.js';
 import type { SpellEvent } from './grimoire.js';
 import type { RitualEvent } from './ritual.js';
@@ -34,6 +35,8 @@ export function parseLines(text: string): RecordedLine[] {
     if (!isObject(v) || typeof v.t !== 'number' || typeof v.stream !== 'string' || !STREAMS.includes(v.stream) || typeof v.id !== 'string' || !isObject(v.event)) {
       throw new Error(`bad recording line ${i + 1}`);
     }
+    // R8: the panel renders an autopsy field by field, so a malformed one is a bad line, not a crash later.
+    if (v.stream === 'ritual' && v.event.type === 'autopsy' && !isAutopsy(v.event.autopsy)) throw new Error(`bad recording line ${i + 1}`);
     lines.push(v as RecordedLine);
   });
   return lines;

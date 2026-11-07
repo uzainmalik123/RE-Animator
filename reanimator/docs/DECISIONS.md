@@ -26,6 +26,7 @@
 | D-R19 | The R4 attack scene: live ghosts and the engine's own frames, Death + minions + wounds on a red layer over a bone body | Accepted |
 | D-R20 | The R5 heal loop: a brief per wound for Kiro (the user hands it over), a re-raise on real vitals before every attack but the first, a one-wound re-run, the merged report as ledger, and a wound closes only on a clean pair that really ran | Accepted (one bullet amended by D-R21) |
 | D-R24 | The R6 graveyard: headstones are the prepared fixtures on disk, three of them, raised by id; Kiro's walk is only a transition | Accepted |
+| D-R25 | The autopsy (R8): a computed reading of the real corpse and remedy, as one `autopsy` ritual event | Accepted |
 | D-R21 | The R7 grimoire drives the real Kiro agent: one headless `kiro-cli chat` turn per spell in the revived body, file tools only, never while Death attacks; the user still dares Death | Accepted |
 
 ---
@@ -250,3 +251,14 @@
   - **Back to the graveyard** is disabled while a ritual runs; it closes the ritual's stream and the attack and spell views. The backend keeps the old body until the next ritual.
   - The replay (R11) is untouched: a recording starts at the first ritual event.
 - **Consequences:** the raise panel no longer starts rituals. The real demo repo (KI-R1), when picked, is one more `fixtures/` folder and appears as a headstone. R8 (cause of death) will hang off the headstone.
+
+### D-R25: The autopsy (R8)
+- **Context:** R8's grill (2026-11-07), built in Kiro (D-R18) with the recommended answer at every question. Until now the panel showed that a repo flatlined and rose, not why.
+- **Decision:**
+  - **Computed, never written.** `buildAutopsy(corpseDir, revivedDir, failure)` diffs the **pristine** corpse (`fixture.corpseDir`, not the copy the vitals ran in, which holds npm and build leftovers) against the remedied body and classifies the changes with a fixed table: `engine-pin`, `removed-api`, `node-sass`, `openssl`, `lockfile`, `other`. No model, so it is deterministic and costs nothing (D-R11).
+  - **Only truly removed APIs** are called removed (`util.puts/print/pump/error/debug`, `sys.puts`, `process.EventEmitter`, `os.tmpDir`). Deprecated-but-present ones (`process.binding`, `require('sys')`) are not.
+  - **`seen`**: a cause is marked as named by the corpse's real failing output or not, so a cause that only came along with the fix (a modernised `engines`) is not passed off as the killer.
+  - **One ritual event**, `autopsy`, right after `remedy`: the recorder and replay carry it unchanged. `parseLines` rejects a malformed one. Old recordings without it still play. A throwing builder never stops the raise.
+  - **Safe reading:** `package.json` is compared by parsed field; symlinks are never followed; `node_modules`, `.git`, binary and files over 64 KB are skipped and counted; evidence is capped (40 lines of 200 chars, 12 causes).
+  - **The panel** shows real text in bone and magic only (red is Death's), `−`/`+` markers, a dot-matrix slab that only counts the causes, and a "Copy autopsy" Markdown for a human's PR (D-R10).
+- **Consequences:** a rite-less R9 grave still gets its reading before it stops. A real stranger's repo is still KI-R25. Evidence lines are repo file contents: see KI-R30.

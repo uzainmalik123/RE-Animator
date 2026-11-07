@@ -89,3 +89,35 @@ describe('art (R11)', () => {
     expect(art('death.svg').endsWith('/art/death.svg')).toBe(true);
   });
 });
+
+describe('RaiseView (R8)', () => {
+  const autopsy = {
+    diedAt: 'install' as const,
+    symptom: 'npm error code EBADENGINE',
+    skipped: 0,
+    causes: [{ kind: 'engine-pin' as const, title: 'Pinned to an old Node', why: 'It pinned.', file: 'package.json', lines: [{ op: '-' as const, text: '"node": "0.10.x"' }], truncated: false, seen: true }],
+  };
+  const flat = { vital: 'install' as const, ok: false, detail: 'npm error code EBADENGINE', ms: 5 };
+  const withAutopsy = { ...handles, ritual: { ...handles.ritual, state: { ...risen, corpse: [flat], rites: ['engines'], autopsy } } };
+
+  it('puts the autopsy between the corpse and the rites', () => {
+    const html = renderToStaticMarkup(<RaiseView {...withAutopsy} />);
+    const corpse = html.indexOf('The corpse');
+    const reading = html.indexOf('The autopsy');
+    const rites = html.indexOf('The rites');
+    expect(corpse).toBeGreaterThan(-1);
+    expect(reading).toBeGreaterThan(corpse);
+    expect(rites).toBeGreaterThan(reading);
+    expect(html).toContain('Died at install: npm error code EBADENGINE');
+  });
+
+  it('has no autopsy section for a ritual without one (an old recording)', () => {
+    expect(renderToStaticMarkup(<RaiseView {...handles} />)).not.toContain('The autopsy');
+  });
+
+  it('in a replay, shows the autopsy with the copy button locked', () => {
+    const html = renderToStaticMarkup(<RaiseView {...withAutopsy} replay={{ recordedAt: '2026-11-20T10:00:00Z' }} />);
+    expect(html).toContain('The autopsy');
+    expect(html).toMatch(/<fieldset[^>]*disabled[\s\S]*Copy autopsy/);
+  });
+});
