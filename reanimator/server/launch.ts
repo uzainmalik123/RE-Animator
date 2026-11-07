@@ -1,6 +1,6 @@
 // One-line launch profiles (D-R28): check the repo's .env (D-R30) for what the profile needs, then start the
 // backend (or the E2B host) with Death's LLM and the grimoire's Kiro set.
-//   npm run server:free [-- groq]    free LLM (REANIMATOR_FREE_LLM, default gemini) + the fake Kiro
+//   npm run server:free [-- ollama]  free LLM (REANIMATOR_FREE_LLM, default groq) + the fake Kiro
 //   npm run server:paid [-- claude]  Claude (REANIMATOR_PAID_LLM, default bedrock) + the real Kiro
 //   npm run e2b:free / e2b:paid [-- <provider>] [-- --minutes 30]   the same, hosted on E2B
 // The profile always wins over REANIMATOR_LLM / REANIMATOR_LLM_MODEL / REANIMATOR_KIRO in .env.
@@ -11,7 +11,7 @@ import { loadDotEnv } from './dotenv.js';
 
 export type Tier = 'free' | 'paid';
 export type Where = 'local' | 'e2b';
-export const PROVIDERS = { free: ['gemini', 'groq', 'ollama'], paid: ['bedrock', 'claude'] } as const;
+export const PROVIDERS = { free: ['groq', 'ollama'], paid: ['bedrock', 'claude'] } as const;
 
 const FAKE_KIRO = fileURLToPath(new URL('./fixtures/fake-kiro.mjs', import.meta.url));
 const set = (env: NodeJS.ProcessEnv, k: string) => Boolean(env[k]?.trim());
@@ -22,7 +22,7 @@ export type Launch = { env: Record<string, string>; kiro: 'fake' | 'real'; summa
 export function resolveProfile(o: { tier: Tier; provider?: string; where: Where; env: NodeJS.ProcessEnv; hasKiro: boolean }): Launch {
   const { tier, env } = o;
   const errors: string[] = [];
-  const provider = o.provider ?? env[tier === 'free' ? 'REANIMATOR_FREE_LLM' : 'REANIMATOR_PAID_LLM']?.trim() ?? (tier === 'free' ? 'gemini' : 'bedrock');
+  const provider = o.provider ?? env[tier === 'free' ? 'REANIMATOR_FREE_LLM' : 'REANIMATOR_PAID_LLM']?.trim() ?? (tier === 'free' ? 'groq' : 'bedrock');
   const allowed: readonly string[] = PROVIDERS[tier];
   if (!allowed.includes(provider)) errors.push(`"${provider}" isn't a ${tier} provider; use one of: ${allowed.join(', ')}`);
   const need = (k: string, why: string) => {
@@ -30,7 +30,7 @@ export function resolveProfile(o: { tier: Tier; provider?: string; where: Where;
   };
 
   let model = '';
-  if (provider === 'gemini' || provider === 'groq' || provider === 'ollama') {
+  if (provider === 'groq' || provider === 'ollama') {
     const up = provider.toUpperCase();
     if (provider !== 'ollama') need(`${up}_API_KEY`, `the ${provider} key`);
     need(`${up}_MODEL`, `a ${provider} model id for Death`);

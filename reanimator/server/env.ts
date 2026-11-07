@@ -3,7 +3,7 @@
 const BASE_KEYS = ['PATH', 'HOME', 'TMPDIR', 'TEMP', 'LANG', 'LC_ALL', 'TERM', 'USER', 'SHELL'];
 // Playwright finds Chromium through these; ANTHROPIC_* and AWS_* configure the compiler (Anthropic or Bedrock),
 // and the free providers' keys (D-R27) the OpenAI-compatible ones.
-const ENGINE_KEYS = ['PLAYWRIGHT_BROWSERS_PATH', 'XDG_CACHE_HOME', 'GEMINI_API_KEY', 'GROQ_API_KEY'];
+const ENGINE_KEYS = ['PLAYWRIGHT_BROWSERS_PATH', 'XDG_CACHE_HOME', 'GROQ_API_KEY'];
 
 function pick(base: NodeJS.ProcessEnv, keep: (key: string) => boolean): NodeJS.ProcessEnv {
   const out: NodeJS.ProcessEnv = {};

@@ -17,6 +17,7 @@ export const PROVIDER_ENV_KEYS = Object.freeze([
   'AWS_SECRET_ACCESS_KEY',
   'AWS_SESSION_TOKEN',
   'AWS_BEARER_TOKEN_BEDROCK',
+  // No longer a provider (D-51), but still never handed to a reset if it's in someone's env.
   'GEMINI_API_KEY',
   'GROQ_API_KEY',
 ]);

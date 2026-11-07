@@ -4,19 +4,19 @@ import { resolveProfile } from './launch.js';
 const base = { where: 'local' as const, hasKiro: true };
 
 describe('resolveProfile (D-R27)', () => {
-  it('free defaults to gemini with its model and the fake Kiro', () => {
-    const l = resolveProfile({ ...base, tier: 'free', env: { GEMINI_API_KEY: 'g', GEMINI_MODEL: 'gm' } });
+  it('free defaults to groq with its model and the fake Kiro', () => {
+    const l = resolveProfile({ ...base, tier: 'free', env: { GROQ_API_KEY: 'q', GROQ_MODEL: 'gm' } });
     expect(l.errors).toEqual([]);
     expect(l.kiro).toBe('fake');
-    expect(l.env).toMatchObject({ REANIMATOR_LLM: 'gemini', REANIMATOR_LLM_MODEL: 'gm' });
+    expect(l.env).toMatchObject({ REANIMATOR_LLM: 'groq', REANIMATOR_LLM_MODEL: 'gm' });
     expect(l.env.REANIMATOR_KIRO).toMatch(/server\/fixtures\/fake-kiro\.mjs$/);
-    expect(l.summary).toContain('gemini (gm)');
+    expect(l.summary).toContain('groq (gm)');
   });
 
   it('a provider argument, then REANIMATOR_FREE_LLM, pick the free provider', () => {
-    const env = { REANIMATOR_FREE_LLM: 'groq', GROQ_API_KEY: 'q', GROQ_MODEL: 'qm', OLLAMA_MODEL: 'om' };
-    expect(resolveProfile({ ...base, tier: 'free', env }).env.REANIMATOR_LLM).toBe('groq');
-    expect(resolveProfile({ ...base, tier: 'free', provider: 'ollama', env }).env).toMatchObject({ REANIMATOR_LLM: 'ollama', REANIMATOR_LLM_MODEL: 'om' });
+    const env = { REANIMATOR_FREE_LLM: 'ollama', GROQ_API_KEY: 'q', GROQ_MODEL: 'qm', OLLAMA_MODEL: 'om' };
+    expect(resolveProfile({ ...base, tier: 'free', env }).env).toMatchObject({ REANIMATOR_LLM: 'ollama', REANIMATOR_LLM_MODEL: 'om' });
+    expect(resolveProfile({ ...base, tier: 'free', provider: 'groq', env }).env).toMatchObject({ REANIMATOR_LLM: 'groq', REANIMATOR_LLM_MODEL: 'qm' });
   });
 
   it('paid defaults to bedrock with the real Kiro; claude maps to anthropic; CLAUDE_MODEL is optional', () => {
@@ -39,13 +39,15 @@ describe('resolveProfile (D-R27)', () => {
   });
 
   it('a blank key counts as missing, and a model is required for the free providers', () => {
-    const l = resolveProfile({ ...base, tier: 'free', env: { GEMINI_API_KEY: '  ' } });
-    expect(l.errors).toEqual(['GEMINI_API_KEY is empty (the gemini key)', 'GEMINI_MODEL is empty (a gemini model id for Death)']);
+    const l = resolveProfile({ ...base, tier: 'free', env: { GROQ_API_KEY: '  ' } });
+    expect(l.errors).toEqual(['GROQ_API_KEY is empty (the groq key)', 'GROQ_MODEL is empty (a groq model id for Death)']);
   });
 
   it('refuses a paid provider on free (no spending by accident) and the reverse', () => {
-    expect(resolveProfile({ ...base, tier: 'free', provider: 'claude', env: {} }).errors[0]).toMatch(/"claude" isn't a free provider; use one of: gemini, groq, ollama/);
-    expect(resolveProfile({ ...base, tier: 'paid', provider: 'gemini', env: {} }).errors[0]).toMatch(/"gemini" isn't a paid provider/);
+    expect(resolveProfile({ ...base, tier: 'free', provider: 'claude', env: {} }).errors[0]).toMatch(/"claude" isn't a free provider; use one of: groq, ollama/);
+    expect(resolveProfile({ ...base, tier: 'paid', provider: 'groq', env: {} }).errors[0]).toMatch(/"groq" isn't a paid provider/);
+    // Gemini is gone (D-R31): an old REANIMATOR_FREE_LLM=gemini in .env gets a clear error, not a silent fallback.
+    expect(resolveProfile({ ...base, tier: 'free', env: { REANIMATOR_FREE_LLM: 'gemini' } }).errors[0]).toMatch(/"gemini" isn't a free provider; use one of: groq, ollama/);
   });
 
   it('refuses ollama on E2B, and leaves REANIMATOR_KIRO to e2b:up there', () => {

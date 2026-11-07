@@ -80,7 +80,7 @@
 | KI-69 | F20 Changeling keys are Tab/Enter/Space only: no Escape or arrow keys, so radio groups, selects, menus and dialogs can't be operated from the keyboard | Minor | F20 | Accepted |
 | KI-70 | F21 sandbox not yet hosted: no container (Candy Swap + Chromium + `poltergeist sandbox` behind a proxy), no public URL, and the PRD's "survives 10 back-to-back public runs" is only proven on the fixture | Minor | F21 sign-off, R11 | Open |
 | KI-71 | Flaky CI test: F21's "ten back-to-back runs" (`packages/cli/test/sandbox-done-when.test.ts`) intermittently finds nothing haunted on one run, failing `npm run health` on an unrelated PR | Minor | CI trust (red checks on unrelated PRs) | Open |
-| KI-72 | D-50's free providers (Gemini, Groq, Ollama) are tested only against a fake `fetch`: whether each accepts our `json_schema` and plans validly is unproven | Minor | cheap testing (D-50) | Open |
+| KI-72 | D-50's free providers (Groq, Ollama; Gemini removed by D-51) are tested only against a fake `fetch`: whether each accepts our `json_schema` and plans validly is unproven | Minor | cheap testing (D-50) | Open |
 
 ---
 
@@ -719,3 +719,4 @@
 ### KI-72: The free providers haven't been run live · Minor · Open
 - **What:** D-50's OpenAI-compatible client is unit-tested with a fake `fetch` only. Unproven: that Gemini's and Groq's OpenAI endpoints accept our `response_format: json_schema` (if one rejects the schema, every pair fails with HTTP 400), which of their models write plans that pass validation, and how often the free-tier rate limits bite at the compiler's concurrency of 4.
 - **Next action:** with a free key, run one Reanimator fixture through Summon Death with `REANIMATOR_LLM=gemini REANIMATOR_LLM_MODEL=<model>` (then `groq`), and note the compiled / uncompilable counts in the report. If a provider rejects the schema, fall back to `response_format: { type: "json_object" }` for it (the schema is in the system message anyway).
+- **Update (2026-11-07):** the first live run used Gemini and every pair failed with HTTP 404 (the configured model was retired for new users), so no plan was ever validated. Gemini was then removed (D-51). Still open: a live Groq run.

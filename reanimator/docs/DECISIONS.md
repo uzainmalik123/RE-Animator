@@ -32,6 +32,7 @@
 | D-R28 | One-line launch profiles (env file location superseded by D-R30): `server:free` / `server:paid` (and `e2b:free` / `e2b:paid`) check `.env` for what they need, then start with Death's LLM and Kiro set; free never spends, paid is Claude + real Kiro | Accepted |
 | D-R29 | Secrets guard: CI job `env-files` fails a PR that fills in an `.env.example`, holds a token-shaped string in a committed env file, or commits a real `.env`; required on `main` with no bypass for anyone | Accepted |
 | D-R30 | One env file for the whole repo: `.env` at the root, templated by the root `.env.example`; Reanimator loads it (`server/dotenv.ts`), Poltergeist never does. Supersedes the `reanimator/.env` location in D-R27/D-R28 | Accepted |
+| D-R31 | Gemini is removed (follows Poltergeist D-51): the free profile is Groq by default, or Ollama; `server:free` refuses `gemini` with a clear error | Accepted |
 | D-R21 | The R7 grimoire drives the real Kiro agent: one headless `kiro-cli chat` turn per spell in the revived body, file tools only, never while Death attacks; the user still dares Death | Accepted |
 
 ---
@@ -310,3 +311,8 @@
   - Reanimator loads it through `server/dotenv.ts` (`loadDotEnv()`, `ENV_FILE`) in `main.ts`, `attack-check.ts`, `launch.ts` and `e2b/up.ts`. The shell or Doppler still wins.
   - **Poltergeist never reads the file.** Reanimator passes the engine only its LLM keys (`engineEnv`); an engine that loaded the whole file would undo that filter. Run alone, it's `set -a && . ../.env && set +a` first, or Doppler.
 - **Consequences:** supersedes the `reanimator/.env` location in D-R27 and D-R28 (their behaviour is unchanged). `e2b:up` uploads only `reanimator/` and `poltergeist/`, so the root `.env` never leaves the machine.
+
+### D-R31: Gemini is removed; Groq is the free default
+- **Context:** (2026-11-07) Death did nothing on `server:free`: Gemini's model had been retired, so every plan failed (Poltergeist D-51, KI-72). The team dropped Gemini.
+- **Decision:** the free profile (D-R28) offers `groq` (default) and `ollama`. An old `REANIMATOR_FREE_LLM=gemini` in `.env` stops `server:free` with *"gemini" isn't a free provider; use one of: groq, ollama* instead of falling back silently. `engineEnv` and `e2b:up` no longer pass `GEMINI_*`; the template drops `GEMINI_API_KEY` / `GEMINI_MODEL`.
+- **Consequences:** supersedes the Gemini parts of D-R27 and D-R28. Set `GROQ_MODEL` in `.env` to a current Groq model.

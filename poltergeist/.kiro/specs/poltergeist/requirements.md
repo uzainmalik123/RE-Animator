@@ -47,7 +47,7 @@ Criterion IDs follow Kiro's convention (`N.M`, D-16), so Poltergeist's own Spec 
 
 #### Acceptance Criteria
 
-1. THE Config_Loader SHALL read a strict `poltergeist.config.json` (unknown keys are errors) with target origin, allowed hosts, routes, accounts, reset command, concurrency, reps, forbidden rules, model, LLM provider (`anthropic`, `bedrock`, or the OpenAI-compatible `gemini`, `groq` or `ollama`, which need their own model, D-50) and an AWS region that only Bedrock may use.
+1. THE Config_Loader SHALL read a strict `poltergeist.config.json` (unknown keys are errors) with target origin, allowed hosts, routes, accounts, reset command, concurrency, reps, forbidden rules, model, LLM provider (`anthropic`, `bedrock`, or the OpenAI-compatible `groq` or `ollama`, which need their own model, D-50, D-51) and an AWS region that only Bedrock may use.
 2. IF `target` has a path, query or hash, THEN THE Config_Loader SHALL reject it with a field-path error.
 3. IF the target host is not `localhost`, `127.0.0.1`, `::1` or listed in `allowedHosts`, THEN THE Config_Loader SHALL refuse to start and explain why.
 4. WHILE a run is in progress, THE Network_Guard SHALL block every request, redirect hop, WebSocket and WebRTC connection to a host outside the allowlist, and report each block with a reason.

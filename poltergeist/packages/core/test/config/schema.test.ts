@@ -36,7 +36,7 @@ describe('ConfigSchema', () => {
     expect(ConfigSchema.parse({ ...base, provider: 'bedrock', awsRegion: 'eusc-de-east-1' }).awsRegion).toBe('eusc-de-east-1');
   });
 
-  it.each(['gemini', 'groq', 'ollama'] as const)('accepts %s with its own model (D-50)', (provider) => {
+  it.each(['groq', 'ollama'] as const)('accepts %s with its own model (D-50)', (provider) => {
     const c = ConfigSchema.parse({ ...base, provider, model: 'some-model' });
     expect(c.provider).toBe(provider);
     expect(c.model).toBe('some-model');
@@ -77,7 +77,8 @@ describe('ConfigSchema', () => {
     ['method with a space', { forbidden: [{ method: 'DE LETE', path: '/x' }] }, 'forbidden.0.method'],
     ['awsRegion without bedrock', { awsRegion: 'us-east-1' }, 'awsRegion'],
     ['unknown provider', { provider: 'openai' }, 'provider'],
-    ['an OpenAI-compatible provider on the Claude default model', { provider: 'gemini' }, 'model'],
+    ['an OpenAI-compatible provider on the Claude default model', { provider: 'groq' }, 'model'],
+    ['gemini, removed (D-51)', { provider: 'gemini', model: 'm' }, 'provider'],
     ['an OpenAI-compatible provider on a Claude model', { provider: 'groq', model: 'claude-haiku-4-5' }, 'model'],
     ['malformed awsRegion', { provider: 'bedrock', awsRegion: 'US East' }, 'awsRegion'],
     ['route path without a slash', { routes: [{ path: 'market', auth: false }] }, 'routes.0.path'],

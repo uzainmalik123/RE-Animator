@@ -37,10 +37,10 @@ describe('prepareAttack', () => {
 
   it('writes the chosen LLM provider and model, and nothing else from it (D-R27)', async () => {
     const { revivedDir, homeRoot, fixture } = await setup();
-    const llm = { provider: 'gemini', model: 'gemini-x', target: 'http://evil.example' } as LlmChoice;
+    const llm = { provider: 'groq', model: 'groq-x', target: 'http://evil.example' } as LlmChoice;
     const p = await prepareAttack({ fixture, revivedDir, origin: 'http://127.0.0.1:5555', homeRoot, llm });
     expect(JSON.parse(await readFile(p.configPath, 'utf8'))).toEqual({
-      target: 'http://127.0.0.1:5555', routes: [{ path: '/', auth: false }], concurrency: 6, reps: 3, provider: 'gemini', model: 'gemini-x',
+      target: 'http://127.0.0.1:5555', routes: [{ path: '/', auth: false }], concurrency: 6, reps: 3, provider: 'groq', model: 'groq-x',
     });
   });
 
