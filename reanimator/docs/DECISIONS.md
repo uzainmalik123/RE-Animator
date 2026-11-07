@@ -262,3 +262,11 @@
   - **Safe reading:** `package.json` is compared by parsed field; symlinks are never followed; `node_modules`, `.git`, binary and files over 64 KB are skipped and counted; evidence is capped (40 lines of 200 chars, 12 causes).
   - **The panel** shows real text in bone and magic only (red is Death's), `−`/`+` markers, a dot-matrix slab that only counts the causes, and a "Copy autopsy" Markdown for a human's PR (D-R10).
 - **Consequences:** a rite-less R9 grave still gets its reading before it stops. A real stranger's repo is still KI-R25. Evidence lines are repo file contents: see KI-R30.
+
+### D-R26: A live Reanimator hosted in an E2B sandbox, behind a keyed gate
+- **Context:** (2026-11-07) The user asked for an E2B sandbox to host the project, so the entry's app URL can be live and not only the recorded replay (R11). The backend runs install/build/serve commands and refuses non-loopback callers (KI-R12), so it can't face a public URL as it is.
+- **Decision:**
+  - **`npm run e2b:up`** (`server/e2b/up.ts`, `e2b` SDK pinned) creates a sandbox, uploads git's view of `reanimator/` and `poltergeist/` (tracked plus untracked, never ignored files such as `.env`), installs Node 22, git, bubblewrap and Chromium, runs `npm ci` and `npm run build`, and starts the backend (loopback, unchanged) and the gate. It prints the gate's public link with a random key. **`npm run e2b:down -- <id>`** kills the sandbox early; otherwise it dies after `--minutes` (default 60).
+  - **The gate** (`server/e2b/gate.ts`) is the only thing on the public port (8080). It lets in only callers who hold the key (once as `?key=`, then an HttpOnly, Secure, SameSite=Strict cookie, compared in constant time). It serves `dist/` and forwards `/api` to the backend with a loopback Host and no Origin, Referer or cookie. The loopback guard isn't loosened; inside the box, the gate is the local caller.
+  - **Secrets:** only `ANTHROPIC_*` and `AWS_*` are forwarded, so Death can run. `E2B_API_KEY` comes from the env or `reanimator/.env` and stays on the machine. Kiro isn't installed in the sandbox, so the grimoire (R7) is local-only.
+- **Consequences:** anyone holding the link can raise repos and spend the forwarded LLM key until the sandbox dies, so share it with care. The live E2B run is KI-R31.

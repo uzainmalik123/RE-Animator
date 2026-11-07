@@ -93,6 +93,7 @@ Before you hand back, if anything changed:
 - **The hosted replay (R11, D-R22):** `REANIMATOR_RECORD=public/recording npm run server` records the session (events + frames) while you use the app; `?replay` on the dev server plays `public/recording/`; `npm run build:replay` builds the static site, and the hand-run **Reanimator replay (GitHub Pages)** workflow publishes it. Only a real run goes in `public/recording/` (KI-R23).
 - The grimoire (R7) runs `kiro-cli` (installed and logged in; override it with `REANIMATOR_KIRO`). To try it without spending Kiro tokens, run `REANIMATOR_KIRO=$PWD/server/fixtures/fake-kiro.mjs npm run server`.
 - R6: the app opens on the graveyard (`GET /api/graveyard` lists `fixtures/*`); pick a headstone and Kiro fetches it into the raise. Add a grave by dropping a fixture folder in `fixtures/`.
+- **Live host on E2B (D-R26):** put `E2B_API_KEY` in `reanimator/.env` (gitignored) or the env, then `npm run e2b:up` (add `-- --minutes 30` to change its life). It prints a keyed public link; `npm run e2b:down -- <id>` kills it. `ANTHROPIC_*`/`AWS_*` from your env are forwarded so Death can run; the grimoire isn't available there.
 - R9: paste a GitHub URL in **Dig a new grave** (Name a grave) to raise a stranger's repo. It needs `git` and `bwrap` (bubblewrap) on the machine; every command of that repo runs in the sandbox (D-R23). Death can't attack it without a chart.
 
 ## Health check (after every implementation)

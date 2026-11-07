@@ -262,3 +262,7 @@
 - **Context:** R8 (D-R25) copies up to 40 changed lines per cause (12 causes) from the corpse and the remedied body into the `autopsy` event, so arbitrary repo text, secrets included, also lands in `events.ndjson` when a session is recorded (R11). `redact` only removes the backend's own secrets and the home directory, not a secret sitting in a stranger's repo (R9). Control and bidi characters are stripped, but nothing scrubs secrets.
 - **Next action:** before recording a session on a grave (KI-R23, KI-R25), read the `autopsy` lines of `events.ndjson` by hand, or leave graves out of recordings. The prepared fixtures hold nothing sensitive. A real stranger's repo will mostly show `other` until the cause table grows (KI-R25).
 - **Also (review minors, accepted):** a file whose only change is a line ending is not shown; `readText` checks a file with `lstat` then reads it (a symlink swapped in between by the sandbox could be followed; the autopsy runs before the body does).
+
+### KI-R31: The E2B host hasn't been run live yet · Major · Open
+- **What:** `npm run e2b:up` (D-R26) is tested only through the gate's unit tests. Not yet proven on a real sandbox: the base template's apt and sudo, the Node 22 install, Chromium's system deps, and whether bubblewrap's user namespaces work inside E2B's VM (if not, graves are refused with `NO_SANDBOX` and the practice corpse still rises).
+- **Next:** run it once with a real `E2B_API_KEY`, raise the practice corpse through the link, and note what broke.
