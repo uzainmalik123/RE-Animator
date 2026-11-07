@@ -30,6 +30,7 @@
 | KI-R25 | R9's Done-when (a real, unprepared, permissively licensed GitHub repo raised end to end) hasn't been run; only a local git repo has, in the real sandbox | Major | R9 Done-when | Open |
 | KI-R26 | R9 sandbox limits: the network is shared (a grave's scripts can reach the internet, the LAN and every loopback service on the machine), the grave runs on the system Node, the render check's Chromium runs outside the sandbox, the revived dir holds attacker-written files (don't open it in an IDE), no disk cap, and no unprivileged user namespaces means no graves | Major | raising untrusted repos on a machine with other local services | Accepted |
 | KI-R27 | R9 review minors: a non-object `dependencies` crashes the rites, the size cap is checked only after the clone (and a host git-lfs filter can fetch first), `files` holds the rite count, the abort test stops at the factory | Minor | none | Open |
+| KI-R28 | R6 minors: a pick that rejoins a ritual already running (a reload mid-ritual) walks to the clicked stone but shows the running repo; the graveyard list is read from disk on every request; the three graves are ours, not a real dead repo (KI-R1) | Minor | none | Open |
 | KI-R24 | R11 review minors: pause/speed restart a gap, Pause shown after the end, late frames dropped across back-to-back attacks, the Pages build skips typecheck, no test that a replay makes no /api calls, UTC banner date, README in the Pages build | Minor | none | Open |
 | KI-R13 | R1 demo-page polish from review: void flash on pitch/mode click, resize jank, late web font, breath jump, no OffscreenCanvas fallback, fractional-DPR cell seams | Minor | R4 (seams) | Open |
 
@@ -239,3 +240,8 @@
   4. The abort test stops at the fixture factory. That the git group is killed rests on `runCommand`'s own abort tests.
 - **Next action:** #1 and #2 when `server/rites.ts` / `server/grave.ts` are next touched.
 
+
+### KI-R28: R6 minors · Minor · Open
+- **Rejoin:** if a ritual is already running (page reloaded mid-ritual), choosing a stone rejoins that ritual (409 carries its id, D-R15) while Kiro walks to the clicked stone; the raise then shows the running repo. Honest data, odd flourish.
+- **Disk read per request:** `listGraves` loads every manifest on each `GET /api/graveyard` and each `grave` POST. Fine for a handful of fixtures.
+- **Ours, not real:** all three headstones are our own written graves (D-R14); the real dead repo is still KI-R1.

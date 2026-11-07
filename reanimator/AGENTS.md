@@ -92,7 +92,8 @@ Before you hand back, if anything changed:
 - `doppler run -- npm run attack:check` → raise the practice corpse and let Death (the real Poltergeist engine, needs an LLM key) attack it; prints the wounds (R3, KI-R15). The backend's **Summon Death** button does the same from the UI, and each wound's **Dare Death again** re-raises the body and re-runs Death on that wound only (R5). `../poltergeist` must be installed (`npm ci` there).
 - **The hosted replay (R11, D-R22):** `REANIMATOR_RECORD=public/recording npm run server` records the session (events + frames) while you use the app; `?replay` on the dev server plays `public/recording/`; `npm run build:replay` builds the static site, and the hand-run **Reanimator replay (GitHub Pages)** workflow publishes it. Only a real run goes in `public/recording/` (KI-R23).
 - The grimoire (R7) runs `kiro-cli` (installed and logged in; override it with `REANIMATOR_KIRO`). To try it without spending Kiro tokens, run `REANIMATOR_KIRO=$PWD/server/fixtures/fake-kiro.mjs npm run server`.
-- R9: paste a GitHub URL in **Name a grave** to raise a stranger's repo. It needs `git` and `bwrap` (bubblewrap) on the machine; every command of that repo runs in the sandbox (D-R23). Death can't attack it without a chart.
+- R6: the app opens on the graveyard (`GET /api/graveyard` lists `fixtures/*`); pick a headstone and Kiro fetches it into the raise. Add a grave by dropping a fixture folder in `fixtures/`.
+- R9: paste a GitHub URL in **Dig a new grave** (Name a grave) to raise a stranger's repo. It needs `git` and `bwrap` (bubblewrap) on the machine; every command of that repo runs in the sandbox (D-R23). Death can't attack it without a chart.
 
 ## Health check (after every implementation)
 
@@ -121,7 +122,7 @@ Death's attack is the sibling engine. **Built in R3 (D-R16, D-R17):** `server/en
 ## Do first (as of 2026-11-04)
 
 1. Read `docs/STORY.md`, `docs/THEME.md`, `docs/PRD.md`.
-2. ~~R0 scaffold, R1 renderer~~ (done). **Approve the look:** run `npm run dev` + `npm run server`, press **Begin the ritual** on the raise, and try the renderer at `?renderer`; sign off or ask for changes (KI-R2; screenshots in `docs/img/`).
+2. ~~R0 scaffold, R1 renderer~~ (done). **Approve the look:** run `npm run dev` + `npm run server`, pick a grave in the graveyard (R6), and try the renderer at `?renderer`; sign off or ask for changes (KI-R2; screenshots in `docs/img/`).
 3. ~~R2 machinery~~ (built on the practice corpse, D-R14). Shortlist and pick the one demo repo (KI-R1) and drop it in as a fixture (with a `chart/`).
 4. ~~R3 wiring~~ (built, D-R16/D-R17), ~~R4 attack scene~~ (built, D-R19). Run `doppler run -- npm run attack:check` once with a key (KI-R15), then press **Summon Death** in the UI to film R4. ~~R5 heal loop~~ (built, D-R20): in the batched Kiro session, open the revived dir shown in the panel in Kiro, paste a wound's **Copy for Kiro** brief, then press **Dare Death again** to close it (KI-R19). ~~R7 grimoire~~ (built, D-R21): in the same session, cast the wound from the grimoire instead (**Cast in the grimoire**), and check the live stream (KI-R21). ~~R11 hosted replay~~ (built, D-R22): record that whole session with `REANIMATOR_RECORD=public/recording`, commit it and run the Pages workflow (KI-R23).
 5. Read the 2026 rules (KI-R6 / Poltergeist KI-05).

@@ -425,6 +425,11 @@ body,
   min-height: 0;
 }
 
+/* Both canvases paint their own void; lightening the top one lets the stones show through it. */
+.graveyard-canvas + .graveyard-canvas {
+  mix-blend-mode: lighten;
+}
+
 .graveyard-canvas {
   position: absolute;
   inset: 0;
