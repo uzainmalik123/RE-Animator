@@ -14,7 +14,17 @@ const REPS = 3;
 // Where the chart (and the engine's report beside it) lives in a revived repo.
 export const chartDir = (revivedDir: string): string => join(revivedDir, '.kiro', 'specs', 'chart');
 
-export async function prepareAttack(o: { fixture: Fixture; revivedDir: string; origin: string; homeRoot: string }): Promise<{ specDir: string; configPath: string; home: string }> {
+// Which LLM plans Death's attacks (D-R27): REANIMATOR_LLM picks Poltergeist's provider (anthropic, bedrock,
+// gemini, groq, ollama) and REANIMATOR_LLM_MODEL its model. Unset keeps the engine's default (Claude).
+export type LlmChoice = { provider?: string; model?: string };
+export function llmChoice(env: NodeJS.ProcessEnv): LlmChoice {
+  return { ...(env.REANIMATOR_LLM ? { provider: env.REANIMATOR_LLM } : {}), ...(env.REANIMATOR_LLM_MODEL ? { model: env.REANIMATOR_LLM_MODEL } : {}) };
+}
+
+// Only these two keys, so nothing here can touch the target.
+const pickLlm = (l: LlmChoice = {}) => ({ ...(l.provider ? { provider: l.provider } : {}), ...(l.model ? { model: l.model } : {}) });
+
+export async function prepareAttack(o: { fixture: Fixture; revivedDir: string; origin: string; homeRoot: string; llm?: LlmChoice }): Promise<{ specDir: string; configPath: string; home: string }> {
   const { fixture } = o;
   if (!fixture.chartDir) throw new Error(`fixture ${fixture.name} has no chart`);
   const specDir = chartDir(o.revivedDir);
@@ -28,6 +38,6 @@ export async function prepareAttack(o: { fixture: Fixture; revivedDir: string; o
   await mkdir(home, { recursive: true });
   const configPath = join(home, 'poltergeist.config.json');
   // Death only attacks the app we revived: the target is always the ritual's loopback origin (D-R7).
-  await writeFile(configPath, `${JSON.stringify({ target: o.origin, routes, concurrency: CONCURRENCY, reps: REPS }, null, 2)}\n`);
+  await writeFile(configPath, `${JSON.stringify({ target: o.origin, routes, concurrency: CONCURRENCY, reps: REPS, ...pickLlm(o.llm) }, null, 2)}\n`);
   return { specDir, configPath, home };
 }

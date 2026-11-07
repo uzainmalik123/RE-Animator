@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { describe, expect, it, vi } from 'vitest';
 import { CompilerError } from '../../src/compiler/errors.js';
-import { bedrockModelId, createAnthropicClient, createBedrockClient, createLlmClient, type LlmRequest } from '../../src/compiler/llm.js';
+import { bedrockModelId, createAnthropicClient, createBedrockClient, createLlmClient, createOpenAiCompatibleClient, type LlmRequest } from '../../src/compiler/llm.js';
 
 const req: LlmRequest = {
   model: 'claude-sonnet-5-5',
@@ -168,5 +168,113 @@ describe('createLlmClient (F19)', () => {
 
   it.each(['anthropic', 'bedrock'] as const)('builds a %s client without touching the network', (provider) => {
     expect(createLlmClient({ provider, ...(provider === 'bedrock' ? { awsRegion: 'us-east-1' } : {}) }).complete).toBeTypeOf('function');
+  });
+});
+
+describe('createOpenAiCompatibleClient (D-50)', () => {
+  const chat = (over: Record<string, unknown> = {}, message: Record<string, unknown> = { content: '{"result":1}' }) =>
+    new Response(JSON.stringify({ choices: [{ message, finish_reason: 'stop', ...over }] }), { status: 200 });
+  const fake = (...responses: (Response | (() => Response))[]) => {
+    const fetch = vi.fn(async () => {
+      const r = responses.shift();
+      if (!r) throw new Error('no more responses');
+      return typeof r === 'function' ? r() : r;
+    });
+    return fetch as unknown as typeof globalThis.fetch & typeof fetch;
+  };
+  const gemini = (fetch: typeof globalThis.fetch, env: NodeJS.ProcessEnv = { GEMINI_API_KEY: 'gem' }) =>
+    createOpenAiCompatibleClient({ provider: 'gemini', env, fetch, backoff: () => 0 });
+  const openAiReq = { ...req, model: 'gemini-x', turns: [{ role: 'user' as const, text: 'first' }, { role: 'assistant' as const, raw: '{"bad":1}' }, { role: 'user' as const, text: 'fix it' }] };
+  const sent = (fetch: ReturnType<typeof vi.fn>, i = 0) => {
+    const [url, init] = fetch.mock.calls[i] as [string, RequestInit];
+    return { url, headers: init.headers as Record<string, string>, body: JSON.parse(init.body as string) as Record<string, unknown> & { messages: { role: string; content: string }[] } };
+  };
+
+  it('posts chat completions with the key, the turns, and the plan schema twice', async () => {
+    const fetch = fake(chat());
+    expect(await gemini(fetch).complete(openAiReq)).toEqual({ kind: 'output', text: '{"result":1}', stopReason: 'stop', raw: '{"result":1}' });
+    const { url, headers, body } = sent(fetch as unknown as ReturnType<typeof vi.fn>);
+    expect(url).toBe('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions');
+    expect(headers.authorization).toBe('Bearer gem');
+    expect(body.model).toBe('gemini-x');
+    expect(body.messages.map((m) => m.role)).toEqual(['system', 'user', 'assistant', 'user']);
+    expect(body.messages[0]!.content).toMatch(/^SYS\n\nAnswer with one JSON object only.*"result"/s);
+    expect(body.messages[2]!.content).toBe('{"bad":1}');
+    expect(body.response_format).toMatchObject({ type: 'json_schema', json_schema: { name: 'test_plan' } });
+    expect(body).not.toHaveProperty('meta');
+  });
+
+  it('uses the Groq URL and key, and Ollama without any key', async () => {
+    const g = fake(chat());
+    await createOpenAiCompatibleClient({ provider: 'groq', env: { GROQ_API_KEY: 'gsk' }, fetch: g }).complete(openAiReq);
+    expect(sent(g as unknown as ReturnType<typeof vi.fn>).url).toBe('https://api.groq.com/openai/v1/chat/completions');
+    expect(sent(g as unknown as ReturnType<typeof vi.fn>).headers.authorization).toBe('Bearer gsk');
+    const o = fake(chat());
+    await createOpenAiCompatibleClient({ provider: 'ollama', env: {}, fetch: o }).complete(openAiReq);
+    expect(sent(o as unknown as ReturnType<typeof vi.fn>).url).toBe('http://127.0.0.1:11434/v1/chat/completions');
+    expect(sent(o as unknown as ReturnType<typeof vi.fn>).headers).not.toHaveProperty('authorization');
+  });
+
+  it('a missing key is a setup CompilerError before any request', async () => {
+    const fetch = fake();
+    const err = await gemini(fetch, {}).complete(openAiReq).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(CompilerError);
+    expect((err as Error).message).toMatch(/GEMINI_API_KEY is not set/);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it.each([401, 403])('HTTP %i → the credentials CompilerError, no retry', async (status) => {
+    const fetch = fake(new Response('no', { status }));
+    await expect(gemini(fetch).complete(openAiReq)).rejects.toThrow(new RegExp(`rejected the credentials \\(HTTP ${status}\\)`));
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries a free-tier 429 and a 503, then answers', async () => {
+    const fetch = fake(new Response('slow down', { status: 429 }), new Response('busy', { status: 503 }), chat());
+    expect((await gemini(fetch).complete(openAiReq)).kind).toBe('output');
+    expect(fetch).toHaveBeenCalledTimes(3);
+  });
+
+  it('gives up after 5 attempts and passes the error through (the pair becomes uncompilable)', async () => {
+    const fetch = fake(...Array.from({ length: 5 }, () => () => new Response('slow down', { status: 429 })));
+    const err = await gemini(fetch).complete(openAiReq).catch((e: unknown) => e);
+    expect(err).not.toBeInstanceOf(CompilerError);
+    expect((err as Error).message).toMatch(/gemini returned HTTP 429: slow down/);
+    expect(fetch).toHaveBeenCalledTimes(5);
+  });
+
+  it('a 400 is not retried', async () => {
+    const fetch = fake(new Response('bad schema', { status: 400 }));
+    await expect(gemini(fetch).complete(openAiReq)).rejects.toThrow(/HTTP 400: bad schema/);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('maps finish_reason length to max_tokens (the compiler\'s truncation)', async () => {
+    const r = await gemini(fake(chat({ finish_reason: 'length' }))).complete(openAiReq);
+    expect(r).toMatchObject({ kind: 'output', stopReason: 'max_tokens' });
+  });
+
+  it('maps a refusal and a content filter to refusal', async () => {
+    expect(await gemini(fake(chat({}, { content: null, refusal: 'no thanks' }))).complete(openAiReq)).toEqual({ kind: 'refusal', detail: 'no thanks' });
+    expect(await gemini(fake(chat({ finish_reason: 'content_filter' }))).complete(openAiReq)).toEqual({ kind: 'refusal', detail: 'content_filter' });
+  });
+
+  it('an abort during the backoff stops the retry', async () => {
+    const ac = new AbortController();
+    const fetch = fake(new Response('slow down', { status: 429 }), chat());
+    const client = createOpenAiCompatibleClient({ provider: 'gemini', env: { GEMINI_API_KEY: 'gem' }, fetch, backoff: () => 60_000 });
+    const p = client.complete({ ...openAiReq, signal: ac.signal });
+    setTimeout(() => ac.abort(new Error('stop')), 10);
+    await expect(p).rejects.toThrow('stop');
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('createLlmClient routes gemini, groq and ollama here', async () => {
+    vi.stubEnv('GEMINI_API_KEY', '');
+    try {
+      await expect(createLlmClient({ provider: 'gemini' }).complete(openAiReq)).rejects.toThrow(/GEMINI_API_KEY is not set/);
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 });

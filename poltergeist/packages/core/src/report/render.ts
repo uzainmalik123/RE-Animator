@@ -25,7 +25,7 @@ export type RunMeta = {
   target: string;
   reps: number;
   model: string;
-  /** F19. Only `bedrock` changes the output. */
+  /** F19, D-50. Anything but `anthropic` is named in the output. */
   provider?: LlmProvider;
   /** Epoch ms. */
   startedAt: number;
@@ -67,10 +67,12 @@ export type RenderedReport = { markdown: string; json: ReportJson };
 type Verdict = ReportVerdict;
 type JsonPair = ReportJson['criteria'][number]['pairs'][number];
 
+const PROVIDER_NAMES: Record<Exclude<LlmProvider, 'anthropic'>, string> = { bedrock: 'Bedrock', gemini: 'Gemini', groq: 'Groq', ollama: 'Ollama' };
+
 /** Pure: the report's markdown and JSON for one run (Req 8, D-35). */
 export function renderReport(input: ReportInput): RenderedReport {
   const { specDir, run } = input;
-  const bedrock = run.provider === 'bedrock';
+  const provider = run.provider && run.provider !== 'anthropic' ? run.provider : undefined;
   const plans = new Map<string, HauntingPlan>();
   for (const p of input.compiled) if (p.status === 'compiled') plans.set(pairKey(p.criterion, p.persona), p.plan);
   const verdictOf = new Map(input.verdicts.criteria.map((c) => [c.criterion, c.verdict]));
@@ -106,7 +108,7 @@ export function renderReport(input: ReportInput): RenderedReport {
     input.wordmark ?? DRAFT_WORDMARK,
     '```',
     '',
-    `Run ${codeSpan(run.runId)} against ${codeSpan(run.target)} · ${run.reps} reps · ${mdText(run.model, 80)}${bedrock ? ' via Bedrock' : ''} · ${new Date(run.startedAt).toISOString()}`,
+    `Run ${codeSpan(run.runId)} against ${codeSpan(run.target)} · ${run.reps} reps · ${mdText(run.model, 80)}${provider ? ` via ${PROVIDER_NAMES[provider]}` : ''} · ${new Date(run.startedAt).toISOString()}`,
     `**${counts.haunted} haunted** [!!] · ${counts.flaky} flaky [~~] · ${counts.inconclusive} inconclusive [??] · ${counts.clean} clean [ok] · ${counts.notApplicable} n/a [--] · ${counts.notRun} not run [  ]`,
     ...(carriedRows ? [`_Merged: ${carriedRows} criteria kept from earlier runs; re-run them to refresh._`] : []),
   ].join('\n').split('\n');
@@ -145,7 +147,7 @@ export function renderReport(input: ReportInput): RenderedReport {
     runId: run.runId,
     target: run.target,
     model: run.model,
-    ...(bedrock ? { provider: 'bedrock' as const } : {}),
+    ...(provider ? { provider } : {}),
     reps: run.reps,
     startedAt: new Date(run.startedAt).toISOString(),
     specFile: 'requirements.md',

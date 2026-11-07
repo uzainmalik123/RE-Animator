@@ -43,6 +43,7 @@ No database SaaS: Candy Swap uses local SQLite, and Poltergeist stores everythin
 ## AWS
 
 - **Amazon Bedrock as an optional LLM provider (F19, D-47).** `"provider": "bedrock"` runs the same Claude models through `@anthropic-ai/bedrock-sdk` 1.1.1 (`AnthropicBedrockMantle`, Bedrock's Messages API endpoint), with AWS credentials from the usual chain (`AWS_BEARER_TOKEN_BEDROCK`, the AWS key variables, `AWS_PROFILE`/SSO). It isn't on the critical path.
+- **Free providers for testing (D-50).** `"provider": "gemini" | "groq" | "ollama"` with that provider's own `model` runs the compiler over its OpenAI-compatible Chat Completions API (plain `fetch`, no SDK): keys in `GEMINI_API_KEY` / `GROQ_API_KEY`, Ollama local with no key. For testing only; the real runs use Claude.
 - **Not used:** Lambda, ECS and the like. Playwright plus Chromium is a poor fit for serverless.
 - **Option (D-12, still open):** host the static replay on AWS Amplify Hosting or S3 + CloudFront instead of Vercel, for an AWS story. It's the same static `dist/`, so no code changes.
 

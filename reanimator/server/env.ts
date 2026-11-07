@@ -1,8 +1,9 @@
 // What the backend's children may see (KI-R14 #4). The backend holds secrets (Doppler, the LLM key);
 // install scripts and the revived app get none of them, and only the engine gets the LLM's.
 const BASE_KEYS = ['PATH', 'HOME', 'TMPDIR', 'TEMP', 'LANG', 'LC_ALL', 'TERM', 'USER', 'SHELL'];
-// Playwright finds Chromium through these; ANTHROPIC_* and AWS_* configure the compiler (Anthropic or Bedrock).
-const ENGINE_KEYS = ['PLAYWRIGHT_BROWSERS_PATH', 'XDG_CACHE_HOME'];
+// Playwright finds Chromium through these; ANTHROPIC_* and AWS_* configure the compiler (Anthropic or Bedrock),
+// and the free providers' keys (D-R27) the OpenAI-compatible ones.
+const ENGINE_KEYS = ['PLAYWRIGHT_BROWSERS_PATH', 'XDG_CACHE_HOME', 'GEMINI_API_KEY', 'GROQ_API_KEY'];
 
 function pick(base: NodeJS.ProcessEnv, keep: (key: string) => boolean): NodeJS.ProcessEnv {
   const out: NodeJS.ProcessEnv = {};
@@ -14,7 +15,7 @@ export function childEnv(base: NodeJS.ProcessEnv, extra: Record<string, string> 
   return { ...pick(base, (k) => BASE_KEYS.includes(k) || k.startsWith('npm_config_')), ...extra };
 }
 
-// The Poltergeist CLI: the child env plus the compiler's credentials (Anthropic or Bedrock), colour off.
+// The Poltergeist CLI: the child env plus the compiler's credentials, colour off.
 export function engineEnv(base: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   return { ...childEnv(base), ...pick(base, (k) => ENGINE_KEYS.includes(k) || k.startsWith('ANTHROPIC_') || k.startsWith('AWS_')), NO_COLOR: '1' };
 }

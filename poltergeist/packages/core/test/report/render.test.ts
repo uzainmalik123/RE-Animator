@@ -26,6 +26,12 @@ describe('renderReport: markdown', () => {
     expect(anthropic.markdown).toBe(markdown);
   });
 
+  it('names an OpenAI-compatible provider in the run line and the JSON (D-50)', () => {
+    const gemini = renderReport(input({ run: { ...RUN, model: 'gemini-x', provider: 'gemini' } }));
+    expect(gemini.markdown).toContain('· 3 reps · gemini-x via Gemini · 2026-11-01');
+    expect(gemini.json.provider).toBe('gemini');
+  });
+
   it('lists every criterion on the board in spec order', () => {
     const board = markdown.split('## Board\n\n')[1]!.split('\n\n')[0]!.split('\n');
     expect(board).toEqual([

@@ -61,7 +61,7 @@ fixtures/candy-swap/ demo target app + its own .kiro/specs/candy-swap/ (built in
   "reps": 3,                                    // 1–10
   "forbidden": [{ "method": "DELETE", "path": "/api/admin/*" }],
   "model": "claude-sonnet-5-5",
-  "provider": "anthropic"                       // or "bedrock" (+ optional "awsRegion": "us-east-1"), D-47
+  "provider": "anthropic"                       // or "bedrock" (+ optional "awsRegion": "us-east-1"), D-47; or "gemini" | "groq" | "ollama" with their own "model", D-50
 }
 ```
 
@@ -130,7 +130,7 @@ Every browser Poltergeist launches goes through one path:
 - **Targets:** D-15 only, and only ones Scout emitted.
 - **Assertions:** `textVisible`, `textNotVisible`, `urlMatches`, `elementCount`, `api {method,path,jsonPath?,status?,equals?}`, `noConsoleErrors`, `noUncaughtExceptions`.
 - **What the LLM returns:** `{ "result": { "kind": "plan", "intent", "actors", "assert" } }` or `{ "result": { "kind": "notApplicable", "reason": "…" } }` (the wrapper exists because a structured-output root must be an object). The compiler stamps `criterion`, `persona` and `routes` (`{path, identity}` of the ≤ 2 picked routes, so F06 knows each session) onto the plan above (D-32).
-- **Compiler:** `compile(criteria, scout, { client, model, cacheDir, outDir?, personas?, concurrency ≤ 4, onPlan? })` → `{ pairs, llmCalls, cacheHits }` (`packages/core/src/compiler/`). Routes are picked deterministically by token overlap (KI-03). Validation is zod, then semantic (persona steps and generators, actor count, Scout-emitted targets on the picked routes, barriers, holds, relative `api` paths). One retry with the errors, then `uncompilable`. The cache key covers the criterion hash, persona and persona-definition hash, the picked routes' `path@identity:routeHash`, model and `PROMPT_VERSION`, plus the provider when it's Bedrock. `createLlmClient(config)` picks the client: Anthropic, or Bedrock through `AnthropicBedrockMantle` with `claude-*` ids sent as `anthropic.claude-*` (F19, D-47).
+- **Compiler:** `compile(criteria, scout, { client, model, cacheDir, outDir?, personas?, concurrency ≤ 4, onPlan? })` → `{ pairs, llmCalls, cacheHits }` (`packages/core/src/compiler/`). Routes are picked deterministically by token overlap (KI-03). Validation is zod, then semantic (persona steps and generators, actor count, Scout-emitted targets on the picked routes, barriers, holds, relative `api` paths). One retry with the errors, then `uncompilable`. The cache key covers the criterion hash, persona and persona-definition hash, the picked routes' `path@identity:routeHash`, model and `PROMPT_VERSION`, plus the provider when it isn't Anthropic. `createLlmClient(config)` picks the client: Anthropic, or Bedrock through `AnthropicBedrockMantle` with `claude-*` ids sent as `anthropic.claude-*` (F19, D-47), or an OpenAI-compatible Chat Completions client for `gemini`, `groq` and `ollama` (D-50). The cache key carries any provider but Anthropic.
 - The zod schema is the single definition. The structured-output JSON Schema and the TS types are generated from it.
 
 ## 7. Personas

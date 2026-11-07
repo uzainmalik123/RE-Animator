@@ -19,8 +19,8 @@ describe('engineEnv', () => {
   });
 
   it('also passes the LLM credentials and turns colour off, but nothing else', () => {
-    const env = engineEnv({ PATH: '/b', ANTHROPIC_API_KEY: 'k', AWS_REGION: 'r', DOPPLER_TOKEN: 'd' });
-    expect(env).toEqual({ PATH: '/b', ANTHROPIC_API_KEY: 'k', AWS_REGION: 'r', NO_COLOR: '1' });
+    const env = engineEnv({ PATH: '/b', ANTHROPIC_API_KEY: 'k', AWS_REGION: 'r', GEMINI_API_KEY: 'g', GROQ_API_KEY: 'q', DOPPLER_TOKEN: 'd', E2B_API_KEY: 'e' });
+    expect(env).toEqual({ PATH: '/b', ANTHROPIC_API_KEY: 'k', AWS_REGION: 'r', GEMINI_API_KEY: 'g', GROQ_API_KEY: 'q', NO_COLOR: '1' });
   });
 });
 

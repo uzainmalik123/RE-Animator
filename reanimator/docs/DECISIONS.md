@@ -27,6 +27,8 @@
 | D-R20 | The R5 heal loop: a brief per wound for Kiro (the user hands it over), a re-raise on real vitals before every attack but the first, a one-wound re-run, the merged report as ledger, and a wound closes only on a clean pair that really ran | Accepted (one bullet amended by D-R21) |
 | D-R24 | The R6 graveyard: headstones are the prepared fixtures on disk, three of them, raised by id; Kiro's walk is only a transition | Accepted |
 | D-R25 | The autopsy (R8): a computed reading of the real corpse and remedy, as one `autopsy` ritual event | Accepted |
+| D-R26 | A live Reanimator hosted in an E2B sandbox (`npm run e2b:up`), behind a keyed gate; the backend's loopback guard is unchanged | Accepted |
+| D-R27 | Cheap testing: `REANIMATOR_LLM`/`REANIMATOR_LLM_MODEL` pick Death's LLM (free Gemini/Groq/Ollama via Poltergeist D-50, Claude for real runs); `e2b:up --kiro fake` (default) casts with the fake Kiro, `--kiro real` uploads kiro-cli and logs in by device flow | Accepted |
 | D-R21 | The R7 grimoire drives the real Kiro agent: one headless `kiro-cli chat` turn per spell in the revived body, file tools only, never while Death attacks; the user still dares Death | Accepted |
 
 ---
@@ -270,3 +272,12 @@
   - **The gate** (`server/e2b/gate.ts`) is the only thing on the public port (8080). It lets in only callers who hold the key (once as `?key=`, then an HttpOnly, Secure, SameSite=Strict cookie, compared in constant time). It serves `dist/` and forwards `/api` to the backend with a loopback Host and no Origin, Referer or cookie. The loopback guard isn't loosened; inside the box, the gate is the local caller.
   - **Secrets:** only `ANTHROPIC_*` and `AWS_*` are forwarded, so Death can run. `E2B_API_KEY` comes from the env or `reanimator/.env` and stays on the machine. Kiro isn't installed in the sandbox, so the grimoire (R7) is local-only.
 - **Consequences:** anyone holding the link can raise repos and spend the forwarded LLM key until the sandbox dies, so share it with care. The live E2B run is KI-R31.
+
+### D-R27: Cheap testing — Death's LLM and the grimoire's Kiro are chosen per run
+- **Context:** (2026-11-07) Testing must not spend Anthropic, Bedrock or Kiro credit, and the E2B host (D-R26) had no Kiro at all, so the grimoire was dead there. The demo itself must still run the real things: Claude plans Death's attacks and real Kiro heals.
+- **Decision:**
+  - **Death's LLM:** `REANIMATOR_LLM` (`anthropic`, `bedrock`, `gemini`, `groq`, `ollama`) and `REANIMATOR_LLM_MODEL` are written into the engine's config by `prepareAttack` as `provider` and `model` only (they can never touch `target`, D-R7). Unset keeps Poltergeist's default, Claude. `engineEnv` also passes `GEMINI_API_KEY` and `GROQ_API_KEY` to the engine, and no other child.
+  - **`npm run e2b:up -- --kiro fake`** (the default): the backend runs with `REANIMATOR_KIRO` set to `server/fixtures/fake-kiro.mjs`, so the grimoire works end to end and spends no Kiro tokens.
+  - **`--kiro real`** (the demo): uploads this machine's `kiro-cli` and `kiro-cli-chat` (a glibc 2.34 binary, no installer) into the sandbox and runs `kiro-cli login --license free --use-device-flow`, streaming its URL and code to your terminal to approve. The login lives only in that sandbox and dies with it.
+  - `e2b:up` forwards only the LLM settings: `ANTHROPIC_*`, `AWS_*`, `GEMINI_*`, `GROQ_*`, `REANIMATOR_LLM*`.
+- **Consequences:** a fake-Kiro, free-LLM run proves the wiring, not the demo: a full dress rehearsal with `--kiro real` and Claude, recorded (R11) as a fallback, comes before judging. The keyed gate is the only spending guard, so anyone holding the link can spend the forwarded LLM key and (with `--kiro real`) Kiro credit until the sandbox dies. Ollama only works locally (no GPU or model in E2B). Live checks: KI-R32.

@@ -49,8 +49,8 @@ export const ForbiddenSchema = z.strictObject({
   path: routePath,
 });
 
-/** Where the compiler's Claude calls go (F19, D-47). */
-export const LLM_PROVIDERS = ['anthropic', 'bedrock'] as const;
+/** Where the compiler's calls go: Claude (Anthropic, or Bedrock F19, D-47), or an OpenAI-compatible API (D-50). */
+export const LLM_PROVIDERS = ['anthropic', 'bedrock', 'gemini', 'groq', 'ollama'] as const;
 export type LlmProvider = (typeof LLM_PROVIDERS)[number];
 
 /** `poltergeist.config.json` (D-17, design §3). Unknown keys are errors at every level. */
@@ -75,6 +75,10 @@ export const ConfigSchema = z
   .superRefine((config, ctx) => {
     if (config.awsRegion !== undefined && config.provider !== 'bedrock') {
       ctx.addIssue({ code: 'custom', path: ['awsRegion'], message: 'only used with provider "bedrock"' });
+    }
+    // The default model is Claude's; the OpenAI-compatible providers need their own (D-50).
+    if (config.provider !== 'anthropic' && config.provider !== 'bedrock' && config.model.startsWith('claude-')) {
+      ctx.addIssue({ code: 'custom', path: ['model'], message: `set "model" to a ${config.provider} model id` });
     }
     config.routes.forEach((route, i) => {
       if (route.auth === false) return;
