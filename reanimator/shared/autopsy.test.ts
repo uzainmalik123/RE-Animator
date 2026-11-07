@@ -54,7 +54,7 @@ describe('autopsyMarkdown', () => {
     expect(md).toContain('sundial-2015');
     expect(md).toContain('Died at build: util.print is not a function');
     expect(md).toContain('Removed Node API: util.print');
-    expect(md).toContain('`build.js`');
+    expect(md).toContain('` build.js `');
     expect(md).toContain("-util.print('built');");
     expect(md).toContain("+process.stdout.write('built');");
     expect(md).toContain('```diff');
@@ -67,5 +67,17 @@ describe('autopsyMarkdown', () => {
   it('uses a longer fence when the evidence contains one', () => {
     const md = autopsyMarkdown('x', { ...autopsy, causes: [{ ...autopsy.causes[0]!, lines: [{ op: '+', text: '```' }] }] });
     expect(md).toContain('````diff');
+  });
+
+  it('keeps repo-controlled text on one line and escaped, so it cannot inject Markdown', () => {
+    const md = autopsyMarkdown('x', {
+      ...autopsy,
+      symptom: 'boom\n# injected [x](http://evil)',
+      causes: [{ ...autopsy.causes[0]!, title: 'Changed: a`b\n## head', file: 'we`ird\nname.js' }],
+    });
+    expect(md).not.toMatch(/^# injected/m);
+    expect(md).not.toMatch(/^## head/m);
+    expect(md).toContain('\\[x\\]\\(http://evil\\)');
+    expect(md).toContain('`` we`ird name.js ``');
   });
 });

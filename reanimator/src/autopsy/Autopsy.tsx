@@ -29,7 +29,7 @@ export function Autopsy({ repo, autopsy }: { repo: string | null; autopsy: Autop
       <canvas ref={slab} className="autopsy-slab" role="img" aria-label={`Autopsy slab: ${n === 0 ? 'no cause found' : `${n} cause${n === 1 ? '' : 's'} found`}`} />
       <p className="cod">{headline(autopsy)}</p>
       {n === 0 && <p className="dim">The body keeps its secret: no known cause was found in what the remedy changed.</p>}
-      <div aria-live="off">
+      <div>
         {autopsy.causes.map((c, i) => (
           <article className="cause" key={`${c.file}:${c.title}:${i}`}>
             <h3>{c.title}</h3>
@@ -53,12 +53,11 @@ export function Autopsy({ repo, autopsy }: { repo: string | null; autopsy: Autop
           </article>
         ))}
       </div>
-      {autopsy.skipped > 0 && <p className="dim">{autopsy.skipped} file{autopsy.skipped === 1 ? '' : 's'} left out of the reading (binary, large, linked or too many).</p>}
+      {autopsy.skipped > 0 && <p className="dim">{autopsy.skipped} {autopsy.skipped === 1 ? 'item' : 'items'} left out of the reading (binary, large, linked, too many files or too many findings).</p>}
       <button type="button" onClick={copyReport}>
         Copy autopsy
       </button>
-      {copy === 'copied' && <span role="status"> Copied for your PR description.</span>}
-      {copy === 'unavailable' && <span role="status"> Copy is unavailable here.</span>}
+      <span role="status">{copy === 'copied' ? ' Copied for your PR description.' : copy === 'unavailable' ? ' Copy is unavailable here.' : ''}</span>
     </section>
   );
 }

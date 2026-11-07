@@ -87,9 +87,10 @@ describe('buildAutopsy: known deaths', () => {
     const a = await buildAutopsy(corpse, revived, null);
     expect(a.causes.map((c) => [c.kind, c.file])).toEqual([
       ['openssl', '.npmrc'],
+      ['lockfile', '.npmrc'],
       ['lockfile', 'package-lock.json'],
     ]);
-    expect(a.causes[1]!.lines).toEqual([]);
+    expect(a.causes[2]!.lines).toEqual([]);
   });
 
   it('an unrelated edit is shown as other and never seen', async () => {
@@ -153,3 +154,50 @@ describe('buildAutopsy: shape and limits', () => {
     expect(await buildAutopsy(corpse, revived, null)).toEqual(await buildAutopsy(corpse, revived, null));
   });
 });
+
+describe('buildAutopsy: review fixes', () => {
+  it('a lockfile over 64 KB is still a lockfile cause (never dumped, never skipped)', async () => {
+    const big = JSON.stringify({ lockfileVersion: 1, pad: 'x'.repeat(LIMITS.fileBytes * 2) });
+    const a = await buildAutopsy(await tree({ 'package-lock.json': big }), await tree({}), null);
+    expect(a.causes.map((c) => [c.kind, c.lines.length])).toEqual([['lockfile', 0]]);
+    expect(a.skipped).toBe(0);
+  });
+
+  it('an identical lockfile is not a cause', async () => {
+    const t = { 'package-lock.json': '{}' };
+    expect((await buildAutopsy(await tree(t), await tree(t), null)).causes).toEqual([]);
+  });
+
+  it('an .npmrc with several signals gives one cause per signal, each with only its own lines', async () => {
+    const a = await buildAutopsy(await tree({ '.npmrc': 'engine-strict=true\n' }), await tree({ '.npmrc': 'node-options=--openssl-legacy-provider\nlegacy-peer-deps=true\n' }), null);
+    expect(a.causes.map((c) => c.kind)).toEqual(['engine-pin', 'openssl', 'lockfile']);
+    expect(a.causes[1]!.lines.map((l) => l.text)).toEqual(['node-options=--openssl-legacy-provider']);
+  });
+
+  it('engineStrict leaving package.json is an engine-pin', async () => {
+    const a = await buildAutopsy(await tree({ 'package.json': pkg({ engineStrict: true }) }), await tree({ 'package.json': pkg({}) }), null);
+    expect(a.causes[0]!.kind).toBe('engine-pin');
+  });
+
+  it('a removed API mentioned in a README or a comment is not a removed-api cause', async () => {
+    const doc = await buildAutopsy(await tree({ 'README.md': 'we use util.puts\n' }), await tree({ 'README.md': 'we use console.log\n' }), null);
+    expect(doc.causes[0]!.kind).toBe('other');
+    const js = await buildAutopsy(await tree({ 'a.js': '// util.puts was here\n' }), await tree({ 'a.js': '// gone\n' }), null);
+    expect(js.causes[0]!.kind).toBe('other');
+  });
+
+  it('strips control and bidi characters from a stranger\'s lines, files and symptom', async () => {
+    const a = await buildAutopsy(await tree({ 'a.txt': 'old\n' }), await tree({ 'a.txt': 'new\u202Eevil\u001b[31m\n' }), { vital: 'build', detail: 'error\u202E boom' });
+    expect(a.symptom).toBe('error boom');
+    const out = JSON.stringify(a);
+    expect(out.includes('\u202E') || out.includes('\u001b')).toBe(false);
+  });
+
+  it('reports a tree too big to walk instead of silently trimming it', async () => {
+    const files: Tree = {};
+    for (let i = 0; i < 2100; i++) files[`d/f${String(i).padStart(4, '0')}.txt`] = 'x';
+    const a = await buildAutopsy(await tree(files), await tree(files), null);
+    expect(a.skipped).toBeGreaterThanOrEqual(1);
+  });
+});
+

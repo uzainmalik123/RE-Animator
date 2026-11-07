@@ -50,7 +50,7 @@ describe('Autopsy (R8)', () => {
     expect(out).toContain('class="ln add"');
     expect(out).toContain('class="ln del"');
     expect(out).toContain('Evidence truncated');
-    expect(out).toContain('2 files left out');
+    expect(out).toContain('2 items left out');
   });
 
   it('says the body keeps its secret when no cause was found', () => {

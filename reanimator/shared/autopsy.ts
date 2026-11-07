@@ -60,12 +60,21 @@ export function isAutopsy(v: unknown): v is Autopsy {
 
 export const headline = (a: Autopsy): string => (a.diedAt ? `Died at ${a.diedAt}: ${a.symptom || 'no output'}` : 'No vital failed on the corpse');
 
+// Repo-controlled text goes into a human's PR description: one line, Markdown characters escaped.
+const oneLine = (s: string): string => s.replace(/\s+/g, ' ').trim().replace(/[\\`*_[\]()<>#|!~&]/g, (c) => `\\${c}`);
+const inlineCode = (s: string): string => {
+  const flat = s.replace(/\s+/g, ' ');
+  const longest = (flat.match(/`+/g) ?? []).reduce((m, r) => Math.max(m, r.length), 0);
+  const tick = '`'.repeat(longest + 1);
+  return `${tick} ${flat} ${tick}`;
+};
+
 // A Markdown report a human can paste into a PR description (D-R10).
 export function autopsyMarkdown(repo: string | null, a: Autopsy): string {
-  const out = [`## Autopsy${repo ? `: ${repo}` : ''}`, '', `**${headline(a)}**`, ''];
+  const out = [`## Autopsy${repo ? `: ${repo}` : ''}`, '', `**${oneLine(headline(a))}**`, ''];
   if (a.causes.length === 0) out.push('No known cause: the body keeps its secret.', '');
   for (const c of a.causes) {
-    out.push(`### ${c.title}`, '', `${c.why} \`${c.file}\`${c.seen ? ' (named in the corpse\'s real failing output)' : ''}`, '');
+    out.push(`### ${oneLine(c.title)}`, '', `${c.why} ${inlineCode(c.file)}${c.seen ? ' (named in the corpse\'s real failing output)' : ''}`, '');
     if (c.lines.length > 0) {
       const longest = Math.max(0, ...c.lines.map((l) => (l.text.match(/`+/g) ?? []).reduce((m, r) => Math.max(m, r.length), 0)));
       const fence = '`'.repeat(Math.max(3, longest + 1));

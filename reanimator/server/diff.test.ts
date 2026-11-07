@@ -46,3 +46,28 @@ describe('diffLines', () => {
     expect(d.filter((l) => l.op !== '-').map((l) => l.text)).toEqual(b);
   });
 });
+
+describe('diffLines on hostile sizes', () => {
+  it('does not build a huge table: two big different files fall back to a block, quickly', () => {
+    const a = Array.from({ length: 30_000 }, (_, i) => `a${i}`);
+    const b = Array.from({ length: 30_000 }, (_, i) => `b${i}`);
+    const t = Date.now();
+    const d = diffLines(a, b, Infinity);
+    expect(Date.now() - t).toBeLessThan(2000);
+    expect(d.filter((l) => l.op === '-')).toHaveLength(30_000);
+    expect(d.filter((l) => l.op === '+')).toHaveLength(30_000);
+  });
+
+  it('still finds the one real change in big files with common ends', () => {
+    const a = Array.from({ length: 30_000 }, (_, i) => `l${i}`);
+    const b = [...a];
+    b[15_000] = 'changed';
+    expect(diffLines(a, b)).toEqual([
+      { op: ' ', text: 'l14999' },
+      { op: '-', text: 'l15000' },
+      { op: '+', text: 'changed' },
+      { op: ' ', text: 'l15001' },
+    ]);
+  });
+});
+

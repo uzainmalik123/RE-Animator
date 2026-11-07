@@ -23,6 +23,12 @@ export const REMOVED_APIS: readonly { name: string; token: RegExp }[] = [
 ];
 
 const MAX_FILES = 2000;
+const MAX_LOCK_BYTES = 8 * 1024 * 1024;
+const JS_FILE = /\.[cm]?[jt]sx?$/;
+// Control and bidi characters in a stranger's text could make a diff lie: they are dropped.
+// eslint-disable-next-line no-control-regex
+const CONTROL = /[\u0000-\u0008\u000B-\u001F\u007F-\u009F\u200E\u200F\u202A-\u202E\u2066-\u2069]/g;
+const clean = (s: string): string => s.replace(CONTROL, '');
 const IGNORED_DIRS = new Set(['node_modules', '.git']);
 const LOCKFILES = new Set(['package-lock.json', 'npm-shrinkwrap.json']);
 const DEP_FIELDS = new Set(['dependencies', 'devDependencies', 'optionalDependencies']);
@@ -46,8 +52,8 @@ const ABOUT: Record<CauseKind, { title: string; why: string; seen: RegExp | null
     seen: /ERR_OSSL|openssl/i,
   },
   lockfile: {
-    title: 'An ancient lockfile',
-    why: 'A version 1 lockfile pins a dependency tree from another era. It was dropped and peer dependencies relaxed.',
+    title: 'An old lockfile',
+    why: 'The lockfile, or strict peer dependencies, held a dependency tree from another era. The remedy dropped the lockfile or relaxed the check.',
     seen: /ERESOLVE|lockfile/i,
   },
   other: { title: 'Changed', why: 'This file differs between the corpse and the raised body.', seen: null },
@@ -57,7 +63,14 @@ const ABOUT: Record<CauseKind, { title: string; why: string; seen: RegExp | null
 function symptom(detail: string): string {
   const lines = detail.split('\n').map((l) => l.trim()).filter((l) => l !== '');
   const line = lines.find((l) => /error|ERR!|EBADENGINE|not a function|not a constructor/i.test(l)) ?? lines[0] ?? '';
-  return line.slice(0, LIMITS.lineChars);
+  return clean(line).slice(0, LIMITS.lineChars);
+}
+
+// Lockfile content for comparison only (null = no regular file, 'big' = too large to compare).
+async function readLock(path: string): Promise<string | null> {
+  const s = await lstat(path).catch(() => null);
+  if (!s?.isFile()) return null;
+  return s.size > MAX_LOCK_BYTES ? `big:${s.size}` : readOwn(path);
 }
 
 type Read = { text: string } | { skip: true } | null;
@@ -73,20 +86,28 @@ async function readText(path: string): Promise<Read> {
 
 // Relative paths under `root`, symlinks and other oddities included (readText refuses them, so they
 // are counted as skipped once and never followed).
-async function walk(root: string): Promise<string[]> {
+async function walk(root: string): Promise<{ files: string[]; cut: boolean }> {
   const out: string[] = [];
+  let cut = false;
   const visit = async (rel: string): Promise<void> => {
-    if (out.length >= MAX_FILES) return;
+    if (out.length >= MAX_FILES) {
+      cut = true;
+      return;
+    }
     const entries = await readdir(join(root, rel), { withFileTypes: true }).catch(() => []);
     for (const e of entries.sort((a, b) => (a.name < b.name ? -1 : 1))) {
       const next = rel === '' ? e.name : `${rel}/${e.name}`;
+      if (out.length >= MAX_FILES) {
+        cut = true;
+        return;
+      }
       if (e.isDirectory()) {
         if (!IGNORED_DIRS.has(e.name)) await visit(next);
       } else out.push(next);
     }
   };
   await visit('');
-  return out;
+  return { files: out, cut };
 }
 
 const split = (s: string): string[] => (s === '' ? [] : s.replace(/\n$/, '').split('\n'));
@@ -96,14 +117,15 @@ const row = (op: DiffLine['op'], text: string): DiffLine => ({ op, text });
 function cause(kind: CauseKind, file: string, lines: DiffLine[], detail: string, over?: { title?: string; names?: string[] }): Cause {
   const about = ABOUT[kind];
   let truncated = lines.length > LIMITS.lines;
-  const capped = lines.slice(0, LIMITS.lines).map((l) => {
+  const capped = lines.slice(0, LIMITS.lines).map((raw) => {
+    const l = { ...raw, text: clean(raw.text) };
     if (l.text.length <= LIMITS.lineChars) return l;
     truncated = true;
     return { ...l, text: l.text.slice(0, LIMITS.lineChars - 1) + '…' };
   });
   const names = over?.names ?? [];
   const seen = kind === 'removed-api' ? names.some((n) => detail.includes(n)) : about.seen !== null && about.seen.test(detail);
-  return { kind, title: over?.title ?? about.title, why: about.why, file, lines: capped, truncated, seen };
+  return { kind, title: clean(over?.title ?? about.title), why: about.why, file: clean(file), lines: capped, truncated, seen };
 }
 
 const compact = (v: unknown): string => JSON.stringify(v);
@@ -133,34 +155,51 @@ function packageCauses(before: unknown, after: unknown, detail: string): Cause[]
     const lines: DiffLine[] = [];
     if (key in before) lines.push(row('-', `${compact(key)}: ${compact(b)}`));
     if (key in after) lines.push(row('+', `${compact(key)}: ${compact(a)}`));
-    causes.push(key === 'engines' ? cause('engine-pin', 'package.json', lines, detail) : cause('other', 'package.json', lines, detail, { title: `Changed: ${key}` }));
+    causes.push(key === 'engines' || key === 'engineStrict' ? cause('engine-pin', 'package.json', lines, detail) : cause('other', 'package.json', lines, detail, { title: `Changed: ${key}` }));
   }
   return causes;
 }
 
-function fileCause(file: string, lines: DiffLine[], detail: string): Cause {
-  const removed = lines.filter((l) => l.op === '-').map((l) => l.text);
-  const added = lines.filter((l) => l.op === '+').map((l) => l.text);
-  if (basename(file) === '.npmrc') {
-    if (removed.some((l) => /engine-strict/.test(l))) return cause('engine-pin', file, lines, detail, { title: 'Strict engines' });
-    if (added.some((l) => /openssl-legacy-provider/.test(l))) return cause('openssl', file, lines, detail);
-    if (added.some((l) => /legacy-peer-deps/.test(l))) return cause('lockfile', file, lines, detail);
-    return cause('other', file, lines, detail, { title: `Changed: ${file}` });
-  }
-  const names = REMOVED_APIS.filter((api) => removed.some((l) => api.token.test(l))).map((api) => api.name);
+// An .npmrc can carry several signals; each is its own cause with only its own lines.
+function npmrcCauses(file: string, lines: DiffLine[], detail: string): Cause[] {
+  const signals: { kind: CauseKind; op: '-' | '+'; token: RegExp; title?: string }[] = [
+    { kind: 'engine-pin', op: '-', token: /engine-strict/, title: 'Strict engines' },
+    { kind: 'openssl', op: '+', token: /openssl-legacy-provider/ },
+    { kind: 'lockfile', op: '+', token: /legacy-peer-deps/ },
+  ];
+  const found = signals
+    .map((sig) => ({ sig, own: lines.filter((l) => l.op === sig.op && sig.token.test(l.text)) }))
+    .filter((x) => x.own.length > 0)
+    .map((x) => cause(x.sig.kind, file, x.own, detail, { title: x.sig.title }));
+  return found.length > 0 ? found : [cause('other', file, lines, detail, { title: `Changed: ${file}` })];
+}
+
+function fileCauses(file: string, lines: DiffLine[], detail: string): Cause[] {
+  if (basename(file) === '.npmrc') return npmrcCauses(file, lines, detail);
+  // Only code, and only lines that are not comments: a README that mentions util.puts is not a death.
+  const code = (l: DiffLine) => l.op === '-' && !/^\s*(\/\/|\/\*|\*)/.test(l.text);
+  const names = JS_FILE.test(file) ? REMOVED_APIS.filter((api) => lines.some((l) => code(l) && api.token.test(l.text))).map((api) => api.name) : [];
   if (names.length > 0) {
-    return cause('removed-api', file, lines, detail, { names, title: `${names.length === 1 ? 'Removed Node API' : 'Removed Node APIs'}: ${names.join(', ')}` });
+    return [cause('removed-api', file, lines, detail, { names, title: `${names.length === 1 ? 'Removed Node API' : 'Removed Node APIs'}: ${names.join(', ')}` })];
   }
-  return cause('other', file, lines, detail, { title: `Changed: ${file}` });
+  return [cause('other', file, lines, detail, { title: `Changed: ${file}` })];
 }
 
 export async function buildAutopsy(corpse: string, revived: string, failure: { vital: VitalName; detail: string } | null): Promise<Autopsy> {
   const detail = failure?.detail ?? '';
-  const files = [...new Set([...(await walk(corpse)), ...(await walk(revived))])].sort();
+  const [wc, wr] = await Promise.all([walk(corpse), walk(revived)]);
+  const files = [...new Set([...wc.files, ...wr.files])].sort();
   const causes: Cause[] = [];
-  let skipped = 0;
+  // A tree too big to read whole is reported, never silently trimmed.
+  let skipped = (wc.cut ? 1 : 0) + (wr.cut ? 1 : 0);
 
   for (const file of files) {
+    if (LOCKFILES.has(basename(file))) {
+      // A lockfile is classified from its bytes alone and never dumped, however big it is.
+      const [x, y] = await Promise.all([readLock(join(corpse, file)), readLock(join(revived, file))]);
+      if (x !== y) causes.push(cause('lockfile', file, [], detail));
+      continue;
+    }
     const [a, b] = await Promise.all([readText(join(corpse, file)), readText(join(revived, file))]);
     if ((a && 'skip' in a) || (b && 'skip' in b)) {
       skipped++;
@@ -169,10 +208,6 @@ export async function buildAutopsy(corpse: string, revived: string, failure: { v
     const before = a?.text ?? null;
     const after = b?.text ?? null;
     if (before === after) continue;
-    if (LOCKFILES.has(basename(file))) {
-      causes.push(cause('lockfile', file, [], detail));
-      continue;
-    }
     if (basename(file) === 'package.json' && before !== null && after !== null) {
       try {
         const found = packageCauses(JSON.parse(before), JSON.parse(after), detail);
@@ -185,7 +220,7 @@ export async function buildAutopsy(corpse: string, revived: string, failure: { v
       }
     }
     const lines = diffLines(split(before ?? ''), split(after ?? ''));
-    if (lines.length > 0) causes.push(fileCause(file, lines, detail));
+    if (lines.length > 0) causes.push(...fileCauses(file, lines, detail));
   }
 
   const order = (c: Cause) => CAUSE_KINDS.indexOf(c.kind);
