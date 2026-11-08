@@ -1,6 +1,0 @@
-{
-  "name": "tally-2014",
-  "diedIn": 2014,
-  "licence": "MIT",
-  "serve": ["node", "server.js"]
-}
