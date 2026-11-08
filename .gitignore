@@ -3,9 +3,7 @@ dist/
 .env
 .env.*
 !.env.example
-.poltergeist/runs/
-test-results/
-playwright-report/
 *.db
 .superpowers/
 .claude/worktrees
+graphify-out/
