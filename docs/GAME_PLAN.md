@@ -1,6 +1,6 @@
 # The game plan (working title: TBD)
 
-> **Status:** draft for the team, 2026-11-08. The ideas below come from one long design conversation. Things marked **✅ Decided** were agreed; things marked **💡 Proposal** are suggestions waiting for the team's yes or no. Nothing is built yet.
+> **Status:** 2026-11-09: the build spec is now **`docs/PRD.md`**; where this plan and the PRD differ, the PRD wins. Draft for the team, 2026-11-08. The ideas below come from one long design conversation. Things marked **✅ Decided** were agreed; things marked **💡 Proposal** are suggestions waiting for the team's yes or no. Nothing is built yet.
 
 ---
 
