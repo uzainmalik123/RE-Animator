@@ -1,11 +1,11 @@
 # AGENTS.md — read this first
 
-This repository is the team's **Kiroween 2026** entry: a horror-themed **cyber incident-response game** (name still open). The plan is **`docs/GAME_PLAN.md`**; read it before doing anything.
+This repository is the team's **Kiroween 2026** entry: a horror-themed **cyber incident-response game** (name still open). The plan is **`docs/GAME_PLAN.md`** (the why) and **`docs/PRD.md`** (exactly what gets built, the source of truth); read both before doing anything.
 
 ```
 <repo root>/
   game/        the game: React + Vite + TypeScript (a black screen so far)
-  docs/        GAME_PLAN.md (the plan), DECISIONS.md, KNOWN_ISSUES.md
+  docs/        GAME_PLAN.md (the why), PRD.md (the what), DECISIONS.md, KNOWN_ISSUES.md
   scripts/     the secrets guard (check-env-files.mjs)
   .github/     CI: `health` (game) and `env-files` (secrets guard), both required on main
   .claude/     repo-wide skills: grill-me / grilling
@@ -17,7 +17,7 @@ The earlier project (Reanimator, which raised dead repos, and Poltergeist, a red
 
 ## Rules
 
-- **Decide before building.** Anything not in `docs/GAME_PLAN.md` gets agreed and written down first. Reanimator failed by building features before deciding what the product was for.
+- **Decide before building.** Build only what has a row in `docs/PRD.md`. To change or add one, edit the PRD and add a `docs/DECISIONS.md` entry first, then build; never improvise in code. Update a row's status in the PR that changes it. Reanimator failed by building features before deciding what the product was for.
 - **One scenario, fully polished**, before a second exists.
 - **Fresh code only.** Nothing is copied from `../reanimator` (the earlier prototype) or `../poltergeist-old`; both predate the hacking window (eligibility). The `failed` branch is fine: it was written inside the window.
 - **`npm run health` stays green** in `game/` after every change. CI runs it.
