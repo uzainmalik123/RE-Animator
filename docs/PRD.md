@@ -27,7 +27,7 @@ All rows start `planned`. Update the status in the same PR that changes it.
 
 ## 1. Platform (D-03)
 
-- **A hosted web page plus one small server.** The page is the game (React + Vite). The server runs `kiro-cli acp` with our `KIRO_API_KEY` and nothing else (D-04). The host is still to pick (KI-04).
+- **A hosted web page plus one small server.** The page is the game (React + Vite). The server runs `kiro-cli acp` with our `KIRO_API_KEY` and nothing else (D-04). The rules require a working URL for judges, so hosting is a must (SYS-18); the host is picked before the vertical slice (KI-04).
 - **Desktop only.** Below 1024 px wide, or on touch-only devices, a "play on a computer" screen shows instead.
 - **No accounts, no saves.** Each run is self-contained.
 - **The game works without the server.** If Kiro is unreachable, every Kiro feature falls back to rule-written text (KIRO-09). A judge never gets a broken game.
@@ -165,7 +165,7 @@ Real Kiro, through `kiro-cli acp` on our server, **on rails**: our rules decide 
 | SYS-06 | **Heartbeat** 🫀 | Starts at 100. Per game minute _(tune)_: −1 per **open door Death is actively using**, −0.5 per active minion, −(feature weight) per disabled feature, −4 while the plug is pulled, −3 while defaced/XSS live. Recovers +1 per game minute while nothing drains. Never above 100. 0 → loss (flatline) | A test with only "plug pulled" flatlines at the expected minute | M |
 | SYS-07 | **Banishment and the return** | Win when Death has no move whose Needs hold **and** no foothold is left. If a foothold is left when his routes close, he goes quiet, then **returns** after 2 real minutes _(tune)_ through it | Leaving ATK-11's admin in place always triggers the return | M |
 | SYS-08 | **Difficulty dials** | The table in GAME_PLAN §8, plus: Easy = consoles have buttons for terminal actions and KIRO-04; Medium = consoles + terminal; Hard = consoles + terminal, no suggestions, quiet ATK variants, more MIN waves. Same recordings and same report verdict on all | Switching difficulty changes only dial values (a test diffs two configs) | M |
-| SYS-09 | **The shell** | Our own. Commands: `ls cd pwd cat head tail grep awk sort uniq wc cut file sha256sum tar cp rm mkdir sqlite3 iptables systemctl ss whois ping nmap curl date history clear help man`. Pipes and `>` supported. `sqlite3` is real SQLite (sql.js) on the recorded DB. Virtual file system filled by SYS-03. Anything else: `command not found` | Each command has tests for its supported flags; the command list is exported for KIRO-08 | M |
+| SYS-09 | **The shell** | Our own. Commands: `ls cd pwd cat head tail grep awk sort uniq wc cut file sha256sum tar cp rm mkdir sqlite3 iptables systemctl ss whois ping nmap curl date history clear help man`. Pipes and `>` supported. `sqlite3` is real SQLite (sql.js) on the recorded DB. Virtual file system filled by SYS-03. Anything else: `command not found` | Each command has tests for its supported flags; a property-based test (fast-check) shows random input never throws, only prints an error; the command list is exported for KIRO-08 and KDEV-01 | M |
 | SYS-10 | **Event log** | Every Death move, minion wave, player action and Kiro call, timestamped in game time | The report and the sim tests read only from it | M |
 | SYS-11 | **Report grading** | Rules over SYS-10: time to notice each stage, time to contain, souls lost, downtime caused, evidence preserved before eradication, footholds missed, IP whack-a-mole (≥ 3 IP blocks on Death), early full logout, notification on time. A grade per phase (detect, contain, eradicate, recover) | Each rule has a test with a crafted event log | M |
 | SYS-12 | **Kiro server** | Node server; one `kiro-cli acp` session per run (with KIRO-07 tools as an MCP server); session token per run; caps (KIRO-10); `KIRO_API_KEY` from `.env` | Runs locally with one command; refuses calls without a run token | M |
@@ -173,7 +173,8 @@ Real Kiro, through `kiro-cli acp` on our server, **on rails**: our rules decide 
 | SYS-14 | **Notification clock** | Starts when the player confirms a breach (first DEF-05 or DEF-19 after souls are taken); 72 game hours (GDPR) compressed to the run length _(tune)_ | Report marks late or missing notification | S |
 | SYS-15 | **Demo mode** | A fixed seed plus a fixed player script for the trailer | Two demo runs produce identical event logs | S |
 | SYS-16 | **Playthrough sims** | Headless runs of the whole rules engine (no UI) with scripted players. See §10 | All §10 sims pass in `npm test` | M |
-| SYS-17 | **Rules consistency** | Rules live as data (`game/src/rules/moves.ts`, `actions.ts`, `minions.ts`). Tests: every ATK has ≥ 1 DEF that stops it; every Need is produced by some move or the start state; every foothold has a DEF that removes it; every MIN has its closing DEF | These tests exist and pass | M |
+| SYS-17 | **Rules consistency** | Rules live as data (`game/src/rules/moves.ts`, `actions.ts`, `minions.ts`). Tests: every ATK has ≥ 1 DEF that stops it; every Need is produced by some move or the start state; every foothold has a DEF that removes it; every MIN has its closing DEF. Plus **property-based tests** (fast-check): random sequences of player actions never crash the engine, never make souls go back up, and never leave heartbeat outside 0–100 | These tests exist and pass | M |
+| SYS-18 | **Hosting** | The page and the Kiro server (SYS-12) live at one public URL from the vertical slice until judging ends | A full run plays from the public URL, both with the Kiro server up and with it stopped | M |
 
 ---
 
@@ -248,13 +249,41 @@ Every lesson a player should leave with, and the rows that teach it. A lesson wi
 
 ---
 
-## 12. Not doing (for scenario one)
+## 12. Kiro in development (KDEV)
+
+The rules judge **how well we used Kiro**, and the write-up (SUB-07) may only claim what Kiro really did. Budget: about **1500 credits for development** and **2500 for in-game use, judges and the demo** _(tune after KI-02)_.
+
+| ID | Kiro feature | How we use it | Done when | Pri |
+|---|---|---|---|---|
+| KDEV-01 | **Steering** | `.kiro/steering/`: the project rules (pointing at `AGENTS.md`) and the shell's command list, always included | Files exist; a test checks the steering command list matches SYS-09's exported list | M |
+| KDEV-02 | **Spec-driven** | The shell (SYS-09) is built from a Kiro spec in `.kiro/specs/shell/` (requirements, design, tasks) made from its PRD row | The spec is in the repo and its tasks are done in Kiro | M |
+| KDEV-03 | **Hooks** | (a) run `npm run health` when `game/src` files are saved; (b) when `game/src/rules/` changes, remind to update the PRD row's status | Both hooks in `.kiro/hooks/` and seen working | M |
+| KDEV-04 | **Property-based testing** | The fast-check suites in SYS-09 and SYS-17, written with Kiro | They run in `npm test` | M |
+| KDEV-05 | **Kiro plays Death** | Kiro CLI writes and runs the recording scripts (REC-03) against the isolated rig only | Each recording script was made in a logged Kiro session | S |
+| KDEV-06 | **Custom agent + MCP + CLI in the product** | The in-game Kiro: a custom agent (KIRO-08 prompt) over `kiro-cli acp` using our MCP game tools (KIRO-07, SYS-12) | KIRO-07 and SYS-12 are done | M |
+| KDEV-07 | **Kiro powers** | Check what powers exist; use one only if it fits a real task | Checked; used or noted as "none fitted" | S |
+| KDEV-08 | **Usage log** | `docs/KIRO_USAGE.md`: every Kiro session (date, feature, what it built, credits). The write-up is built only from this | Every Kiro session has an entry | M |
+
+## 13. Submission (SUB)
+
+From the Kiroween 2026 rules. Each one is a hard requirement unless marked bonus.
+
+| ID | Requirement | Done when | Pri |
+|---|---|---|---|
+| SUB-01 | A URL to the working game, no login | SYS-18 done; the URL is in the form | M |
+| SUB-02 | A text description of features and how it works | Written from this PRD's done rows only | M |
+| SUB-03 | A video under 3 minutes, public on YouTube, showing the game running on desktop; **no third-party trademarks or copyrighted music** (our own or properly licensed sound only; no OWASP logo on screen) | Uploaded, public, under 3:00 | M |
+| SUB-04 | Public GitHub repo with everything needed to run it, and an open-source licence shown in About | MIT licence detected (already true); README has run instructions | M |
+| SUB-05 | `/.kiro` at the repo root, never in `.gitignore` | `git check-ignore -q .kiro` fails, checked in CI | M |
+| SUB-06 | Category and bonus categories | Category: Frankenstein. Bonus: Social Blitz (post with `#KiroweenHackathon26` at the start, during the submission period), Blog (says it's for Kiroween 2026). Best Student only if both of us qualify | M |
+| SUB-07 | The Kiro write-up: IDE/CLI, custom agents, hooks, specs, steering, MCP, PBT, powers | Every claim traces to a KIRO_USAGE.md entry | M |
+
+## 14. Not doing (for scenario one)
 
 3D · live attacks during play · multiplayer · accounts or saved progress · mobile · scenarios two and three (stretch) · Kiro upgrades (stretch, KIRO-11) · an LLM driving Death.
 
-## 13. Still open (doesn't block building)
+## 15. Still open (doesn't block building)
 
 - **Name** (KI-01): the team decides.
 - **Who does what**: the team decides once both are online.
-- **Hosting for the page and SYS-12** (KI-04).
-- **Category:** Frankenstein (horror game + security training), Costume Contest as the alternative.
+- **Which host** for SYS-18 (KI-04).
